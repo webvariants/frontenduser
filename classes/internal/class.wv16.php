@@ -140,26 +140,25 @@ abstract class _WV16 {
 	{
 		$return = array();
 		
-		foreach ($available as $info) {
-			
+		foreach ($available as $attribute) {
 			$metadata = null;
 			$req      = false;
 			
 			foreach ($assigned as $data) {
-				if ($data->getMetaInfoID() == $info->getID()) {
+				if ($data->getAttributeID() == $attribute->getID()) {
 					$metadata = $data;
 					break;
 				}
 			}
 			
 			foreach ($required as $rinfo) {
-				if ($rinfo->getID() == $info->getID()) {
+				if ($rinfo->getID() == $attribute->getID()) {
 					$req = true;
 					break;
 				}
 			}
 			
-			$return[] = array('info' => $info, 'data' => $metadata, 'required' => $req);
+			$return[] = array('attribute' => $attribute, 'data' => $metadata, 'required' => $req);
 		}
 		
 		return $return;

@@ -24,11 +24,8 @@ foreach ($types as $type) {
 }
 
 $type = new WV_Form_Select('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE, $typesSelect);
-$type->setAttribute('onchange', 'wv2.changeArticleType(this)');
+$type->setAttribute('onchange', 'wv16.changeUserType(this)');
 $type->setMultiple(false);
-
-////////////////////////////////////////////////////////////////////////////////
-// Block 1 fertig
 
 $form->addElements(array($login, $password1, $password2, $type));
 
@@ -43,8 +40,11 @@ $dataToDisplay = _WV16::getAttributesToDisplay(WV16_Users::getAllAttributes(), $
 $attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : array();
 
 foreach ($dataToDisplay as $data) {
-	$value = !empty($data['data']) ? $data['data']->getValue() : null;
-	WV_Datatype::call($data['info']->getDatatypeID(), 'renderAsFormElement', array($form, $value, !in_array($data['info']->getID(), $attributes), $data['info']));
+	$value      = !empty($data['data']) ? $data['data']->getValue() : null;
+	$datatypeID = $data['attribute']->getDatatypeID();
+	$parameters = array($form, $value, true, $data['attribute']);
+	
+	WV_Datatype::call($datatypeID, 'renderAsFormElement', $parameters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,6 @@ foreach ($availableGroups as $index => $group) {
 }
 
 $groups = new WV_Form_CheckboxGroup('groups', 'Benutzergruppen', $assignedGroups, $groups);
-$groups->setAttribute('onchange', 'wv2.changeArticleType(this)');
 $groups->setMultiple(false);
 
 $form->add($groups);
@@ -75,7 +74,7 @@ $form->render();
 
 <script type="text/javascript">
 /* <![CDATA[ */
-wv2.infosPerType = [];
+wv16.attributesPerType = [];
 <?php
 	
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
@@ -83,11 +82,11 @@ wv2.infosPerType = [];
 
 foreach (WV16_Users::getAllUserTypes() as $type) {
 	print "\n";
-	print 'wv2.infosPerType['.$type->getID().'] = [];';
+	print 'wv16.attributesPerType['.$type->getID().'] = [];';
 	
 	foreach ($type->getAttributeIDs() as $attr) {
 		print "\n";
-		print 'wv2.infosPerType['.$type->getID().'].push('.$attr.');';
+		print 'wv16.attributesPerType['.$type->getID().'].push('.$attr.');';
 	}
 	
 	print "\n";
