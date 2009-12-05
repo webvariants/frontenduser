@@ -9,35 +9,29 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-class _WV16_Extensions {
-	/**
-	 * Liste aller CSS-Dateien des AddOns.
-	 */
-	private static $cssFiles = array(
-		'*' => array('addons/frontenduser' => 'css/wv16.css')
-	);
-
+class _WV16_Extensions
+{
 	/**
 	 * AddOn in Extension Points einklinken
 	 *
 	 * Diese Methode registriert sich bei allen von dem AddOn genutzten
 	 * Extension Points. Bis auf OOREDAXO_GET_META_VALUE werden die
 	 * Registrierungen nur im Backend vorgenommen.
-	 *
-	 * @param string $page   die aktuelle Seite im Backend
-	 * @param string $mode   der Seitenmodus (z.B. "meta" bei der Seite "content")
-	 * @param bool   $force  wenn true, wird sich MetaInfoEx in die PAGE_*-EPs einhängen, auch wenn der User sich gerade nicht auf einer MetaInfoEx-Seite befindet
 	 */
-	public static function plugin($page, $mode, $force = false) {
+	public static function plugin()
+	{
 		global $REX, $ctype;
 
-		$self = __CLASS__;
+		if (WV_Redaxo::isFrontend()) {
+			return;
+		}
 
-		if (!$REX['REDAXO'] && !$force) return;
+		$self = __CLASS__;
+		$page = WV_Redaxo::getCurrentPage();
 		
 		// HTML-Kopf
 
-		if ( in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content')) || $force ) {
+		if (in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content'))) {
 			rex_register_extension('PAGE_HEADER', array($self, 'pageHeader'));
 		}
 
@@ -67,23 +61,6 @@ class _WV16_Extensions {
 			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
 		}
 	}
-	
-	public static function sendFiles() {
-		$js  = rex_get('js',  'string');
-		$css = rex_get('css', 'string');
-
-//		if (!empty($js) && isset(self::$jsFiles[$js])) {
-//			rex_send_file(_WV2_PATH.self::$jsFiles[$js], 'text/javascript', 'frontend');
-//			exit;
-//		}
-
-		foreach ( self::$cssFiles as $version => $files ) {
-			if (!empty($css) && isset($files[$css])) {
-				rex_send_file(_WV16_PATH.$files[$css], 'text/css', 'frontend');
-				exit;
-			}
-		}
-	}
 
 	/*
 	   ************************************************************
@@ -96,22 +73,11 @@ class _WV16_Extensions {
 	 *
 	 * Generiert die HTML-Codes zur Einbindung der CSS- und JavaScript-Dateien.
 	 *
-	 * @param  array $params  die von Redaxo übergebenen Parameter
-	 * @return string         das von Redaxo übergebende Subject plus der zusätzlichen Angaben
+	 * @param array $params  die von Redaxo übergebenen Parameter
 	 */
-	public static function pageHeader($params) {
-		$files = array();
-		foreach (self::$cssFiles as $version => $cssFiles) {
-			if ( $version == '*' || $version == WV2::getRedaxoVersion() ) {
-				foreach ( $cssFiles as $code => $filename) {
-					$files[] = '<link rel="stylesheet" type="text/css" href="index.php?css='.$code.'" />';
-				}
-			}
-		}
-//		foreach (self::$jsFiles as $code => $filename) {
-//			$files[] = '<script src="index.php?js='.$code.'" type="text/javascript"></script>';
-//		}
-		return $params['subject'].'  '.implode("\n  ", $files)."\n";
+	public static function pageHeader($params)
+	{
+		WV_Redaxo::addCSSFile('frontenduser/css/wv16.css');
 	}
 
 	/*

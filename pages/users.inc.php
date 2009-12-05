@@ -13,7 +13,7 @@ $id   = rex_request('id', 'int');
 $func = rex_request('func', 'string');
 $loop = 1;
 
-while ( $loop ) { --$loop; switch ( $func ) {
+while ($loop) { --$loop; switch ($func) {
 #===========================================================
 # Benutzer hinzufügen
 #===========================================================
@@ -224,10 +224,10 @@ case 'do_edit':
 #===========================================================
 default:
 
-	$offset  = abs(rex_get('offset', 'int', 0));
-	$perPage = WV4_Registry::get('wv16_users_per_page');
+	$offset  = abs(wv_get('offset', 'int', 0));
+	$perPage = WV_Registry::get('wv16_users_per_page');
 	$perPage = $perPage === null ? 20 : $perPage;
-	$data    = WV16_Users::getAllUsers('login', 'asc', $offset, $perPage);
+	$users   = WV16_Users::getAllUsers('login', 'asc', $offset, $perPage);
 	
 	require _WV16_PATH.'templates/users/table.phtml';
 } }

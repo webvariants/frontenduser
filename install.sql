@@ -63,7 +63,8 @@ CREATE TABLE `%TABLE_PREFIX%wv16_users` (
   `password` varchar(40) NOT NULL,
   `registered` datetime NOT NULL,
   `type_id` smallint(5) unsigned NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `login` (`login`(100))
 );
 
 CREATE TABLE `%TABLE_PREFIX%wv16_utype_attrib` (

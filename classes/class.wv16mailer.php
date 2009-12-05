@@ -9,22 +9,23 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-abstract class WV16_Mailer {
+abstract class WV16_Mailer
+{
 	
-	public static function sendConfirmationRequest($user, $email, $name) {
-		global $REX;
+	public static function sendConfirmationRequest($user, $email, $name)
+	{
+		$clang = WV_Redaxo::clang();
 
-		// save code to registry
+		// Bestätigungscode erzeugen und speichern
 		
 		$code = WV16_Users::generateConfirmationCode($email);
-		$code_db = WV16_Users::getConfig('code_db', array());
-		$code_db[$email] = $code;
-		WV16_Users::setConfig('code_db', $code_db);
+		$user->setConfirmationCode($code);
+		$user->update();
 		
 		// Body erzeugen
 		
 		$link = OOArticle::getArticleById(WV16_Users::getConfig('mail_validation_article'))->getUrl(array('confirm' => $code));
-		$body = WV16_Users::getConfig('confirmation_body_'.$REX['CUR_CLANG']);
+		$body = WV16_Users::getConfig('confirmation_body_'.$clang);
 		$body = str_replace(
 			array('#CONFIRMATION_URL#', '#CONFIRM_URL#'),
 			substr(Utils::getAbsoluteURLBase(true), 0, -1).$link,
@@ -34,25 +35,28 @@ abstract class WV16_Mailer {
 		
 		// Mail verschicken
 		
-		$mailer = new PHPMailer();
+		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
+		$mailer      = new PHPMailer();
 		
 		$mailer->AddAddress($email, $name);
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
+		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
 		$mailer->CharSet = 'utf-8';
 		$mailer->Body    = $body;
-		$mailer->Subject = WV16_Users::getConfig('confirmation_subject_'.$REX['CUR_CLANG']);
+		$mailer->Subject = WV16_Users::getConfig('confirmation_subject_'.$clang);
 		
 		return $mailer->Send();
 	}
 
-	public static function reportNewUserToAdmin($user) {
+	public static function reportNewUserToAdmin($user)
+	{
 		$body = "Hallo,\n\nder Nutzer #LOGIN# hat sich soeben\nauf der Website ".Utils::getAbsoluteURLBase(true)." angemeldet.\n\n";
 		$body = self::replaceAttributes($body, $user);
 		
-		$mailer = new PHPMailer();
+		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
+		$mailer      = new PHPMailer();
 		
 		$mailer->AddAddress(WV16_Users::getConfig('admin_mail'), WV16_Users::getConfig('admin_name'));
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
+		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
 		$mailer->CharSet = 'utf-8'; 
 		$mailer->Body    = $body;
 		$mailer->Subject = 'Neuer Nutzer angemeldet.';
@@ -60,20 +64,17 @@ abstract class WV16_Mailer {
 		return $mailer->Send();
 	}
 	
-	public static function notifyUserOnActivation(_WV16_User $user) {
-		global $REX;
+	public static function notifyUserOnActivation(_WV16_User $user)
+	{
+		$clang = WV_Redaxo::clang();
 		
-		// UNSCHÖN: hier steckt vorwissen aus dem aci-projekt drin!
-		// 		normalerweise kann diese methode überhaupt nicht wissen, dass es 
-		// 		die nutzerattribute name, fname und mail gibt. andererseits
-		// 		sollten wir überlegen, ob wir nicht einige essentiellen attribute
-		// 		einführen wollen, ohne die ein großteil dieser anwendung ohnehin
-		// 		nicht funktionieren würde (zb email-adresse)
+		$toMail  = WV16_Users::getConfig('activation_to_'.$clang);
+		$body    = WV16_Users::getConfig('activation_body_'.$clang);
+		$subject = WV16_Users::getConfig('activation_subject_'.$clang);
 		
-		$name = $user->getAttribute('fname')->getValue().' '.$user->getAttribute('name')->getValue();
-		$mail = $user->getAttribute('mail')->getValue();
-		$body = WV16_Users::getConfig('activation_body_'.$REX['CUR_CLANG']);
-		$body = self::replaceAttributes($body, $user);
+		$to      = self::replaceAttributes($to, $user);
+		$body    = self::replaceAttributes($body, $user);
+		$subject = self::replaceAttributes($subject, $user);
 		
 		$mailer = new PHPMailer();
 		
@@ -81,12 +82,13 @@ abstract class WV16_Mailer {
 		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
 		$mailer->CharSet = 'utf-8'; 
 		$mailer->Body    = $body;
-		$mailer->Subject = WV16_Users::getConfig('activation_subject_'.$REX['CUR_CLANG']);
+		$mailer->Subject = $subject;
 		
 		return $mailer->Send();
 	}
 	
-	public static function replaceAttributes($body, $user) {
+	public static function replaceAttributes($body, $user)
+	{
 		$body = str_replace('#LOGIN#', $user->getLogin(), $body);
 		
 		foreach ($user->getAttributes() as $attr) {

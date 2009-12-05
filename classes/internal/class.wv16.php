@@ -135,4 +135,33 @@ abstract class _WV16 {
 		list($id, $type) = _WV16::identifyObject($object, $objectType);
 		return WV_SQL::getInstance()->count('wv16_rights', 'object_id = '.$id.' AND object_type = '.$type) > 0;
 	}
+	
+	public static function getAttributesToDisplay($available, $assigned, $required)
+	{
+		$return = array();
+		
+		foreach ($available as $info) {
+			
+			$metadata = null;
+			$req      = false;
+			
+			foreach ($assigned as $data) {
+				if ($data->getMetaInfoID() == $info->getID()) {
+					$metadata = $data;
+					break;
+				}
+			}
+			
+			foreach ($required as $rinfo) {
+				if ($rinfo->getID() == $info->getID()) {
+					$req = true;
+					break;
+				}
+			}
+			
+			$return[] = array('info' => $info, 'data' => $metadata, 'required' => $req);
+		}
+		
+		return $return;
+	}
 }

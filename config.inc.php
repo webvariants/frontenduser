@@ -9,72 +9,69 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-if ($REX['SETUP']) return;
-
-// Wegen Abhängigkeiten kann das AddOn bereits von anderen
-// AddOns eingebunden worden sein und muss dann den Aufruf
-// von Redaxo ablehnen. Redaxo verwendet kein include_once.
-
-if (defined('_WV16_PATH')) return;
-
-// MetaInfoEx wird später von Redaxo eingebunden, da Redaxo
-// alphabetisch sortiert. Daher müssen wir uns selber darum
-// kümmern.
-
-require $REX['INCLUDE_PATH'].'/addons/metainfoex/config.inc.php';
+if ($REX['SETUP'] || defined('_WV16_PATH')) return;
+define('_WV16_PATH', $REX['INCLUDE_PATH'].'/addons/frontenduser/');
 
 // AddOn-Konfiguration
 
 $REX['ADDON']['page']['frontenduser']        = 'frontenduser';
 $REX['ADDON']['name']['frontenduser']        = 'Benutzerverwaltung';
-$REX['ADDON']['version']['frontenduser']     = '1.0.1';
+$REX['ADDON']['version']['frontenduser']     = file_get_contents(_WV16_PATH.'version');
 $REX['ADDON']['author']['frontenduser']      = 'Christoph Mewes';
 $REX['ADDON']['perm']['frontenduser']        = 'frontenduser[]';
 $REX['ADDON']['supportpage']['frontenduser'] = 'www.webvariants.de';
-
 $REX['PERM'][] = 'frontenduser[]';
 
-// Bibliothek einbinden
+// Autoloading
 
-define('_WV16_PATH', $REX['INCLUDE_PATH'].'/addons/frontenduser/');
+function _wv16_autoload($params)
+{
+	$className = $params['subject'];
+	
+	static $classes = array(
+		'_WV16'              => 'internal/class.wv16.php',
+		'_WV16_Attribute'    => 'internal/class.wv16attribute.php',
+		'_WV16_UserType'     => 'internal/class.wv16usertype.php',
+		'_WV16_UserValue'    => 'internal/class.wv16uservalue.php',
+		'_WV16_Group'        => 'internal/class.wv16group.php',
+		'_WV16_DataProvider' => 'internal/class.wv16dataprovider.php',
+		'_WV16_User'         => 'internal/class.wv16user.php',
+		
+		'WV16_Users'  => 'class.wv16users.php',
+		'WV16_Mailer' => 'class.wv16mailer.php'
+	);
+	
+	if (isset($classes[$className])) {
+		require_once _WV16_PATH.'classes/'.$classes[$className];
+		return '';
+	}
+}
 
-include_once _WV16_PATH.'classes/internal/class.wv16.php';
-include_once _WV16_PATH.'classes/internal/class.wv16attribute.php';
-include_once _WV16_PATH.'classes/internal/class.wv16usertype.php';
-include_once _WV16_PATH.'classes/internal/class.wv16uservalue.php';
-include_once _WV16_PATH.'classes/internal/class.wv16group.php';
-include_once _WV16_PATH.'classes/internal/class.wv16dataprovider.php';
-include_once _WV16_PATH.'classes/internal/class.wv16user.php';
-include_once _WV16_PATH.'classes/internal/class.wv16extensions.php';
-
-include_once _WV16_PATH.'classes/class.wv16users.php';
-include_once _WV16_PATH.'classes/class.wv16mailer.php';
-include_once _WV16_PATH.'classes/class.phpmailer.php';
+rex_register_extension('__AUTOLOAD', '_wv16_autoload');
 
 // Initialisierungen
 
-_WV16_Extensions::plugin(isset($page) ? $page : '', isset($mode) ? $mode : '');
-_WV16_Extensions::sendFiles();
+require_once _WV16_PATH.'classes/internal/class.wv16extensions.php';
+_WV16_Extensions::plugin();
 
-if ($REX['REDAXO']) {
-	rex_register_extension('WV2_INIT_PERMISSIONS', array('_WV16','initPermissions'));
-	_WV2::initUserPermissions();
-}
+// Dateien rausschicken, die über FrontendUser geschützt sind.
 
-if (isset($_REQUEST['wv16_file'])) {
+if (WV_Redaxo::isFrontend() && isset($_REQUEST['wv16_file'])) {
 	$filename = $_REQUEST['wv16_file'];
 	$media    = OOMedia::getMediaByFilename($filename);
+	
 	if (OOMedia::isValid($media)) {
 		if (!WV16_Users::isProtected($media) || (WV16_Users::isLoggedIn() && WV16_Users::getCurrentUser()->canAccess($media))) {
 			header('Content-Type: '.$media->getType());
 			readfile('files/'.$media->getFileName());
 		}
 		else {
-			header("HTTP/1.1 403 Forbidden");
+			header('HTTP/1.1 403 Forbidden');
 		}
 	}
 	else {
-		header("HTTP/1.1 404 Not Found");
+		header('HTTP/1.1 404 Not Found');
 	}
+	
 	exit;
 }

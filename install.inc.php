@@ -8,4 +8,10 @@
  * http://www.opensource.org/licenses/mit-license.php
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
-$REX['ADDON']['install']['frontenduser'] = true;
+
+if (empty($REX['ADDON']['status']['developer_utils'])) {
+	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Developer Utils-AddOn.';
+}
+else {
+	$REX['ADDON']['install']['frontenduser'] = 1;
+}

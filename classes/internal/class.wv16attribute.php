@@ -9,7 +9,8 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-class _WV16_Attribute {
+class _WV16_Attribute implements _WV_IProperty
+{
 	private $id;             ///< int      die interne ID
 	private $name;           ///< string   der interne Name
 	private $title;          ///< string   der angezeigte Name (Titel)
@@ -518,15 +519,16 @@ class _WV16_Attribute {
 	 * @return mixed  die entsprechende Eigenschaft
 	 */
 	
-	public function getId()            { return $this->id;            }
-	public function getName()          { return $this->name;          }
-	public function getTitle()         { return $this->title;         }
-	public function getPosition()      { return $this->position;      }
-	public function getDatatype()      { return $this->datatype;      }
-	public function getParams()        { return $this->params;        }
-	public function getDefaultValue()  { return $this->defaultValue;  }
-	public function getDefaultOption() { return $this->defaultValue;  } // Kompatibilität zu MetaInfoEx
-	public function getUserTypes()     { return $this->userTypes;     }
+	public function getId()         { return $this->id;            }
+	public function getName()       { return $this->name;          }
+	public function getTitle()      { return $this->title;         }
+	public function getPosition()   { return $this->position;      }
+	public function getDatatypeID() { return $this->datatype;      }
+	public function getParams()     { return $this->params;        }
+	public function getDefault()    { return $this->defaultValue;  }
+	public function getUserTypes()  { return $this->userTypes;     }
+	public function getHelpText()   { return '';                   }
+	
 	
 	/*@}*/
 	
