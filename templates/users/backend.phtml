@@ -1,0 +1,142 @@
+<?php if ( isset($errormsg) ) WV2::error($errormsg); ?>
+
+<?php
+WV2_Form::display('4.2.0', '<div class="rex-addon-output-v2"><div id="rex-addon-editmode" class="rex-form">');
+WV2_Form::display('4.1.0', '<div class="rex-addon-editmode">');
+?>
+
+<script type="text/javascript" src="index.php?js=addons/metainfoex"></script>
+
+<form action="index.php" method="post">
+	<fieldset>
+		<legend class="rex-lgnd">Benutzer <?php print $func == 'add' ? 'erstellen' : 'bearbeiten'; ?></legend>
+
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+
+		<input type="hidden" name="page" value="frontenduser" />
+		<input type="hidden" name="subpage" value="" />
+		<input type="hidden" name="func" value="do_<?= htmlspecialchars($func); ?>" />
+		<input type="hidden" name="id" value="<?= $user ? $user->getID() : ''; ?>" />
+
+		<?php WV2_Form::startElement('Login', 'login', 'text'); ?>
+		<input id="login" type="text" name="login" value="<?= $user ? htmlspecialchars($user->getLogin()) : '' ?>" class="rex-form-text" />
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Passwort', 'password', 'text'); ?>
+		<input id="password" type="password" name="password" value="" class="rex-form-text" />
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Passwort wiederholen', 'password2', 'text'); ?>
+		<input id="password2" type="password" name="password2" value="" class="rex-form-text" />
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Benutzertyp', 'type', 'select'); ?>
+		<select name="type" size="1" id="type" class="rex-form-select" onchange="wv2.changeArticleType(this)">
+			<?php foreach (WV16_Users::getAllUserTypes() as $type): ?>
+			<option value="<?= $type->getID() ?>"<?= $type->getID() == ($user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE) ? ' selected="selected"' : '' ?>><?= htmlspecialchars($type->getTitle()) ?></option>
+			<?php endforeach; ?>
+		</select>
+		<?php WV2_Form::closeElement(); ?>
+
+		<div id="wv2_container_metainfos">
+			<p class="headerLine">Attribute für den aktuellen Benutzertyp</p>
+
+			<?php
+			
+			$requiredAttr = WV16_Users::getAttributesForUserType($user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE);
+			$assignedData = $user ? $user->getAttributes() : array();
+	
+			foreach (WV16_Users::getAllAttributes() as $attr) {
+				$userdata = null;
+				$required = false;
+				
+				if ($assignedData) {
+					if (!is_array($assignedData)) $assignedData = array($assignedData);
+					
+					foreach ($assignedData as $data) {
+						if ($data->getAttributeID() == $attr->getID() ) {
+							$userdata = $data;
+							break;
+						}
+					}
+				}
+				
+				if ($requiredAttr) {
+					foreach ($requiredAttr as $rattr) {
+						if ($rattr->getID() == $attr->getID()) {
+							$required = true;
+							break;
+						}
+					}
+				}
+				
+				print '<div id="wv2_container_'.$attr->getID().'" style="display:'.($required ? 'block' : 'none').'">';
+				print _WV2::callForDatatype($attr->getDatatype(), 'getFrontendForm', array($attr, $userdata ? $userdata->getSerializedValue() : false));
+				print '</div>';
+			}
+			
+			?>
+
+		</div>
+
+		<p class="headerLine">Dieser Benutzer gehört den folgenden Gruppen an:</p>
+
+		<table class="articleTypes"><tr>
+			<?php
+			
+			$assignedGroups  = $user ? $user->getGroupIDs() : array();
+			$availableGroups = WV16_Users::getAllGroups();
+
+			foreach ($availableGroups as $index => $group) {
+				$checked = in_array($group->getId(), $assignedGroups) ? ' checked="checked"' : '';
+
+				if ($index > 0 && $index % 3 == 0) print '</tr><tr>';
+				print '<td>';
+				print '<input class="checkbox" type="checkbox" id="group_'.$group->getId().'" name="groups[]"'.$checked.' value="'.$group->getID().'" /> ';
+				print '<label for="group_'.$group->getId().'">'.htmlspecialchars($group->getTitle()).'</label>';
+				print '</td>';
+			}
+
+			?>
+		</tr></table>
+
+		<?php WV2_Form::buttonLine() ?>
+			<input type="submit" name="save"   class="rex-sbmt rex-form-submit" value="Speichern" />
+			<input type="submit" name="apply"  class="rex-sbmt rex-form-submit" value="Übernehmen" />
+			<?php if ($func == 'edit'): ?>
+			<input type="submit" name="delete" class="rex-sbmt rex-form-submit" onclick="return confirm('Löschen?');" value="Löschen" />
+			<?php endif; ?>
+		<?php WV2_Form::closeButtonLine() ?>
+
+	  </div>
+	</fieldset>
+</form>
+
+<?php
+WV2_Form::display('4.2.0', '</div></div>');
+WV2_Form::display('4.1.0', '</div>');
+?>
+
+<script type="text/javascript">
+/* <![CDATA[ */
+wv2.infosPerType = [];
+<?php
+	
+// Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
+// vorhanden sind.
+
+foreach (WV16_Users::getAllUserTypes() as $type) {
+	print "\n";
+	print 'wv2.infosPerType['.$type->getID().'] = [];';
+	
+	foreach ($type->getAttributeIDs() as $attr) {
+		print "\n";
+		print 'wv2.infosPerType['.$type->getID().'].push('.$attr.');';
+	}
+	
+	print "\n";
+}
+
+?>
+/* ]]> */
+</script>

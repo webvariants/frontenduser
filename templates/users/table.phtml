@@ -1,0 +1,19 @@
+<p style="margin-bottom:1em">Die folgenden Benutzer sind auf Ihrer Website registriert.</p>
+
+<table class="rex-table"><thead><tr>
+	<th class="rex-icon"><a href="index.php?page=frontenduser&amp;func=add"><img src="media/user_plus.gif" alt="" title="Hinzufügen" /></a></th>
+	<th>Login</th>
+	<th>Gruppe(n)</th>
+	<th>registriert am</th>
+</tr></thead><tbody><?php foreach ($data as $user): ?><tr id="info<?= $user->getID() ?>">
+	<td class="rex-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="media/user.gif" alt="" title="Benutzer bearbeiten" /></a></td>
+	<td><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><?= htmlspecialchars($user->getLogin()) ?></a></td>
+	<td><?php
+	$groups = array();
+	foreach ($user->getGroups() as $g) $groups[] = $g->getTitle();
+	print htmlspecialchars(implode(', ', $groups));
+	?></td>
+	<td><?= htmlspecialchars($user->getRegistered()) ?></td>
+</tr><?php endforeach; if (empty($data)): ?><tr>
+	<td colspan="4">Es haben sich noch keine Benutzer angemeldet.</td>
+</tr><?php endif; ?></tbody></table>

@@ -1,0 +1,36 @@
+<p style="margin-bottom:1em">Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier legen Sie fest, welche
+Attribute es gibt und wie diese gestaltet werden sollen. Bitte beachten Sie, dass die Felder &quot;Benutzername&quot; und
+&quot;Passwort&quot; fest im System integriert sind und daher nicht geändert werden können.</p>
+
+<table class="rex-table" id="attrtable"><thead><tr>
+	<th class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=add"><img src="media/metainfo_plus.gif" alt="" title="Hinzufügen" /></a></th>
+	<th style="width:200px">Attributename</th>
+	<th style="width:150px">Feldtyp</th>
+	<th style="width:auto">Feldbezeichnung</th>
+</tr></thead><tbody><?php foreach ($data as $attr): ?><tr id="info<?= $attr->getID() ?>">
+	<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=edit&amp;id=<?= $attr->getID() ?>"><img src="media/metainfo.gif" alt="" title="Attribut bearbeiten" /></a></td>
+	<td><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=edit&amp;id=<?= $attr->getID() ?>"><?= htmlspecialchars($attr->getName()) ?></a></td>
+	<td><?= htmlspecialchars(WV2::getDatatypeName($attr->getDatatype())) ?></td>
+	<td><?= htmlspecialchars($attr->getTitle()) ?></td>
+</tr><?php endforeach; if (empty($data)): ?><tr>
+	<td colspan="4">Es sind noch keine Attribute vorhanden.</td>
+</tr><?php endif; ?></tbody></table>
+
+<?php if (count($data) <= 1) return; ?>
+
+<script type="text/javascript">
+	var tableDnD = new TableDnD();
+	tableDnD.init(document.getElementById('attrtable'));
+
+	wv16.oldPositions = [];
+
+	<?php
+	foreach ($data as $attr) {
+		print 'wv16.oldPositions[\'attr'.$attr->getID().'\'] = '.$attr->getPosition().';';
+		print "\n\t";
+	}
+	?>
+
+	tableDnD.onDrop = wv16.tableDrop;
+	tableDnD.onDrag = wv16.tableDrag;
+</script>

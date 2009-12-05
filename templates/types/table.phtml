@@ -1,0 +1,26 @@
+<p style="margin-bottom:1em">Jeder Benutzer auf Ihrer Webseite gehört zu einem bestimmten Typ, der regelt, welche Attribute für ihn
+zutreffen. Der Typ eines Benutzers wirkt sich hingegen nicht auf die Benutzerrechte aus und ein Benutzer kann auch immer nur zu einem
+einzigen Typ gehören.</p>
+
+<table class="rex-table" id="attrtable"><thead><tr>
+	<th class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=add"><img src="media/metainfo_plus.gif" alt="" title="Hinzufügen" /></a></th>
+	<th>Interner Name</th>
+	<th>Bezeichnung</th>
+	<th>Zugehörige Attribute</th>
+</tr></thead><tbody><?php foreach ($data as $type): ?><tr id="info<?= $type->getID() ?>">
+	<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><img src="media/metainfo.gif" alt="" title="Typ bearbeiten" /></a></td>
+	<td><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><?= htmlspecialchars($type->getName()) ?></a></td>
+	<td><?= htmlspecialchars($type->getTitle()) ?></td>
+	<td><?php
+	
+	$attributes = $type->getAttributes();
+	$titles     = array();
+	
+	foreach ( $attributes as $attr ) {
+		$titles[] = htmlspecialchars($attr->getTitle());
+	}
+	
+	print empty($titles) ? '&lt;keine&gt;' : implode(', ', $titles);
+	
+	?></td>
+</tr><?php endforeach; ?></tbody></table>

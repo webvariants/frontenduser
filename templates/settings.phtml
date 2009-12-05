@@ -1,0 +1,138 @@
+<?php if ( isset($errormsg) ) WV2::error($errormsg); ?>
+
+<?php
+WV2_Form::display('4.2.0', '<div class="rex-addon-output-v2"><div id="rex-addon-editmode" class="rex-form">');
+WV2_Form::display('4.1.0', '<div class="rex-addon-editmode">');
+
+function getRexLinkButton($elementID, $value) {
+	$article = $value > 0 ? OOArticle::getArticleById($value) : null;
+	$title   = $article ? $article->getName() : '';
+	
+	return '<input type="hidden" name="'.$elementID.'" id="LINK_'.$elementID.'" value="'.$value.'" />
+	<input type="text" style="width:50%" name="LINK_NAME['.$elementID.']" value="'.htmlspecialchars($title).'" id="LINK_'.$elementID.'_NAME" readonly="readonly" />
+	<span class="rex-wdgt-icons">
+		<a href="#" onclick="openLinkMap(\'LINK_'.$elementID.'\', \'\'); return false;"><img src="media/file_open.gif" width="16" height="16" alt="Öffne Auswahlfenster" title="Öffne Auswahlfenster" /></a>
+		<a href="#" onclick="deleteREXLink(\''.$elementID.'\'); return false;"><img src="media/file_del.gif" width="16" height="16" title="Seite entfernen" alt="Seite entfernen" /></a>
+	</span>';
+}
+?>
+
+<form action="index.php" method="post">
+	<fieldset>
+		<legend class="rex-lgnd">Systemartikel</legend>
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+
+		<input type="hidden" name="page" value="frontenduser" />
+		<input type="hidden" name="subpage" value="settings" />
+		<input type="hidden" name="func" value="save" />
+
+		<?php
+			WV2_Form::startElement('Login-Seite', 'LINK_login_article', 'text');
+			print getRexLinkButton('login_article', WV16_Users::getConfig('login_article', 0));
+			WV2_Form::closeElement();
+			
+			WV2_Form::startElement('Registierungs-Seite', 'LINK_register_article', 'text');
+			print getRexLinkButton('register_article', WV16_Users::getConfig('register_article', 0));
+			WV2_Form::closeElement();
+			
+			WV2_Form::startElement('eMail-Verifikation', 'LINK_mail_validation_article', 'text');
+			print getRexLinkButton('mail_validation_article', WV16_Users::getConfig('mail_validation_article', 0));
+			WV2_Form::closeElement();
+			
+			WV2_Form::startElement('Zugriff-verweigert-Seite', 'LINK_access_denied_article', 'text');
+			print getRexLinkButton('access_denied_article', WV16_Users::getConfig('access_denied_article', 0));
+			WV2_Form::closeElement();
+		?>
+		
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend class="rex-lgnd">Allgemeine Einstellungen</legend>
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+
+		<?php
+			WV2_Form::startElement('Name des Administrators', 'admin_name', 'text');
+			print '<input id="admin_name" type="text" name="admin_name" value="'.htmlspecialchars(WV16_Users::getConfig('admin_name', '')).'" class="rex-form-text" />';
+			WV2_Form::closeElement();
+			
+			WV2_Form::startElement('eMail des Administrators', 'admin_mail', 'text');
+			print '<input id="admin_mail" type="text" name="admin_mail" value="'.htmlspecialchars(WV16_Users::getConfig('admin_mail', '')).'" class="rex-form-text" />';
+			WV2_Form::closeElement();
+		?>
+		
+		</div>
+	</fieldset>
+	
+	<fieldset>
+		<legend class="rex-lgnd">eMail-Texte (Bestätigungs-eMails)</legend>
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+		
+		<div id="langchoosers">
+			<?php
+				WV2_Form::startElement('Sprache auswählen', 'langs', 'text');
+				$links = array();
+				foreach ($REX['CLANG'] as $id => $name) {
+					$links[] = '<a href="javascript:;" onclick="showLanguage('.$id.')" id="langchoose'.$id.'">'.htmlspecialchars($name).'</a>';
+				}
+				print implode(' | ', $links);
+				WV2_Form::closeElement();
+			?>
+		</div>
+		
+		<div id="langs">
+			<?php foreach ($REX['CLANG'] as $id => $name): ?>
+				<div id="lang<?= $id ?>">
+				<?php
+					// Text der eMail, die an den Besucher geht, um seine eMail-Adresse zu verifizieren
+					
+					WV2_Form::startElement('Betreff (Verifikation)', 'confirmation_subject_'.$id, 'text');
+					print '<input id="confirmation_subject_'.$id.'" type="text" name="confirmation_subject_'.$id.'" value="'.htmlspecialchars(WV16_Users::getConfig('confirmation_subject_'.$id, '')).'" class="rex-form-text" />';
+					WV2_Form::closeElement();
+					
+					WV2_Form::startElement('Text (Verifikation)', 'confirmation_body_'.$id, 'textarea');
+					print '<textarea id="confirmation_body_'.$id.'" name="confirmation_body_'.$id.'" class="rex-form-text" rows="10" cols="50">'.htmlspecialchars(WV16_Users::getConfig('confirmation_body_'.$id, '')).'</textarea>';
+					WV2_Form::closeElement();
+					
+					// Text der eMail, die an den Besucher geht, wenn ein Admin ihn freigeschaltet hat.
+					
+					WV2_Form::startElement('Betreff (Freischaltung)', 'activation_subject_'.$id, 'text');
+					print '<input id="activation_subject_'.$id.'" type="text" name="activation_subject_'.$id.'" value="'.htmlspecialchars(WV16_Users::getConfig('activation_subject_'.$id, '')).'" class="rex-form-text" />';
+					WV2_Form::closeElement();
+					
+					WV2_Form::startElement('Text (Freischaltung)', 'activation_body_'.$id, 'textarea');
+					print '<textarea id="activation_body_'.$id.'" name="activation_body_'.$id.'" class="rex-form-text" rows="10" cols="50">'.htmlspecialchars(WV16_Users::getConfig('activation_body_'.$id, '')).'</textarea>';
+					WV2_Form::closeElement();
+				?>
+				</div>
+			<?php endforeach; ?>
+		</div>
+
+		<?php WV2_Form::buttonLine() ?>
+			<input type="submit" name="save" class="rex-sbmt rex-form-submit" value="Speichern" />
+		<?php WV2_Form::closeButtonLine() ?>
+
+	  </div>
+	</fieldset>
+</form>
+
+<?php
+WV2_Form::display('4.2.0', '</div></div>');
+WV2_Form::display('4.1.0', '</div>');
+?>
+
+<script type="text/javascript">
+jQuery(function($) {
+	$('#langs div').hide();
+	$('#langs div:first').show();
+	$('a[id^=langchoose]:first').css('font-weight', 'bold');
+});
+
+function showLanguage(id) {
+	jQuery('#langs div').hide();
+	jQuery('a[id^=langchoose]').css('font-weight','normal');
+	jQuery('#lang' + id).show();
+	jQuery('#langchoose' + id).css('font-weight', 'bold');
+	return false;
+}
+</script>

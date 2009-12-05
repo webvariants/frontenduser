@@ -1,0 +1,120 @@
+<?php if ( isset($errormsg) ) WV2::error($errormsg); ?>
+
+<?php
+WV2_Form::display('4.2.0', '<div class="rex-addon-output-v2"><div id="rex-addon-editmode" class="rex-form">');
+WV2_Form::display('4.1.0', '<div class="rex-addon-editmode">');
+?>
+
+<script type="text/javascript" src="index.php?js=addons/metainfoex"></script>
+
+<form action="index.php" method="post">
+	<fieldset>
+		<legend class="rex-lgnd">Attribut <?php print $func == 'add' ? 'erstellen' : 'bearbeiten'; ?></legend>
+
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+
+		<input type="hidden" name="page" value="frontenduser" />
+		<input type="hidden" name="subpage" value="attributes" />
+		<input type="hidden" name="func" value="do_<?= htmlspecialchars($func); ?>" />
+		<input type="hidden" name="id" value="<?= $attribute ? $attribute->getID() : ''; ?>" />
+
+		<?php WV2_Form::startElement('Interner Name', 'name', 'text'); ?>
+		<input id="name" type="text" name="name" value="<?= $attribute ? htmlspecialchars($attribute->getName()) : '' ?>" class="rex-form-text" />
+		<span class="<?= WV2_Form::noticeClass(false) ?>">Über diesen Namen wird das Attribut programmseitig angsprochen.</span>
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Titel', 'title', 'text'); ?>
+		<input id="title" type="text" name="title" value="<?= $attribute ? htmlspecialchars($attribute->getTitle()) : '' ?>" class="rex-form-text" />
+		<span class="<?= WV2_Form::noticeClass(false) ?>">Der Titel wird innerhalb von Redaxo in allen Formularen angezeigt.</span>
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Feldtyp', 'datatype', 'select') ?>
+		<select name="datatype" size="1" id="datatype" onchange="wv2.changeDatatype(this)" class="rex-form-select">
+		
+		<?php
+
+		$forms = array();
+
+		foreach (WV2::getDatatypes() as $id => $className) {
+			$selected = $attribute && $id == $attribute->getDatatype();
+
+			if ($selected) {
+				$forms[$id] = _WV2::callForDatatype($id, 'getBackendForm', array($attribute->getParams(), $attribute->getDefaultOption()));
+			} else {
+				$forms[$id] = _WV2::callForDatatype($id, 'getBackendForm', array(null, null));
+			}
+
+			print '<option value="'.htmlspecialchars($id).'"'.($selected ? ' selected="selected"' :'').'>';
+			print htmlspecialchars(WV2::getDatatypeName($id));
+			print '</option>';
+		}
+
+		print '</select>';
+		WV2_Form::closeElement();
+		
+		?>
+
+		<div id="datatypeContainer">
+			<p class="headerLine">Optionen für den aktuellen Feldtyp</p>
+
+			<?php
+
+			$firstRun = true; // beim Hinzufügen einer Metainfo das erste Feld für den Datentyp angezeigt lassen
+
+			foreach ($forms as $datatypeID => $formText) {
+				$display = (!$attribute && $firstRun ) || ( $attribute && $datatypeID == $attribute->getDatatype());
+
+				print '<div id="datatypeForm_'.$datatypeID.'"'.($display ? '' : ' style="display:none"').'>';
+				print $formText;
+				print '</div>';
+
+				$firstRun = false;
+			}
+
+			?>
+
+		</div>
+
+		<?php
+
+		$assignedTypes  = $attribute ? $attribute->getUserTypes() : array();
+		$availableTypes = WV16_Users::getAllUserTypes();
+		
+		?>
+
+		<p class="headerLine">
+			Dieses Attribut gehört zu den folgenden Benutzertypen:
+		</p>
+
+		<table class="articleTypes"><tr>
+			<?php
+
+			foreach ($availableTypes as $index => $type) {
+				$checked = in_array($type->getId(), $assignedTypes) ? ' checked="checked"' : '';
+
+				if ($index > 0 && $index % 3 == 0) print '</tr><tr>';
+				print '<td>';
+				print '<input class="checkbox" type="checkbox" name="utypes[]"'.$checked.' value="'.$type->getId().'" /> ';
+				print htmlspecialchars($type->getTitle());
+				print '</td>';
+			}
+
+			?>
+		</tr></table>
+
+		<?php WV2_Form::buttonLine() ?>
+			<input type="submit" name="save"   class="rex-sbmt rex-form-submit" value="Speichern" />
+			<input type="submit" name="apply"  class="rex-sbmt rex-form-submit" value="Übernehmen" />
+			<?php if ($func == 'edit'): ?>
+			<input type="submit" name="delete" class="rex-sbmt rex-form-submit" onclick="return confirm('Löschen?');" value="Löschen" />
+			<?php endif; ?>
+		<?php WV2_Form::closeButtonLine() ?>
+
+	  </div>
+	</fieldset>
+</form>
+
+<?php
+WV2_Form::display('4.2.0', '</div></div>');
+WV2_Form::display('4.1.0', '</div>');
+?>

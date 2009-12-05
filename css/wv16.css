@@ -1,0 +1,130 @@
+#langchoosers label {
+	padding: 0 !important;
+}
+
+p span.rex-notice {
+	display: block;
+	clear: both;
+	margin: 1em 5px 1em 150px;
+}
+
+p span.rex-listitem {
+	display: block;
+	clear: both;
+	margin: 0em 5px 0em 150px;
+	padding: 0em;
+}
+
+div.hiddenMetainfo,
+div.hiddenMetainfo select option {
+	color: #BBB;
+}
+
+div.requiredMetainfo label {
+	color: black;
+	font-weight: bold;
+}
+
+p.headerLine {
+	background: #D7D6D3 !important;
+	font-weight: bold;
+}
+
+span.choices_key,
+span.metainfoName {
+	color: #777 !important;
+}
+
+span.choices_value:hover {
+	font-weight: bold;
+}
+
+div.category,
+div.category fieldset,
+div.medium,
+div.medium fieldset {
+	background: #D7D6D3;
+}
+
+.wv2_fright {
+	float: right;
+	margin-top: -18px;
+	margin-right: 3px;
+	cursor: pointer;
+}
+
+.rex-fldst-wrppr.wv2 {
+	border-top: 0px solid transparent !important;
+}
+
+#languages {
+	line-height: 16px;
+}
+
+input.error { color: red; }
+input.normal { color: black; }
+
+span.ullike {
+	margin-left: 0;
+	margin-top: 0;
+	float: left;
+}
+
+span.ullike span.item {
+	display: block;
+	line-height: 17px;
+}
+
+span.ullike span.item:before {
+	content: "• ";
+}
+
+span.item.choice .key {
+	color: #999;
+}
+
+span.item.choice .value:hover {
+	font-weight: bold;
+}
+
+table.articleTypes {
+	width: 100%;
+	border-bottom: 1px solid #FFF;
+	margin: 0;
+	background: #F0EFEB none repeat scroll 0 0;
+}
+
+table.articleTypes td {
+	width: 33%;
+	padding: 5px;
+}
+
+#metaresult {
+	font-size: 11px;
+	margin-left: 10px;
+}
+
+#metaresult.success {
+	color: green;
+}
+
+#metaresult.error, span.error {
+	color: red;
+}
+
+span.hidden {
+	display: none !important;
+}
+
+.wv2errorable.error.rex-form-text,
+.wv2errorable.error.rex-form-textarea {
+	border: 1px solid red !important;
+	background: #FDD;
+	color: black;
+}
+
+input.checkbox {
+	position: relative;
+	top: 3px;
+	width: 20px !important;
+}

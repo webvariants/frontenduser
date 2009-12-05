@@ -1,0 +1,65 @@
+<?php if ( isset($errormsg) ) WV2::error($errormsg); ?>
+
+<?php
+WV2_Form::display('4.2.0', '<div class="rex-addon-output-v2"><div id="rex-addon-editmode" class="rex-form">');
+WV2_Form::display('4.1.0', '<div class="rex-addon-editmode">');
+?>
+
+<form action="index.php" method="post">
+	<fieldset>
+		<legend class="rex-lgnd">Benutzertyp <?php print $func == 'add' ? 'erstellen' : 'bearbeiten'; ?></legend>
+
+		<div class="rex-fldst-wrppr rex-form-wrapper">
+
+		<input type="hidden" name="page" value="frontenduser" />
+		<input type="hidden" name="subpage" value="types" />
+		<input type="hidden" name="func" value="do_<?= htmlspecialchars($func); ?>" />
+		<input type="hidden" name="id" value="<?= $type ? $type->getID() : ''; ?>" />
+
+		<?php WV2_Form::startElement('Interner Name', 'name', 'text'); ?>
+		<input id="name" type="text" name="name" value="<?= $type ? htmlspecialchars($type->getName()) : '' ?>" class="rex-form-text" />
+		<span class="<?= WV2_Form::noticeClass(false) ?>">Über diesen Namen wird das Attribut programmseitig angsprochen.</span>
+		<?php WV2_Form::closeElement(); ?>
+
+		<?php WV2_Form::startElement('Titel', 'title', 'text'); ?>
+		<input id="title" type="text" name="title" value="<?= $type ? htmlspecialchars($type->getTitle()) : '' ?>" class="rex-form-text" />
+		<span class="<?= WV2_Form::noticeClass(false) ?>">Der Titel wird innerhalb von Redaxo in allen Formularen angezeigt.</span>
+		<?php WV2_Form::closeElement(); ?>
+
+		<p class="headerLine">Die folgenden Attribute sind diesem Benutzertyp zugeordnet:</p>
+
+		<table class="articleTypes"><tr>
+			<?php
+			
+			$assignedAttributes  = $type ? $type->getAttributeIDs() : array();
+			$availableAttributes = WV16_Users::getAttributesForUserType(-1);
+
+			foreach ($availableAttributes as $index => $attr) {
+				$checked = in_array($attr->getId(), $assignedAttributes) ? ' checked="checked"' : '';
+
+				if ($index > 0 && $index % 3 == 0) print '</tr><tr>';
+				print '<td>';
+				print '<input class="checkbox" type="checkbox" name="attributes[]"'.$checked.' value="'.$attr->getID().'" /> ';
+				print htmlspecialchars($attr->getTitle());
+				print '</td>';
+			}
+
+			?>
+		</tr></table>
+
+		<?php WV2_Form::buttonLine() ?>
+			<input type="submit" name="save"   class="rex-sbmt rex-form-submit" value="Speichern" />
+			<input type="submit" name="apply"  class="rex-sbmt rex-form-submit" value="Übernehmen" />
+			<?php if ($func == 'edit'): ?>
+			<input type="submit" name="delete" class="rex-sbmt rex-form-submit" onclick="return confirm('Löschen?');" value="Löschen" />
+			<?php endif; ?>
+		<?php WV2_Form::closeButtonLine() ?>
+
+	  </div>
+	</fieldset>
+</form>
+
+<?php
+WV2_Form::display('4.2.0', '</div></div>');
+WV2_Form::display('4.1.0', '</div>');
+?>

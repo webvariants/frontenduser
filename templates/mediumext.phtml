@@ -1,0 +1,36 @@
+<div class="rex-cnt-metamode medium">
+
+<fieldset>
+	<legend class="rex-lgnd">Rechteverwaltung</legend>
+
+	<?php $hasRights = _WV16::hasObjectRights($mediumID, _WV16::TYPE_MEDIUM); ?>
+	
+	<?php WV2_Form::startElement('Rechteverwaltung', 'frontenduser', 'checkbox') ?>
+	<input type="checkbox" value="1" name="frontenduser" id="frontenduser" style="width:20px" <?= $hasRights ? 'checked="checked"' : '' ?>/> Zugriff auf diese Datei einschränken.
+	<input type="hidden" name="saverights" value="1" />
+	<?php WV2_Form::closeElement() ?>
+	
+	<div id="frontenduserContainer" style="display:<?= $hasRights ? 'block' : 'none' ?>">
+	
+	<?php foreach (WV16_Users::getAllGroups('title', 'asc') as $group): ?>
+	
+		<?php $right = $group->canAccess($mediumID, _WV16::TYPE_MEDIUM) ? 1 : 0; ?>
+	
+		<?php WV2_Form::startElement($group->getTitle(), $group->getName(), 'text') ?>
+		<input type="radio" value="1" name="<?= md5($group->getName()) ?>" <?= $right  ? ' checked="checked"' : '' ?> id="<?= md5($group->getName()) ?>" style="width:20px" /> zulassen
+		<input type="radio" value="0" name="<?= md5($group->getName()) ?>" <?= !$right ? ' checked="checked"' : '' ?> style="width:20px" /> verbieten
+		<?php WV2_Form::closeElement() ?>
+	
+	<?php endforeach; ?>
+	
+	</div>
+	
+	<script type="text/javascript">
+		jQuery(function($) {
+			$('#frontenduser').click(function() { $('#frontenduserContainer').toggle(); });
+		});
+	</script>
+
+</fieldset>
+
+</div>
