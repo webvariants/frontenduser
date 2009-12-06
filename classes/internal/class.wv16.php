@@ -74,7 +74,8 @@ abstract class _WV16 {
 		return array(-1, _WV16::TYPE_ARTICLE);
 	}
 	
-	public static function serializeUserForm($userType) {
+	public static function serializeUserForm($userType)
+	{
 		$requiredAttrs  = WV16_Users::getAttributesForUserType($userType);
 		$availableAttrs = WV16_Users::getAttributesForUserType(-1);
 		$valuesToStore  = array();
@@ -92,10 +93,12 @@ abstract class _WV16 {
 	
 			// Wir lassen keine Daten zu, die nicht zu diesem Benutzertyp gehören.
 	
-			if (!$isRequired) continue;
+			if (!$isRequired) {
+				continue;
+			}
 	
 			try {
-				$inputForUser = _WV2::callForDatatype($attr->getDatatype(), 'serializeFrontendForm', array($attr->getParams(), $attr->getID()));
+				$inputForUser = WV_Datatype::call($attr->getDatatypeID(), 'serializeFrontendForm', array($attr->getParams(), $attr));
 				
 				// Keine gültige Eingabe aber benötigtes Feld? -> Abbruch!
 	
@@ -114,7 +117,7 @@ abstract class _WV16 {
 					'attribute' => $attr->getID()
 				);
 			}
-			catch (DatatypeException $e) {
+			catch (WV_DatatypeException $e) {
 				$errors[] = array(
 					'attribute' => $attr->getID(),
 					'error'     => $e->getMessage()
@@ -123,15 +126,18 @@ abstract class _WV16 {
 		}
 		
 		if (empty($errors)) return $valuesToStore;
+		
 		self::$errors = $errors;
 		return null;
 	}
 	
-	public static function getErrors() {
+	public static function getErrors()
+	{
 		return self::$errors;
 	}
 	
-	public static function hasObjectRights($object, $objectType = null) {
+	public static function hasObjectRights($object, $objectType = null)
+	{
 		list($id, $type) = _WV16::identifyObject($object, $objectType);
 		return WV_SQL::getInstance()->count('wv16_rights', 'object_id = '.$id.' AND object_type = '.$type) > 0;
 	}

@@ -42,7 +42,7 @@ $attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes()
 foreach ($dataToDisplay as $data) {
 	$value      = !empty($data['data']) ? $data['data']->getValue() : null;
 	$datatypeID = $data['attribute']->getDatatypeID();
-	$parameters = array($form, $value, true, $data['attribute']);
+	$parameters = array($form, $value, false, $data['attribute']);
 	
 	WV_Datatype::call($datatypeID, 'renderAsFormElement', $parameters);
 }

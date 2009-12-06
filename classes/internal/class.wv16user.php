@@ -9,7 +9,8 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-class _WV16_User {
+class _WV16_User
+{
 	const ERR_UNKNOWN_USER  = 1; 
 	const ERR_INVALID_LOGIN = 2; 
 	const ERR_PWD_TOO_SHORT = 3; 
@@ -64,6 +65,112 @@ class _WV16_User {
 		$this->origTypeID = $this->typeID;
 		$this->attributes = null;
 		$this->groups     = array_map('intval', $sql->getArray('SELECT group_id FROM #_wv16_user_groups WHERE user_id = '.$this->id, '#_'));
+	}
+	
+	public static function register($login, $password, $userType = null)
+	{
+		$sql = WV_SQLEx::getInstance();
+		
+		$password = trim($password);
+		$login    = trim($login);
+		$userType = _WV16::getIDForUserType($userType, true);
+		
+		if ($userType === null) {
+			$userType = _WV16::DEFAULT_USER_TYPE;
+		}
+		
+		if (!preg_match('#^[a-z0-9_.,;\#+-@]+$#i', $login)) {
+			throw new Exception('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
+		}
+		
+		if (strlen($password) < 6) {
+			throw new Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+		}
+		
+		if ($sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) != 0) {
+			throw new Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
+		}
+		
+		$registered = date('Y-m-d H:i:s');
+		
+		$sql->queryEx(
+			'INSERT INTO #_wv16_users (login,password,registered,type_id) VALUES (?,"",?,?)',
+			array($login, $registered, $userType), '#_'
+		);
+		
+		$userID = $sql->lastID();
+		$pwhash = sha1($userID.$password.$registered);
+		
+		$sql->queryEx('UPDATE #_wv16_users SET password = ? WHERE id = ?',
+			array($pwhash, $userID), '#_'
+		);
+		
+		$user = self::getInstance($userID);
+		$user->addGroup(_WV16_Group::GROUP_UNCONFIRMED);
+		
+		// Attribute und ihre Standardwerte übernehmen
+		
+		$attributes = WV16_Users::getAttributesForUserType($userType);
+		
+		foreach ($attributes as $attr) {
+			$sql->queryEx(
+				'INSERT INTO #_wv16_user_values (user_id,attribute_id,value) VALUES (?,?,?)',
+				array($userID, $attr->getID(), $attr->getDefault()), '#_'
+			);
+		}
+		
+		return $user;
+	}
+	
+	public function update() {
+		$sql = WV_SQL::getInstance();
+		
+		if ($sql->count('wv16_users','LOWER(login) = LOWER("'.mysql_real_escape_string($this->login).'") AND id <> '.$this->id) != 0) {
+			throw new Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
+		}
+		
+		$sql->query(sprintf('UPDATE %swv16_users SET login = "%s", '.
+			'password = "%s", type_id = %d WHERE id = %d',
+			WV_SQL::getPrefix(),
+			mysql_real_escape_string($this->login),
+			$this->password,
+			$this->typeID,
+			$this->id
+		));
+		
+		if ($this->typeID != $this->origTypeID) {
+			$oldTypesAttributes = WV16_Users::getAttributesForUserType($this->origTypeID);
+			$newTypesAttributes = WV16_Users::getAttributesForUserType($this->typeID);
+			
+			foreach ($oldTypesAttributes as $idx => $attr) $oldTypesAttributes[$idx] = $attr->getID();
+			foreach ($newTypesAttributes as $idx => $attr) $newTypesAttributes[$idx] = $attr->getID();
+			
+			$toDelete = array_diff($oldTypesAttributes, $newTypesAttributes);
+			$toAdd    = array_diff($newTypesAttributes, $oldTypesAttributes);
+			
+			if (!empty($toDelete)) {
+				$sql->query('DELETE FROM #_wv16_user_values WHERE '.
+					'user_id = '.$this->id.' AND '.
+					'attribute_id IN ('.implode(',', $toDelete).')', '#_');
+			}
+			
+			foreach ($toAdd as $addID) {
+				$attr = _WV16_Attribute::getInstance($addID);
+				$sql->query('INSERT INTO '.WV_SQL::getPrefix().'wv16_user_values '.
+					'(user_id,attribute_id,value) VALUES ('.$this->id.','.$addID.','.
+					'"'.mysql_real_escape_string($attr->getDefaultValue()).'")');
+			}
+			
+			$this->attributes = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
+			$this->origTypeID = $this->typeID;
+		}
+	}
+	
+	public function delete() {
+		$sql = WV_SQL::getInstance();
+		$sql->query('DELETE FROM #_wv16_users WHERE id = '.$this->id, '#_');
+		$sql->query('DELETE FROM #_wv16_user_groups WHERE user_id = '.$this->id, '#_');
+		$sql->query('DELETE FROM #_wv16_user_values WHERE user_id = '.$this->id, '#_');
 	}
 	
 	public function getLogin() {
@@ -154,112 +261,6 @@ class _WV16_User {
 		}
 		
 		return $this->attributes;
-	}
-	
-	public static function register($login, $password, $userType = null) {
-		$sql = WV_SQL::getInstance();
-		
-		$password = trim($password);
-		$login    = trim($login);
-		$userType = _WV16::getIDForUserType($userType, true);
-		
-		if ($userType === null) $userType = _WV16::DEFAULT_USER_TYPE;
-		
-		if (!preg_match('#^[a-z0-9_.,;\#+-@]+$#i', $login)) {
-			throw new Exception('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
-		}
-		
-		if (strlen($password) < 6) {
-			throw new Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
-		}
-		
-		if ($sql->count('wv16_users','LOWER(login) = LOWER("'.mysql_real_escape_string($login).'")') != 0) {
-			throw new Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
-		}
-		
-		$registered = date('Y-m-d H:i:s');
-		
-		$sql->query(sprintf('INSERT INTO %swv16_users (login,'.
-			'password,registered,type_id) VALUES ("%s","","%s",%d)',
-			WV_SQL::getPrefix(),
-			mysql_real_escape_string($login),
-			$registered,
-			$userType
-		));
-		
-		$userID = $sql->lastID();
-		$pwhash = sha1($userID.$password.$registered);
-		
-		$sql->query(sprintf('UPDATE %swv16_users SET password = "%s" WHERE id = %d',
-			WV_SQL::getPrefix(),
-			$pwhash,
-			$userID
-		));
-		
-		$user = self::getInstance($userID);
-		$user->addGroup(_WV16_Group::GROUP_UNCONFIRMED);
-		
-		// Attribute und ihre Standardwerte übernehmen
-		
-		$attributes = WV16_Users::getAttributesForUserType($userType);
-		foreach ($attributes as $attr) {
-			$sql->query('INSERT INTO '.WV_SQL::getPrefix().'wv16_user_values '.
-				'(user_id,attribute_id,value) VALUES ('.$userID.','.$attr->getID().','.
-				'"'.mysql_real_escape_string($attr->getDefaultValue()).'")');
-		}
-		
-		return $user;
-	}
-	
-	public function update() {
-		$sql = WV_SQL::getInstance();
-		
-		if ($sql->count('wv16_users','LOWER(login) = LOWER("'.mysql_real_escape_string($this->login).'") AND id <> '.$this->id) != 0) {
-			throw new Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
-		}
-		
-		$sql->query(sprintf('UPDATE %swv16_users SET login = "%s", '.
-			'password = "%s", type_id = %d WHERE id = %d',
-			WV_SQL::getPrefix(),
-			mysql_real_escape_string($this->login),
-			$this->password,
-			$this->typeID,
-			$this->id
-		));
-		
-		if ($this->typeID != $this->origTypeID) {
-			$oldTypesAttributes = WV16_Users::getAttributesForUserType($this->origTypeID);
-			$newTypesAttributes = WV16_Users::getAttributesForUserType($this->typeID);
-			
-			foreach ($oldTypesAttributes as $idx => $attr) $oldTypesAttributes[$idx] = $attr->getID();
-			foreach ($newTypesAttributes as $idx => $attr) $newTypesAttributes[$idx] = $attr->getID();
-			
-			$toDelete = array_diff($oldTypesAttributes, $newTypesAttributes);
-			$toAdd    = array_diff($newTypesAttributes, $oldTypesAttributes);
-			
-			if (!empty($toDelete)) {
-				$sql->query('DELETE FROM #_wv16_user_values WHERE '.
-					'user_id = '.$this->id.' AND '.
-					'attribute_id IN ('.implode(',', $toDelete).')', '#_');
-			}
-			
-			foreach ($toAdd as $addID) {
-				$attr = _WV16_Attribute::getInstance($addID);
-				$sql->query('INSERT INTO '.WV_SQL::getPrefix().'wv16_user_values '.
-					'(user_id,attribute_id,value) VALUES ('.$this->id.','.$addID.','.
-					'"'.mysql_real_escape_string($attr->getDefaultValue()).'")');
-			}
-			
-			$this->attributes = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
-			$this->origTypeID = $this->typeID;
-		}
-	}
-	
-	public function delete() {
-		$sql = WV_SQL::getInstance();
-		$sql->query('DELETE FROM #_wv16_users WHERE id = '.$this->id, '#_');
-		$sql->query('DELETE FROM #_wv16_user_groups WHERE user_id = '.$this->id, '#_');
-		$sql->query('DELETE FROM #_wv16_user_values WHERE user_id = '.$this->id, '#_');
 	}
 	
 	public function isInGroup($group) {

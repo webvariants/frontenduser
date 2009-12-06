@@ -9,41 +9,40 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-$id   = rex_request('id', 'int');
-$func = rex_request('func', 'string');
+$id   = wv_request('id', 'int');
+$func = wv_request('func', 'string');
 $loop = 1;
 
 while ($loop) { --$loop; switch ($func) {
-#===========================================================
+#===============================================================================
 # Benutzer hinzufügen
-#===========================================================
+#===============================================================================
 case 'add':
 
 	$user = null;
 	include _WV16_PATH.'templates/users/backend.phtml';
 	break;
 
-#===========================================================
+#===============================================================================
 # Benutzer speichern
-#===========================================================
+#===============================================================================
 case 'do_add':
 
 	$user      = null;
-	$login     = trim(stripslashes(rex_post('login', 'string')));
-	$password1 = trim(stripslashes(rex_post('password', 'string')));
-	$password2 = trim(stripslashes(rex_post('password2', 'string')));
-	$userType  = rex_post('type', 'int');
-	$groups    = array();
-
-	if ( isset($_POST['groups']) && is_array($_POST['groups']) ) {
-		$groups = array_map('intval', $_POST['groups']);
-	}
+	$login     = wv_post('login', 'string');
+	$password1 = wv_post('password', 'string');
+	$password2 = wv_post('password2', 'string');
+	$userType  = wv_post('type', 'int');
+	$groups    = wv_postArray('groups', 'int');
 	
 	///////////////////////////////////////////////////////////////
 	// Passwort und Benutzertyp checken
 	
 	try {
-		if ($password1 != $password2) throw new Exception('Die beiden Passwörter sind nicht identisch.');
+		if ($password1 != $password2) {
+			throw new Exception('Die beiden Passwörter sind nicht identisch.');
+		}
+		
 		$userTypeObj = _WV16_UserType::getInstance($userType);
 	}
 	catch (Exception $e) {
@@ -60,7 +59,11 @@ case 'do_add':
 	
 	if ($valuesToStore === null) {
 		$errors = _WV16::getErrors();
-		foreach ($errors as $idx => $e) $errors[$idx] = $e['error'];
+		
+		foreach ($errors as $idx => $e) {
+			$errors[$idx] = $e['error'];
+		}
+		
 		$errormsg = implode('<br />', $errors);
 		$func     = 'add';
 		++$loop;
@@ -74,14 +77,19 @@ case 'do_add':
 		$user = _WV16_User::register($login, $password1, $userType);
 		
 		// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
+		
 		foreach ($valuesToStore as $value) {
 			$user->setAttribute($value['attribute'], $value['value']);
 		}
 		
 		// Standardmäßig ist der Benutzer nun in der Gruppe "noch nicht bestätigt".
 		// Wir sind aber im Backend und ändern das daher gleich.
+		
 		$user->removeAllGroups();
-		foreach ($groups as $group) $user->addGroup($group);
+		
+		foreach ($groups as $group) {
+			$user->addGroup($group);
+		}
 	}
 	catch (Exception $e) {
 		$errormsg = $e->getMessage();
@@ -90,22 +98,15 @@ case 'do_add':
 		continue;
 	}
 
-	WV2::success('Der Benutzer wurde erfolgreich angelegt.');
-
-	if (isset($_POST['apply'])) {
-		$id   = $user->getID();
-		$func = 'edit';
-		++$loop;
-		continue;
-	}
+	WV_Redaxo::success('Der Benutzer wurde erfolgreich angelegt.');
 
 	$func = '';
 	++$loop;
 	continue;
 
-#===========================================================
+#===============================================================================
 # Benutzer löschen
-#===========================================================
+#===============================================================================
 case 'delete':
 	
 	try {
@@ -123,18 +124,18 @@ case 'delete':
 	++$loop;
 	continue;
 
-#===========================================================
+#===============================================================================
 # Benutzer bearbeiten
-#===========================================================
+#===============================================================================
 case 'edit':
 
 	$user = _WV16_User::getInstance($id);
 	include _WV16_PATH.'templates/users/backend.phtml';
 	break;
 
-#===========================================================
+#===============================================================================
 # Metainformation speichern
-#===========================================================
+#===============================================================================
 case 'do_edit':
 
 	if (isset($_POST['delete'])) {
@@ -219,9 +220,9 @@ case 'do_edit':
 
 	// kein break;
 
-#===========================================================
+#===============================================================================
 # Registrierte Benutzer auflisten
-#===========================================================
+#===============================================================================
 default:
 
 	$offset  = abs(wv_get('offset', 'int', 0));
