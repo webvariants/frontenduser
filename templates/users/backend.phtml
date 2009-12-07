@@ -72,6 +72,15 @@ $groups = new WV_Form_CheckboxGroup('groups', 'Benutzergruppen', $assignedGroups
 $form->add($groups);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Buttons festlegen
+
+if ($user) {
+	$delete = new WV_Form_Button('submit', 'delete', 'Löschen');
+	$delete->setAttribute('onclick', 'return confirm("Sicher, dass dieser Benutzer gelöscht werden soll?")');
+	$form->setDeleteButton($delete);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Fertig!
 
 $form->setFocus('login');

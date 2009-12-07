@@ -9,6 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
+WV_Redaxo::addJavaScriptFile('developer_utils/js/jquery.tablednd.js');
 require $REX['INCLUDE_PATH'].'/layout/top.php';
 
 $subpages = array(
@@ -16,7 +17,7 @@ $subpages = array(
 //	array('groups',     'Gruppen'),
 	array('types',      'Benutzertypen'),
 	array('attributes', 'Attribute'),
-	array('settings',   'Einstellungen')
+//	array('settings',   'Einstellungen')
 );
 
 $subpageFiles = array(
@@ -24,7 +25,7 @@ $subpageFiles = array(
 //	'groups'     => 'groups',
 	'types'      => 'types',
 	'attributes' => 'attributes',
-	'settings'   => 'settings',
+//	'settings'   => 'settings',
 );
 
 rex_title('Benutzerverwaltung', $subpages);

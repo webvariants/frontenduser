@@ -1,36 +1,37 @@
-<p style="margin-bottom:1em">Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier legen Sie fest, welche
-Attribute es gibt und wie diese gestaltet werden sollen. Bitte beachten Sie, dass die Felder &quot;Benutzername&quot; und
-&quot;Passwort&quot; fest im System integriert sind und daher nicht geändert werden können.</p>
+<?
 
-<table class="rex-table" id="attrtable"><thead><tr>
-	<th class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=add"><img src="media/metainfo_plus.gif" alt="" title="Hinzufügen" /></a></th>
-	<th style="width:200px">Attributename</th>
-	<th style="width:150px">Feldtyp</th>
-	<th style="width:auto">Feldbezeichnung</th>
-</tr></thead><tbody><?php foreach ($data as $attr): ?><tr id="info<?= $attr->getID() ?>">
-	<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=edit&amp;id=<?= $attr->getID() ?>"><img src="media/metainfo.gif" alt="" title="Attribut bearbeiten" /></a></td>
-	<td><a href="index.php?page=frontenduser&amp;subpage=attributes&amp;func=edit&amp;id=<?= $attr->getID() ?>"><?= htmlspecialchars($attr->getName()) ?></a></td>
-	<td><?= htmlspecialchars(WV2::getDatatypeName($attr->getDatatype())) ?></td>
-	<td><?= htmlspecialchars($attr->getTitle()) ?></td>
-</tr><?php endforeach; if (empty($data)): ?><tr>
-	<td colspan="4">Es sind noch keine Attribute vorhanden.</td>
-</tr><?php endif; ?></tbody></table>
+WV_Redaxo::p(
+	'Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier '.
+	'legen Sie fest, welche Attribute es gibt und wie diese gestaltet werden sollen. '.
+	'Bitte beachten Sie, dass die Felder &quot;Benutzername&quot; und &quot;Passwort&quot; '.
+	'fest im System integriert sind und daher nicht geändert werden können.'
+);
 
-<?php if (count($data) <= 1) return; ?>
+$base  = 'index.php?page=frontenduser&amp;subpage=attributes&amp;func=';
+$id    = '<a href="'.$base.'add"><img src="media/metainfo_plus.gif" alt="" title="Hinzufügen" /></a>';
+$table = new WV_Table('attrtable');
+$table->addColumn(new WV_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new WV_Table_Column('Attributename'));
+$table->addColumn(new WV_Table_Column('Feldtyp'));
+$table->addColumn(new WV_Table_Column('Feldbezeichnung'));
 
-<script type="text/javascript">
-	var tableDnD = new TableDnD();
-	tableDnD.init(document.getElementById('attrtable'));
+$table->setIsEmpty(empty($data));
+$table->setEmptyNotice('Sie haben noch keine Attribute angelegt.');
 
-	wv16.oldPositions = [];
+$table->enableDragAndDrop(count($data) > 1);
+$table->setDragAndDropHandler('wv16.handleTableDrop');
 
-	<?php
-	foreach ($data as $attr) {
-		print 'wv16.oldPositions[\'attr'.$attr->getID().'\'] = '.$attr->getPosition().';';
-		print "\n\t";
-	}
+$table->renderHeader();
+
+foreach ($data as $attr) {
 	?>
+	<tr id="attr<?= $attr->getID() ?>">
+		<td class="rex-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="media/metainfo.gif" alt="" title="Attribut bearbeiten" /></a></td>
+		<td><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><?= wv_html($attr->getName()) ?></a></td>
+		<td><?= wv_html(WV_Datatype::getTitle($attr->getDatatypeID())) ?></td>
+		<td><?= wv_html($attr->getTitle()) ?></td>
+	</tr>
+	<?
+}
 
-	tableDnD.onDrop = wv16.tableDrop;
-	tableDnD.onDrag = wv16.tableDrag;
-</script>
+$table->renderFooter();

@@ -115,8 +115,8 @@ class _WV16_User
 			
 			foreach ($attributes as $attr) {
 				$sql->queryEx(
-					'INSERT INTO #_wv16_user_values (user_id,attribute_id,value) VALUES (?,?,?)',
-					array($userID, $attr->getID(), $attr->getDefault()), '#_'
+					'INSERT INTO #_wv16_user_values (user_id,attribute_id,set_id,value) VALUES (?,?,?,?)',
+					array($userID, $attr->getID(), 1, $attr->getDefault()), '#_'
 				);
 			}
 			

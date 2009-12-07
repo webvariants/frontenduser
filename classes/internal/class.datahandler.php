@@ -99,15 +99,16 @@ abstract class _WV16_DataHandler
 		
 		// Daten vorbereiten
 		
-		$value     = strval($value);
-		$attribute = _WV16::getIDForAttribute($attribute);
+		$value      = strval($value);
+		$attribute  = _WV16::getIDForAttribute($attribute);
+		$attributes = WV16_Users::getAttributesForUserType($user->getTypeID(), true);
 		
 		// Prüfen, ob das Attribut überhaupt zu dem aktuellen Benutzertyp gehört.
 		// Dazu reicht es, die Liste der geholten Attribute durchzugehen, da ein
 		// Benutzer immer alle Attribute hat, die zum Typ gehören (auch wenn sie
 		// mit ihrem jeweiligen Standardwert belegt sind).
 		
-		if (!in_array($attribute, array_keys($user->getValues()))) { // getValues() holt die Attribute, falls nötig!
+		if (!in_array($attribute, $attributes)) { // getValues() holt die Attribute, falls nötig!
 			return false;
 		}
 		
@@ -149,7 +150,10 @@ abstract class _WV16_DataHandler
 		$sql    = WV_SQLEx::getInstance();
 		$id     = $sql->saveFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
 		
-		return (int) $id;
+		// Die kleinste erlaubte ID ist 1. Wenn noch keine Werte vorhanden sein
+		// sollten, müssen wir dies hier dennoch sicherstellen.
+		
+		return $id == 0 ? 1 : (int) $id;
 	}
 	
 	/**
@@ -230,7 +234,7 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $userType   die ID / der Name des Artikeltyps
 	 * @return array             eine Liste von _WV16_Attribute-Objekten
 	 */
-	public static function getAttributesForUserType($userType)
+	public static function getAttributesForUserType($userType, $returnAsIDs = false)
 	{
 		if ($userType === -1) {
 			return self::getAllAttributes();
@@ -247,7 +251,7 @@ abstract class _WV16_DataHandler
 		$attributes = $sql->getArray('SELECT attribute_id FROM #_wv16_utype_attrib WHERE user_type = ?', $userType, '#_', $mode);
 		
 		foreach ($attributes as $id) {
-			$return[] = _WV16_Attribute::getInstance($id);
+			$return[] = $returnAsIDs ? $id : _WV16_Attribute::getInstance($id);
 		}
 		
 		return $return;
@@ -428,8 +432,7 @@ abstract class _WV16_DataHandler
 		
 		// Cache-Miss. Mist. Dann eben in die Datenbank...
 
-		#$sql1   = WV_SQLEx::getInstance();
-		$sql    = WV_SQLEx::getClone(); // clone $sql1;//WV_SQLEx::getInstance();
+		$sql    = WV_SQLEx::getClone();
 		$return = array();
 		$ids    = array();
 		$params = array($userID, $setID);

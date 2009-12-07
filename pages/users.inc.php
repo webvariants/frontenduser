@@ -144,6 +144,12 @@ case 'edit':
 #===============================================================================
 case 'do_edit':
 
+	if (isset($_POST['delete'])) {
+		$func = 'delete';
+		++$loop;
+		continue;
+	}
+
 	$user      = null;
 	$login     = wv_post('login', 'string');
 	$password1 = wv_post('password', 'string');
