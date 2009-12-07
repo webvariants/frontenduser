@@ -42,6 +42,10 @@ function getRexLinkButton($elementID, $value) {
 			WV2_Form::startElement('Zugriff-verweigert-Seite', 'LINK_access_denied_article', 'text');
 			print getRexLinkButton('access_denied_article', WV16_Users::getConfig('access_denied_article', 0));
 			WV2_Form::closeElement();
+			
+			WV2_Form::startElement('Passwort-vergessen-Seite', 'LINK_password_forgotten_article', 'text');
+			print getRexLinkButton('password_forgotten_article', WV16_Users::getConfig('password_forgotten_article', 0));
+			WV2_Form::closeElement();
 		?>
 		
 		</div>
@@ -102,6 +106,16 @@ function getRexLinkButton($elementID, $value) {
 					
 					WV2_Form::startElement('Text (Freischaltung)', 'activation_body_'.$id, 'textarea');
 					print '<textarea id="activation_body_'.$id.'" name="activation_body_'.$id.'" class="rex-form-text" rows="10" cols="50">'.htmlspecialchars(WV16_Users::getConfig('activation_body_'.$id, '')).'</textarea>';
+					WV2_Form::closeElement();
+					
+					//Text der Email, bei Passwort wiederherstellung
+					
+					WV2_Form::startElement('Betreff (PW Recovery)', 'password_recovery_subject_'.$id, 'text');
+					print '<input id="password_recovery_subject_'.$id.'" type="text" name="password_recovery_subject_'.$id.'" value="'.htmlspecialchars(WV16_Users::getConfig('password_recovery_subject_'.$id, '')).'" class="rex-form-text" />';
+					WV2_Form::closeElement();
+					
+					WV2_Form::startElement('Text (PW Recovery)', 'password_recovery_body_'.$id, 'textarea');
+					print '<textarea id="password_recovery_body_'.$id.'" name="password_recovery_body_'.$id.'" class="rex-form-text" rows="10" cols="50">'.htmlspecialchars(WV16_Users::getConfig('password_recovery_body_'.$id, '')).'</textarea>';
 					WV2_Form::closeElement();
 				?>
 				</div>

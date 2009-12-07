@@ -9,11 +9,12 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-class _WV16_UserValue {
-	private $serializedValue; ///< string        der noch serialisierte Wert
-	private $value;           ///< mixed         der vom Datentyp deserialisierte Wert
-	private $attribute;       ///< _WV2_MetaInfo die Metainformation
-	private $user;            ///< mixed         der Benutzer
+class _WV16_UserValue
+{
+	protected $serializedValue; ///< string          der noch serialisierte Wert
+	protected $value;           ///< mixed           der vom Datentyp deserialisierte Wert
+	protected $attribute;       ///< _WV16_Attribute das Attribut
+	protected $user;            ///< mixed           der Benutzer
 	
 	/**
 	 * Konstruktor
@@ -27,7 +28,8 @@ class _WV16_UserValue {
 	 * @param _WV2_MetaInfo $metainfo die Metainformation
 	 * @param mixed         $user     der dazugehörige Benutzer
 	 */
-	public function __construct($value, $attribute, $user) {
+	public function __construct($value, $attribute, $user)
+	{
 		$this->serializedValue = $value;
 		$this->attribute       = null;
 		$this->user            = null;
@@ -39,8 +41,8 @@ class _WV16_UserValue {
 			
 			// Wert über den Datentyp automatisch deserialisieren
 			
-			$this->value = _WV2::callForDatatype(
-				$this->attribute->getDatatype(),
+			$this->value = WV_Datatype::call(
+				$this->attribute->getDatatypeID(),
 				'deserializeValue',
 				array($value, $this->attribute->getParams()));
 		}
@@ -56,11 +58,8 @@ class _WV16_UserValue {
 	 * @return mixed  die entsprechende Eigenschaft
 	 */
 	public function getCLang()           { return $this->clang;           }
-	public function getObject()          { return $this->obj;             }
-	public function getArticle()         { return $this->getObject();     }
-	public function getCategory()        { return $this->getObject();     }
-	public function getMedium()          { return $this->getObject();     }
-	public function getMetaInfo()        { return $this->metainfo;        }
+	public function getUser()            { return $this->user;            }
+	public function getAttribute()       { return $this->attribute;       }
 	public function getSerializedValue() { return $this->serializedValue; }
 	public function getAttribute()       { return $this->attribute ? $this->attribute                : null; }
 	public function getAttributeID()     { return $this->attribute ? $this->attribute->getID()       : null; }
@@ -83,10 +82,11 @@ class _WV16_UserValue {
 	 * @param  int   $element  (optional) der gewünschte Index im Wert (falls Array)
 	 * @return mixed           der entsprechende Wert
 	 */
-	public function getValue($element = -1) {
-		if ( $element == -1 || !is_array($this->value) ) return $this->value;
-		if ( $element < 0 ) $element = 0;
-		if ( $element > count($this->value) ) $element = count($this->value) - 1;
+	public function getValue($element = -1)
+	{
+		if ($element == -1 || !is_array($this->value)) return $this->value;
+		if ($element < 0) $element = 0;
+		if ($element > count($this->value)) $element = count($this->value) - 1;
 		$values = array_values($this->value);
 		if (empty($values)) return null;
 		return $values[$element];
@@ -106,10 +106,11 @@ class _WV16_UserValue {
 	 * @param  int   $element  der gewünschte Index im Wert (falls Array)
 	 * @return mixed           der entsprechende Schlüsselwert
 	 */
-	public function getKey($element = 0) {
-		if ( !is_array($this->value) ) return $this->value;
-		if ( $element < 0 ) $element = 0;
-		if ( $element > count($this->value) ) $element = count($this->value) - 1;
+	public function getKey($element = 0)
+	{
+		if (!is_array($this->value)) return $this->value;
+		if ($element < 0) $element = 0;
+		if ($element > count($this->value)) $element = count($this->value) - 1;
 		$keys = array_keys($this->value);
 		if (empty($keys)) return null;
 		return $keys[$element];
@@ -123,10 +124,9 @@ class _WV16_UserValue {
 	 * 
 	 * @return array  Liste aller Schlüssel bzw. einelementige Liste mit dem einzigen Wert
 	 */
-	public function getKeys() {
-		if ( !is_array($this->value) ) return array($this->value);
+	public function getKeys()
+	{
+		if (!is_array($this->value)) return array($this->value);
 		return array_keys($this->value);
 	}
 }
-
-// EOF

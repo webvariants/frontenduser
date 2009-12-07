@@ -19,6 +19,7 @@ case 'save':
 	WV16_Users::setConfig('register_article',        rex_post('register_article', 'int', 0));
 	WV16_Users::setConfig('mail_validation_article', rex_post('mail_validation_article', 'int', 0));
 	WV16_Users::setConfig('access_denied_article',   rex_post('access_denied_article', 'int', 0));
+	WV16_Users::setConfig('password_forgotten_article',   rex_post('password_forgotten_article', 'int', 0));
 	
 	WV16_Users::setConfig('admin_name',   rex_post('admin_name', 'string', ''));
 	WV16_Users::setConfig('admin_mail',   rex_post('admin_mail', 'string', ''));
@@ -29,6 +30,9 @@ case 'save':
 		
 		WV16_Users::setConfig('activation_subject_'.$id, rex_post('activation_subject_'.$id, 'string', ''));
 		WV16_Users::setConfig('activation_body_'.$id, rex_post('activation_body_'.$id, 'string', ''));
+		
+		WV16_Users::setConfig('password_recovery_subject_'.$id, rex_post('password_recovery_subject_'.$id, 'string', ''));
+		WV16_Users::setConfig('password_recovery_body_'.$id, rex_post('password_recovery_body_'.$id, 'string', ''));
 	}
 
 	// kein break;

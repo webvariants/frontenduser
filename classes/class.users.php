@@ -9,7 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-abstract class WV16_Users extends _WV16_DataProvider
+abstract class WV16_Users extends _WV16_DataHandler
 {
 	const ANONYMOUS              = 0;
 	const ERR_USER_UNKNOWN       = 1;
@@ -113,30 +113,35 @@ abstract class WV16_Users extends _WV16_DataProvider
 		return null;
 	}
 	
-	public static function login($login, $password)
-	{
-		$sql      = WV_SQLEx::getInstance();
-		$password = trim($password);
-		$login    = trim($login);
-		$userdata = $sql->saveFetch('*', 'wv16_users', 'LOWER(login) = ?', strtolower($login));
+	public static function login($login, $password) {
+		$userObj = self::getUser($login);
 		
-		if (empty($userdata)) {
-			throw new Exception('User unknown', self::ERR_USER_UNKNOWN);
-		}
-		
-		if (sha1($userdata['id'].$password.$userdata['registered']) !== $userdata['password']) {
-			throw new Exception('invalid login', self::ERR_INVALID_LOGIN);
-		}
-		
-		$userObj = _WV16_User::getInstance($userdata['id']);
-		
-		if ($userObj->isInGroup(_WV16_Group::GROUP_ACTIVATED)) {
+		if ($userObj->isInGroup(_WV16_Group::GROUP_ACTIVATED) && self::checkPassword($userObj, $password)) {
 			self::loginUser($userObj);
 			return $userObj;
 		}
 		else {
 			throw new Exception('user not activated', self::ERR_USER_NOT_ACTIVATED);
 		}
+	}
+	
+	public static function getUser($login){
+		$sql 	= _WV_SQL::getInstance();
+		$login	= trim($login);
+		
+		$userdata = $sql->fetch('*', 'wv16_users', 'deleted = 0 AND LOWER(login) = LOWER("'.mysql_real_escape_string($login).'")');
+				
+		if (empty($userdata)) {
+			throw new Exception('User unknown', self::ERR_USER_UNKNOWN);
+		}
+		
+		return _WV16_User::getInstance((int) $userdata['id']);
+	}
+	
+	public static function checkPassword(_WV16_User $user, $password) {
+		$password = trim($password);
+
+		return sha1($user->getId().$password.$user->getRegistered()) === $user->getPasswordHash();
 	}
 	
 	public static function loginUser(WV16_User $user)
@@ -185,28 +190,29 @@ abstract class WV16_Users extends _WV16_DataProvider
 
 		$parentCategory = $isStartpage ? $objectID : $sql->saveFetch('re_id', 'article', 'id = ?', $objectID);
 		if ($parentCategory == 0) return false; // Artikel/Kategorie der obersten Ebene, da generell alle Objekte erlaubt sind, hören wir hier auf.
-		return self::isProtected($parentCategory, _WV16::TYPE_CATEGORY);
+		return self::isProtected(intval($parentCategory), _WV16::TYPE_CATEGORY);
 	}
 	
-	public static function protect($object, $loginArticleID, $accessDeniedArticleID, $objectType = null)
-	{
+	public static function protect($object, $objectType = null, $loginArticle = null, $accessDeniedArticle = null) {
 		if (self::isProtected($object, $objectType)) {
 			$user = WV16_Users::getCurrentUser();
-			$url  = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
+			$url  = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 			
-			if (!$user) {
+			/*if (!$user) {
 				rex_set_session('frontenduser_target_url', $url);
-				$loginArticle = OOArticle::getArticleById($loginArticleID);
-				header('Location: '.str_replace('&amp;', '&', $loginArticle->getUrl()));
+				if($loginArticle == null) $loginArticle = self::getConfig('login_article', '');
+				$loginArticle = OOArticle::getArticleById(WV2::getIDForArticle($loginArticle));
+				header('Location: '.$loginArticle->getUrl());
 				exit;
-			}
+			}*/
 			
 			$access = $user && $user->canAccess($object, $objectType);
 			
 			if (!$access) {
 				rex_set_session('frontenduser_target_url', $url);
-				$accessDeniedArticle = OOArticle::getArticleById($accessDeniedArticleID);
-				header('Location: '.str_replace('&amp;', '&', $accessDeniedArticle->getUrl()));
+				if($accessDeniedArticle == null) $accessDeniedArticle = self::getConfig('access_denied_article', '');
+				$accessDeniedArticle = OOArticle::getArticleById(self::getConfig('access_denied_article', ''));
+				header('Location: '.$accessDeniedArticle->getUrl());
 				exit;
 			}
 		}
@@ -244,5 +250,32 @@ abstract class WV16_Users extends _WV16_DataProvider
 		catch (Exception $e) {
 			return false;
 		}
+	}
+	
+	public static function verifyEmail($code) {
+		$code_db = WV4_Registry::get('wv16_code_db');
+		if ($code_db === null) return;
+		if (isset($code_db[$code])){
+			$user = self::getUser($code_db[$code]);
+			$user->addGroup(_WV16_Group::GROUP_CONFIRMED);
+			$user->removeGroup(_WV16_Group::GROUP_UNCONFIRMED);
+			self::removeVerificationCode($code);
+		} 
+	}
+		
+	public static function recoverPassword(_WV16_User $user, $email, $newpassword){
+		$email = trim($email);
+		$newpassword = trim($newpassword);
+		$orig_email = $user->getAttribute('email')->getValue();
+		
+		if($orig_email == $email){
+			$user->setPassword($newpassword);
+			$user->update();
+			WV16_Mailer::sendPasswordRecovery($user, $orig_email, $newpassword);		
+		}else throw new Exception('Wrong email address', 0);
+	}
+	
+	public static function isReadOnlySet($setID) {
+		return _WV16_User::isReadOnlySet($setID);
 	}
 }

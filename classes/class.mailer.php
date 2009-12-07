@@ -87,15 +87,36 @@ abstract class WV16_Mailer
 		return $mailer->Send();
 	}
 	
+	public static function sendPasswordRecovery(_WV16_User $user, $email, $password){
+		global $REX;
+				
+		$body = WV16_Users::getConfig('password_recovery_body_'.$REX['CUR_CLANG']);
+		
+		$body = str_replace(array('#PASSWORD#', '#PASSWORT#'), $password, $body);
+		$body = self::replaceAttributes($body, $user);
+						
+		$mailer = new PHPMailer();
+		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
+		$mailer->CharSet = 'utf-8';
+			
+		$mailer->Body    = $body;
+		$mailer->Subject = WV16_Users::getConfig('password_recovery_subject_'.$REX['CUR_CLANG']);
+		$mailer->AddAddress($email);
+			
+		return $mailer->Send();
+	}
+	
 	public static function replaceAttributes($body, $user)
 	{
 		$body = str_replace('#LOGIN#', $user->getLogin(), $body);
 		
 		foreach ($user->getAttributes() as $attr) {
-			$code = $attr->getAttributeName();
-			$code = preg_replace('#[^a-z0-9_]#i', '_', $code);
-			$code = strtoupper($code);
-			$body = str_replace('#'.$code.'#', $attr->getValue(), $body);
+			$code  = $attr->getAttributeName();
+			$code  = preg_replace('#[^a-z0-9_]#i', '_', $code);
+			$code  = strtoupper($code);
+			$value = $attr->getValue();
+			$value = is_array($value) ? implode(', ', $value) : $value;
+			$body  = str_replace('#'.$code.'#', $value, $body);
 		}
 		
 		return $body;

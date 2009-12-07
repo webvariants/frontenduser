@@ -74,24 +74,33 @@ case 'do_add':
 	// Attribute sind OK. Ab in die Datenbank damit.
 
 	try {
-		$user = _WV16_User::register($login, $password1, $userType);
+		$sql  = WV_SQLEx::getInstance();
+		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
+		$sql->beginTransaction();
+		
+		$user = _WV16_User::register($login, $password1, $userType, false);
 		
 		// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
 		
 		foreach ($valuesToStore as $value) {
-			$user->setAttribute($value['attribute'], $value['value']);
+			$user->setValue($value['attribute'], $value['value'], false);
 		}
 		
 		// Standardmäßig ist der Benutzer nun in der Gruppe "noch nicht bestätigt".
 		// Wir sind aber im Backend und ändern das daher gleich.
 		
-		$user->removeAllGroups();
+		$user->removeAllGroups(false);
 		
 		foreach ($groups as $group) {
-			$user->addGroup($group);
+			$user->addGroup($group, false);
 		}
+		
+		$sql->commit();
+		$sql->setErrorMode($mode);
 	}
 	catch (Exception $e) {
+		$sql->rollback();
 		$errormsg = $e->getMessage();
 		$func     = 'add';
 		++$loop;

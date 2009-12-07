@@ -1,12 +1,12 @@
 <?php
 /*
  * Copyright (c) 2009, webvariants GbR, http://www.webvariants.de
- * 
- * Diese Datei steht unter der MIT-Lizenz. Der Lizenztext befindet sich in der 
+ *
+ * Diese Datei steht unter der MIT-Lizenz. Der Lizenztext befindet sich in der
  * beiliegenden LICENSE Datei und unter:
- * 
+ *
  * http://www.opensource.org/licenses/mit-license.php
- * http://de.wikipedia.org/wiki/MIT-Lizenz 
+ * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
 if ($REX['SETUP'] || defined('_WV16_PATH')) return;
@@ -29,16 +29,17 @@ function _wv16_autoload($params)
 	$className = $params['subject'];
 	
 	static $classes = array(
-		'_WV16'              => 'internal/class.wv16.php',
-		'_WV16_Attribute'    => 'internal/class.wv16attribute.php',
-		'_WV16_UserType'     => 'internal/class.wv16usertype.php',
-		'_WV16_UserValue'    => 'internal/class.wv16uservalue.php',
-		'_WV16_Group'        => 'internal/class.wv16group.php',
-		'_WV16_DataProvider' => 'internal/class.wv16dataprovider.php',
-		'_WV16_User'         => 'internal/class.wv16user.php',
+		'_WV16'             => 'internal/class.frontenduser.php',
+		'_WV16_Attribute'   => 'internal/class.attribute.php',
+		'_WV16_UserType'    => 'internal/class.usertype.php',
+		'_WV16_UserValue'   => 'internal/class.uservalue.php',
+		'_WV16_Group'       => 'internal/class.group.php',
+		'_WV16_DataHandler' => 'internal/class.datahandler.php',
+		'_WV16_User'        => 'internal/class.user.php',
 		
-		'WV16_Users'  => 'class.wv16users.php',
-		'WV16_Mailer' => 'class.wv16mailer.php'
+		'WV16_Users'     => 'class.users.php',
+		'WV16_Mailer'    => 'class.mailer.php',
+		'WV16_Exception' => 'class.exception.php'
 	);
 	
 	if (isset($classes[$className])) {
@@ -51,7 +52,7 @@ rex_register_extension('__AUTOLOAD', '_wv16_autoload');
 
 // Initialisierungen
 
-require_once _WV16_PATH.'classes/internal/class.wv16extensions.php';
+require_once _WV16_PATH.'classes/internal/class.extensions.php';
 _WV16_Extensions::plugin();
 
 // Dateien rausschicken, die über FrontendUser geschützt sind.

@@ -1,0 +1,332 @@
+<?php
+/*
+ * Copyright (c) 2009, webvariants GbR, http://www.webvariants.de
+ *
+ * Diese Datei steht unter der MIT-Lizenz. Der Lizenztext befindet sich in der
+ * beiliegenden LICENSE Datei und unter:
+ *
+ * http://www.opensource.org/licenses/mit-license.php
+ * http://de.wikipedia.org/wiki/MIT-Lizenz
+ */
+
+class _WV16_UserType
+{
+	protected $id;          ///< int     die ID
+	protected $name;        ///< string  der interne Name
+	protected $title;       ///< string  der angezeigte Titel
+	protected $attributes;  ///< array   Liste von Attribut-IDs, die diesem Typ zugeordnet sind
+	protected $origAttributes;
+	
+	private static $instances = array();
+	
+	public static function getInstance($idOrName, $prefetchedData = array())
+	{
+		$id = self::getIDForName($idOrName);
+		
+		if (empty(self::$instances[$id])) {
+			self::$instances[$id] = new self($id, $prefetchedData);
+		}
+		
+		return self::$instances[$id];
+	}
+	
+	private function __construct($id, $prefetchedData = array())
+	{
+		$sql  = WV_SQLEx::getInstance();
+		$data = $prefetchedData ? $prefetchedData : $sql->saveFetch('*', 'wv16_utypes', 'id = ?', $id);
+		
+		if (!$data) {
+			throw new WV16_Exception('Der Benutzertyp #'.$id.' konnte nicht gefunden werden!');
+		}
+		
+		$this->id             = (int) $data['id'];
+		$this->name           = $data['name'];
+		$this->title          = $data['title'];
+		$this->attributes     = $sql->getArray('SELECT attribute_id FROM #_wv16_utype_attrib WHERE user_type = ?', $this->id, '#_');
+		$this->origAttributes = $this->attributes;
+	}
+	
+	public static function exists($typeID)
+	{
+		return WV_SQLEx::getInstance()->count('wv16_utypes', 'id = ?', (int) $typeID) == 1;
+	}
+	
+	/**
+	 * ID ermitteln
+	 *
+	 * Diese Methode ermittelt für einen internen Namen eines Artikeltyps die
+	 * dazughörige ID.
+	 *
+	 * @throws Exception     falls der interne Name nicht gefunden wurde
+	 * @param  string $name  der interne Name
+	 * @return int           die gefundene ID
+	 */
+	public static function getIDForName($name)
+	{
+		if (WV_String::isInteger($name)) {
+			return (int) $name;
+		}
+		
+		$id = WV_SQLEx::getInstance()->saveFetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
+		
+		if (!$id) {
+			throw new WV16_Exception('Der Benutzertyp "'.$name.'" konnte nicht gefunden werden!');
+		}
+		
+		return (int) $id;
+	}
+	
+	/**
+	 * Artikeltyp aktualisieren
+	 *
+	 * Diese Methode speichert und validiert alle Änderungen, die bisher mit den
+	 * set*-Methoden auf diesem Objekt durchgeführt wurden, persistent in der
+	 * Datenbank.
+	 *
+	 * @throws Exception  falls der interne Name bereits vergeben ist oder ein SQL-Fehler auftrat
+	 */
+	public function update($useTransaction = true)
+	{
+		$sql  = WV_SQLEx::getInstance();
+		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
+		try {
+			$sql->startTransaction($useTransaction);
+			
+			// Auf Eindeutigkeit des Namens prüfen
+			
+			if ($sql->count('wv16_utypes','LOWER(name) = ? AND id <> ?', array(strtolower($this->name), $this->id)) > 0) {
+				throw new WV_Input_Exception('Dieser interne Name ist bereits vergeben.');
+			}
+			
+			// Daten aktualisieren
+			
+			$query = 'UPDATE #_wv16_utypes SET name = ?, title = ? WHERE id = ?';
+			$sql->queryEx($query, array($this->name, $this->title, $this->id), '#_');
+			
+			// Zugeordnete Attribute aktualisieren
+			// TODO: Das können wir effizienter.
+			
+			$sql->queryEx('DELETE FROM #_wv16_utype_attrib WHERE user_type = ?', $this->id, '#_');
+			
+			foreach ($this->attributes as $aid) {
+				$sql->queryEx(
+					'INSERT INTO #_wv16_utype_attrib (user_type,attribute_id) VALUES (?,?)',
+					array($this->id, (int) $aid), '#_'
+				);
+			}
+			
+			// Nun löschen wir noch alle Attributwerte von allen Benutzern, die nicht
+			// mehr zu diesem Benutzertyp gehören. Dazu brauchen wir zuerst alle Benutzer,
+			// die diesen Benutzertyp besitzen.
+			
+			$users = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id = ?', $this->id, '#_');
+			
+			// Nun können wir diesen Benutzern die nicht mehr erlaubten Attribute wegnehmen.
+			
+			if (!empty($users)) {
+				$markers = WV_SQLEx::getMarkers(count($users));
+				$query   = 'DELETE FROM #_wv16_user_values WHERE user_id IN ('.$markers.')';
+				
+				if (empty($this->attributes)) {
+					$sql->queryEx($query, $users, '#_');
+				}
+				else {
+					$query .= ' AND attribute_id NOT IN ('.WV_SQLEx::getMarkers(count($this->attributes)).')';
+					$params = array_merge($users, $this->attributes);
+					
+					$sql->queryEx($query, $params, '#_');
+					
+					$params = null;
+				}
+			
+				// Falls mehr Attribute diesem Typ zugewiesen wurden, übernehmen wir den Standardwert
+				// dieser neuen Attribute in die dazugehörigen Benutzer.
+				
+				$newAttributes = array_diff($this->attributes, $this->origAttributes);
+				
+				// TODO: Das können wir besser.
+				
+				$params = $users;
+				array_unshift($users, 0, 0);
+				
+				foreach ($newAttributes as $attr) {
+					$attr = _WV16_Attribute::getInstance($attr);
+					
+					$params[0] = $attr->getID();
+					$params[1] = $attr->getDefault();
+					
+					$sql->queryEx(
+						'INSERT INTO #_wv16_user_values SELECT id,?,? FROM #_wv16_users WHERE id IN ('.$markers.')',
+						$params, '#_'
+					);
+					
+					$attr = null;
+				}
+				
+				$params  = null;
+				$markers = null;
+				$users   = null;
+			}
+			
+			$sql->doCommit($useTransaction);
+			$sql->setErrorMode($mode);
+			
+			$this->origAttributes = $this->attributes;
+		}
+		catch (Exception $e) {
+			$sql->cleanEndTransaction($useTransaction, $mode, $e, 'WV16_Exception');
+			return false;
+		}
+	}
+	
+	public static function create($name, $title, $attributes, $useTransaction = true)
+	{
+		$name  = trim($name);
+		$title = trim($title);
+		$sql   = WV_SQL::getInstance();
+		$mode  = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
+		try {
+			$sql->startTransaction($useTransaction);
+			
+			// Auf Eindeutigkeit des Namens prüfen
+			
+			if ($sql->count('wv16_utypes', 'LOWER(name) = ?', strtolower($name)) > 0) {
+				throw new WV_Input_Exception('Dieser interne Name ist bereits vergeben.');
+			}
+			
+			// Daten eintragen
+			
+			$query = 'INSERT INTO #_wv16_utypes (name,title) VALUES (?,?)';
+			$sql->queryEx($query, array($name, $title), '#_');
+			$id = $sql->lastID();
+			
+			// Zuordnungen zu den Metainfos erzeugen
+			// TODO: Das können wir besser.
+			
+			foreach ($attributes as $aid) {
+				$sql->queryEx(
+					'INSERT INTO #_wv16_utype_attrib (user_type,attribute_id) VALUES (?,?)',
+					array($id, (int) $aid), '#_'
+				);
+			}
+			
+			$sql->doCommit($useTransaction);
+			$sql->setErrorMode($mode);
+			
+			return self::getInstance($id);
+		}
+		catch (Exception $e) {
+			$sql->cleanEndTransaction($useTransaction, $mode, $e, 'WV16_Exception');
+			return null;
+		}
+	}
+	
+	/**
+	 * Artikeltyp löschen
+	 *
+	 * Diese Methode löscht einen Artikeltyp. Dabei werden alle Artikel, die ihm
+	 * zugewiesen waren, nun dem Standard-Artikeltyp zugewiesen. Dabei werden
+	 * ebenfalls die Metadatum, die nicht zum Standardtyp gehören, entfernt.
+	 *
+	 * @throws Exception  falls versucht wird, den Standardtyp zu löschen
+	 */
+	public function delete($useTransaction = true)
+	{
+		if ($this->id == _WV16::DEFAULT_USER_TYPE) {
+			throw new WV16_Exception('Der Standard-Benutzertyp kann nicht gelöscht werden!');
+		}
+		
+		$sql  = WV_SQL::getInstance();
+		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
+		try {
+			$sql->startTransaction($useTransaction);
+			
+			// Welche Attribute gehörten zu diesem Typ?
+			
+			$attrThisType    = WV16_Users::getAttributesForUserType($this->id);
+			$attrDefaultType = WV16_Users::getAttributesForUserType(_WV16::DEFAULT_USER_TYPE);
+			
+			foreach ($attrDefaultType as $idx => $attr) $attrDefaultType[$idx] = $attr->getID();
+			foreach ($attrThisType    as $idx => $attr) $attrThisType[$idx]    = $attr->getID();
+			
+			$attrToDelete = array_diff($attrDefaultType, $attrThisType);
+			$attrToDelete = array_map('intval', $attrToDelete);
+			$markers      = WV_SQLEx::getMarkers(count($attrToDelete));
+			
+			// Daten löschen
+			
+			$sql->queryEx('DELETE FROM #_wv16_utypes WHERE id = ?', $this->id, '#_');
+			$sql->queryEx('DELETE FROM #_wv16_utype_attrib WHERE user_type = ?', $this->id, '#_');
+			$sql->queryEx('UPDATE #_wv16_users SET type_id = ? WHERE type_id = ?', array(_WV16::DEFAULT_USER_TYPE, $this->id), '#_');
+			$sql->queryEx('DELETE FROM #_wv16_user_values WHERE attribute_id IN ('.$markers.')', $attrToDelete, '#_');
+			
+			$sql->doCommit($useTransaction);
+			$sql->setErrorMode($mode);
+			
+			$attrToDelete    = null;
+			$attrDefaultType = null;
+			$attrThisType    = null;
+			$markers         = null;
+			
+			return true;
+		}
+		catch (Exception $e) {
+			$sql->cleanEndTransaction($useTransaction, $mode, $e, 'WV16_Exception');
+			return false;
+		}
+	}
+	
+	/** @name Getter */
+	
+	/*@{*/
+	
+	/**
+	 * Getter
+	 *
+	 * Diese Methode gibt die gewünschte Eigenschaft ungefiltert zurück.
+	 *
+	 * @return mixed  die entsprechende Eigenschaft
+	 */
+	public function getID()           { return $this->id;         }
+	public function getName()         { return $this->name;       }
+	public function getTitle()        { return $this->title;      }
+	public function getAttributeIDs() { return $this->attributes; }
+	
+	public function getAttributes()
+	{
+		$return = array();
+		
+		foreach ($this->attributes as $id) {
+			$return[] = _WV16_Attribute::getInstance($id);
+		}
+		
+		return $return;
+	}
+	
+	/*@}*/
+	
+	/** @name Setter */
+	
+	/*@{*/
+	
+	/**
+	 * Setter
+	 *
+	 * Diese Methode setzt die Eigenschaft auf einen neuen Wert. Das Prüfen der
+	 * Eingabe übernimmt erst die update()-Method der jeweiligen Instanz.
+	 *
+	 * @param mixed $value  der neue Wert der Eigenschaft
+	 */
+	public function setName($value)  { $this->name  = trim($value); }
+	public function setTitle($value) { $this->title = trim($value); }
+	
+	public function setAttributes($value)
+	{
+		$this->attributes = array_unique(array_map('intval', wv_makeArray($value)));
+	}
+	
+	/* @} */
+}

@@ -9,7 +9,8 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-abstract class _WV16 {
+abstract class _WV16
+{
 	const DEFAULT_USER_TYPE = 1;
 	
 	const TYPE_ARTICLE  = 1;
@@ -18,60 +19,52 @@ abstract class _WV16 {
 	
 	private static $errors = null;
 	
-	// MetaInfoEx vorgaukeln, wir hätten alle Rechte, damit wir
-	// die dortigen Datentypen uneingeschränkt nutzen können.
-	public static function initPermissions($params) {
-		global $page;
-		if ($page != 'frontenduser') return;
-		
-		$rights = $params['subject'];
-		$rights['metainfo_complete'] = true;
-		$rights['metainfo_defaults'] = true;
-		$rights['articletype']       = true;
-		return $rights;
-	}
-	
-	public static function getIDForUserType($userType, $allowNull = true) {
+	public static function getIDForUserType($userType, $allowNull = true)
+	{
 		if ($userType === null && $allowNull) return null;
 		if ($userType instanceof _WV6_UserType) return $userType->getID();
-		if (is_string($userType)) return _WV16_UserType::getIDForName($userType);
-		return intval($userType);
+		if (WV_String::isInteger($userType)) return (int) $userType;
+		else return _WV16_UserType::getIDForName($userType);
 	}
 	
-	public static function getIDForUser($user, $allowNull = true) {
+	public static function getIDForUser($user, $allowNull = true)
+	{
 		if ($user === null && $allowNull) return null;
 		if ($user instanceof _WV16_User) return $user->getID();
-		return intval($user);
+		return (int) $user;
 	}
 	
-	public static function getIDForGroup($group, $allowNull = true) {
+	public static function getIDForGroup($group, $allowNull = true)
+	{
 		if ($group === null && $allowNull) return null;
 		if ($group instanceof _WV6_Group) return $group->getID();
-		return intval($group);
+		return (int) $group;
 	}
 	
-	public static function getIDForAttribute($attribute, $allowNull = true) {
+	public static function getIDForAttribute($attribute, $allowNull = true)
+	{
 		if ($attribute === null && $allowNull) return null; /* <- bedeutet im DataProvider: "gib mir alle Attribute!" */
-		if (WV2::isInteger($attribute)) return intval($attribute);
+		if (WV2::isInteger($attribute)) return (int) $attribute;
 		if (is_string($attribute)) return _WV16_Attribute::getIDForName($attribute);
-		if ($attribute instanceof _WV16_Attribute) return intval($attribute->getID());
-		if ($attribute instanceof _WV16_UserValue) return intval($attribute->getAttributeID());
+		if ($attribute instanceof _WV16_Attribute) return (int) $attribute->getID();
+		if ($attribute instanceof _WV16_UserValue) return (int) $attribute->getAttributeID();
 		trigger_error('Konnte Attribute-ID für "'.$attribute.'" ('.gettype($attribute).') nicht ermitteln!', E_USER_WARNING);
 		return -1;
 	}
 	
-	public static function identifyObject($object, $objectType = null) {
-		if ($object instanceof OOArticle)   return array(intval($object->getId()), _WV16::TYPE_ARTICLE);
-		if ($object instanceof rex_article) return array(intval($object->getValue('article_id')), _WV16::TYPE_ARTICLE);
-		if ($object instanceof OOCategory)  return array(intval($object->getId()), _WV16::TYPE_CATEGORY);
-		if ($object instanceof OOMedia)     return array(intval($object->getId()), _WV16::TYPE_MEDIUM);
+	public static function identifyObject($object, $objectType = null)
+	{
+		if ($object instanceof OOArticle)   return array((int) $object->getId(), self::TYPE_ARTICLE);
+		if ($object instanceof rex_article) return array((int) $object->getValue('article_id'), self::TYPE_ARTICLE);
+		if ($object instanceof OOCategory)  return array((int) $object->getId(), self::TYPE_CATEGORY);
+		if ($object instanceof OOMedia)     return array((int) $object->getId(), self::TYPE_MEDIUM);
 		
-		if ($objectType == _WV16::TYPE_ARTICLE)  return array(intval($object), $objectType);
-		if ($objectType == _WV16::TYPE_CATEGORY) return array(intval($object), $objectType);
-		if ($objectType == _WV16::TYPE_MEDIUM)   return array(intval($object), $objectType);
+		if ($objectType == self::TYPE_ARTICLE)  return array((int) $object, $objectType);
+		if ($objectType == self::TYPE_CATEGORY) return array((int) $object, $objectType);
+		if ($objectType == self::TYPE_MEDIUM)   return array((int) $object, $objectType);
 		
 		trigger_error('Konnte ID für "'.$object.'" ('.gettype($object).') nicht ermitteln!', E_USER_WARNING);
-		return array(-1, _WV16::TYPE_ARTICLE);
+		return array(-1, self::TYPE_ARTICLE);
 	}
 	
 	public static function serializeUserForm($userType)
@@ -138,8 +131,8 @@ abstract class _WV16 {
 	
 	public static function hasObjectRights($object, $objectType = null)
 	{
-		list($id, $type) = _WV16::identifyObject($object, $objectType);
-		return WV_SQL::getInstance()->count('wv16_rights', 'object_id = '.$id.' AND object_type = '.$type) > 0;
+		list($id, $type) = self::identifyObject($object, $objectType);
+		return WV_SQLEx::getInstance()->count('wv16_rights', 'object_id = ? AND object_type = ?', array($id, $type)) > 0;
 	}
 	
 	public static function getAttributesToDisplay($available, $assigned, $required)
