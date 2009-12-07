@@ -1,65 +1,50 @@
-<?php if ( isset($errormsg) ) WV2::error($errormsg); ?>
+<?
+if (!empty($errormsg)) {
+	WV_redaxo::error($errormsg);
+}
 
-<?php
-WV2_Form::display('4.2.0', '<div class="rex-addon-output-v2"><div id="rex-addon-editmode" class="rex-form">');
-WV2_Form::display('4.1.0', '<div class="rex-addon-editmode">');
-?>
+$form = new WV_Backend_Form('index.php', 'POST', 'Benutzertyp '.($func == 'add' ? 'erstellen' : 'bearbeiten'));
 
-<form action="index.php" method="post">
-	<fieldset>
-		<legend class="rex-lgnd">Benutzertyp <?php print $func == 'add' ? 'erstellen' : 'bearbeiten'; ?></legend>
+$form->addHiddenValue('page',    'frontenduser');
+$form->addHiddenValue('subpage', 'types');
+$form->addHiddenValue('func',     'do_'.$func);
+$form->addHiddenValue('id',       $type ? $type->getID() : '');
 
-		<div class="rex-fldst-wrppr rex-form-wrapper">
+////////////////////////////////////////////////////////////////////////////////
+// Normale Felder
 
-		<input type="hidden" name="page" value="frontenduser" />
-		<input type="hidden" name="subpage" value="types" />
-		<input type="hidden" name="func" value="do_<?= htmlspecialchars($func); ?>" />
-		<input type="hidden" name="id" value="<?= $type ? $type->getID() : ''; ?>" />
+$name  = new WV_Form_Input_Text('name', 'Interner Name', $type ? $type->getName() : '');
+$title = new WV_Form_Input_Text('title', 'Titel', $type ? $type->getTitle() : '');
 
-		<?php WV2_Form::startElement('Interner Name', 'name', 'text'); ?>
-		<input id="name" type="text" name="name" value="<?= $type ? htmlspecialchars($type->getName()) : '' ?>" class="rex-form-text" />
-		<span class="<?= WV2_Form::noticeClass(false) ?>">Über diesen Namen wird das Attribut programmseitig angsprochen.</span>
-		<?php WV2_Form::closeElement(); ?>
+$name->setHelpText('Über diesen Namen wird das Attribut programmseitig angsprochen.');
+$title->setHelpText('Der Titel wird innerhalb von Redaxo in allen Formularen angezeigt.');
 
-		<?php WV2_Form::startElement('Titel', 'title', 'text'); ?>
-		<input id="title" type="text" name="title" value="<?= $type ? htmlspecialchars($type->getTitle()) : '' ?>" class="rex-form-text" />
-		<span class="<?= WV2_Form::noticeClass(false) ?>">Der Titel wird innerhalb von Redaxo in allen Formularen angezeigt.</span>
-		<?php WV2_Form::closeElement(); ?>
+$form->addElements(array($name, $title));
 
-		<p class="headerLine">Die folgenden Attribute sind diesem Benutzertyp zugeordnet:</p>
+////////////////////////////////////////////////////////////////////////////////
+// Zugehörige Attribute
 
-		<table class="articleTypes"><tr>
-			<?php
-			
-			$assignedAttributes  = $type ? $type->getAttributeIDs() : array();
-			$availableAttributes = WV16_Users::getAttributesForUserType(-1);
+$form->beginFieldset('Die folgenden Attribute sind diesem Benutzertyp zugeordnet:');
 
-			foreach ($availableAttributes as $index => $attr) {
-				$checked = in_array($attr->getId(), $assignedAttributes) ? ' checked="checked"' : '';
+$assignedAttributes  = $type ? $type->getAttributeIDs() : array();
+$availableAttributes = WV16_Users::getAttributesForUserType(-1);
+$attributes          = array();
 
-				if ($index > 0 && $index % 3 == 0) print '</tr><tr>';
-				print '<td>';
-				print '<input class="checkbox" type="checkbox" name="attributes[]"'.$checked.' value="'.$attr->getID().'" /> ';
-				print htmlspecialchars($attr->getTitle());
-				print '</td>';
-			}
+foreach ($availableAttributes as $attr) {
+	$attributes[$attr->getID()] = $attr->getTitle();
+}
 
-			?>
-		</tr></table>
+$attributes = new WV_Form_CheckboxGroup('attributes', 'Attribute', $assignedAttributes, $attributes);
+$form->add($attributes);
 
-		<?php WV2_Form::buttonLine() ?>
-			<input type="submit" name="save"   class="rex-sbmt rex-form-submit" value="Speichern" />
-			<input type="submit" name="apply"  class="rex-sbmt rex-form-submit" value="Übernehmen" />
-			<?php if ($func == 'edit'): ?>
-			<input type="submit" name="delete" class="rex-sbmt rex-form-submit" onclick="return confirm('Löschen?');" value="Löschen" />
-			<?php endif; ?>
-		<?php WV2_Form::closeButtonLine() ?>
+////////////////////////////////////////////////////////////////////////////////
+// Buttons festlegen
 
-	  </div>
-	</fieldset>
-</form>
+if ($type && $type->getID() != _WV16::DEFAULT_USER_TYPE) {
+	$delete = new WV_Form_Button('submit', 'delete', 'Löschen');
+	$delete->setAttribute('onclick', 'return confirm("Sicher, dass dieser Benutzertyp gelöscht werden soll?")');
+	$form->setDeleteButton($delete);
+}
 
-<?php
-WV2_Form::display('4.2.0', '</div></div>');
-WV2_Form::display('4.1.0', '</div>');
-?>
+$form->setFocus('name');
+$form->render();

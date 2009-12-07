@@ -96,7 +96,7 @@ class _WV16_UserType
 			// Auf Eindeutigkeit des Namens prüfen
 			
 			if ($sql->count('wv16_utypes','LOWER(name) = ? AND id <> ?', array(strtolower($this->name), $this->id)) > 0) {
-				throw new WV_Input_Exception('Dieser interne Name ist bereits vergeben.');
+				throw new WV_InputException('Dieser interne Name ist bereits vergeben.');
 			}
 			
 			// Daten aktualisieren
@@ -125,19 +125,15 @@ class _WV16_UserType
 			// Nun können wir diesen Benutzern die nicht mehr erlaubten Attribute wegnehmen.
 			
 			if (!empty($users)) {
-				$markers = WV_SQLEx::getMarkers(count($users));
-				$query   = 'DELETE FROM #_wv16_user_values WHERE user_id IN ('.$markers.')';
+				$users = implode(',', $users);
+				$query = 'DELETE FROM #_wv16_user_values WHERE user_id IN ('.$users.')';
 				
 				if (empty($this->attributes)) {
-					$sql->queryEx($query, $users, '#_');
+					$sql->queryEx($query, array(), '#_');
 				}
 				else {
-					$query .= ' AND attribute_id NOT IN ('.WV_SQLEx::getMarkers(count($this->attributes)).')';
-					$params = array_merge($users, $this->attributes);
-					
-					$sql->queryEx($query, $params, '#_');
-					
-					$params = null;
+					$query .= ' AND attribute_id NOT IN ('.implode(',', $this->attributes).')';
+					$sql->queryEx($query, array(), '#_');
 				}
 			
 				// Falls mehr Attribute diesem Typ zugewiesen wurden, übernehmen wir den Standardwert
@@ -147,26 +143,16 @@ class _WV16_UserType
 				
 				// TODO: Das können wir besser.
 				
-				$params = $users;
-				array_unshift($users, 0, 0);
-				
 				foreach ($newAttributes as $attr) {
 					$attr = _WV16_Attribute::getInstance($attr);
 					
-					$params[0] = $attr->getID();
-					$params[1] = $attr->getDefault();
-					
 					$sql->queryEx(
-						'INSERT INTO #_wv16_user_values SELECT id,?,? FROM #_wv16_users WHERE id IN ('.$markers.')',
-						$params, '#_'
+						'INSERT INTO #_wv16_user_values SELECT id,?,? FROM #_wv16_users WHERE id IN ('.$users.')',
+						array($attr->getID(), $attr->getDefault()), '#_'
 					);
 					
 					$attr = null;
 				}
-				
-				$params  = null;
-				$markers = null;
-				$users   = null;
 			}
 			
 			$sql->doCommit($useTransaction);
@@ -184,16 +170,24 @@ class _WV16_UserType
 	{
 		$name  = trim($name);
 		$title = trim($title);
-		$sql   = WV_SQL::getInstance();
+		$sql   = WV_SQLEx::getInstance();
 		$mode  = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
 		
 		try {
 			$sql->startTransaction($useTransaction);
 			
+			if (empty($name)) {
+				throw new WV_InputException('Der Name muss angegeben werden!');
+			}
+			
+			if (empty($title)) {
+				throw new WV_InputException('Der Titel muss angegeben werden!');
+			}
+			
 			// Auf Eindeutigkeit des Namens prüfen
 			
 			if ($sql->count('wv16_utypes', 'LOWER(name) = ?', strtolower($name)) > 0) {
-				throw new WV_Input_Exception('Dieser interne Name ist bereits vergeben.');
+				throw new WV_InputException('Dieser interne Name ist bereits vergeben.');
 			}
 			
 			// Daten eintragen
@@ -238,7 +232,7 @@ class _WV16_UserType
 			throw new WV16_Exception('Der Standard-Benutzertyp kann nicht gelöscht werden!');
 		}
 		
-		$sql  = WV_SQL::getInstance();
+		$sql  = WV_SQLEx::getInstance();
 		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
 		
 		try {
@@ -252,16 +246,18 @@ class _WV16_UserType
 			foreach ($attrDefaultType as $idx => $attr) $attrDefaultType[$idx] = $attr->getID();
 			foreach ($attrThisType    as $idx => $attr) $attrThisType[$idx]    = $attr->getID();
 			
-			$attrToDelete = array_diff($attrDefaultType, $attrThisType);
+			$attrToDelete = array_diff($attrThisType, $attrDefaultType);
 			$attrToDelete = array_map('intval', $attrToDelete);
-			$markers      = WV_SQLEx::getMarkers(count($attrToDelete));
 			
 			// Daten löschen
 			
 			$sql->queryEx('DELETE FROM #_wv16_utypes WHERE id = ?', $this->id, '#_');
 			$sql->queryEx('DELETE FROM #_wv16_utype_attrib WHERE user_type = ?', $this->id, '#_');
 			$sql->queryEx('UPDATE #_wv16_users SET type_id = ? WHERE type_id = ?', array(_WV16::DEFAULT_USER_TYPE, $this->id), '#_');
-			$sql->queryEx('DELETE FROM #_wv16_user_values WHERE attribute_id IN ('.$markers.')', $attrToDelete, '#_');
+			
+			if (!empty($attrToDelete)) {
+				$sql->queryEx('DELETE FROM #_wv16_user_values WHERE attribute_id IN ('.implode(',', $attrToDelete).')', array(), '#_');
+			}
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);

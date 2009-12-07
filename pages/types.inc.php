@@ -9,17 +9,17 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-$id   = rex_request('id', 'int');
-$func = rex_request('func', 'string');
+$id   = wv_request('id', 'int');
+$func = wv_request('func', 'string');
 $loop = 1;
 
 while ($loop) { --$loop; switch ($func) {
-#===========================================================
+#===============================================================================
 # Benutzertyp verschieben
-#===========================================================
+#===============================================================================
 case 'shift':
 
-	$position = rex_get('position', 'int');
+	$position = wv_get('position', 'int');
 
 	try {
 		$attribute = _WV16_Attribute::getInstance($id);
@@ -29,31 +29,27 @@ case 'shift':
 		// pass..
 	}
 
-	while (ob_get_level()) ob_end_clean();
+	WV_Redaxo::clearOutput();
 	die;
 
-#===========================================================
+#===============================================================================
 # Benutzertyp hinzufügen
-#===========================================================
+#===============================================================================
 case 'add':
 
 	$type = null;
 	include _WV16_PATH.'templates/types/backend.phtml';
 	break;
 
-#===========================================================
+#===============================================================================
 # Benutzertyp speichern
-#===========================================================
+#===============================================================================
 case 'do_add':
 
 	$type       = null;
-	$name       = stripslashes(rex_request('name',  'string'));
-	$title      = stripslashes(rex_request('title', 'string'));
-	$attributes = array();
-
-	if (isset($_POST['attributes']) && is_array($_POST['attributes'])) {
-		$attributes = array_map('intval', $_POST['attributes']);
-	}
+	$name       = wv_post('name',  'string');
+	$title      = wv_post('title', 'string');
+	$attributes = wv_postArray('attributes', 'int');
 
 	try {
 		$type = _WV16_UserType::create($name, $title, $attributes);
@@ -65,22 +61,15 @@ case 'do_add':
 		continue;
 	}
 
-	WV2::success('Der Benutzertyp wurde erfolgreich gespeichert.');
-
-	if (isset($_POST['apply'])) {
-		$id   = $type->getID();
-		$func = 'edit';
-		++$loop;
-		continue;
-	}
+	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	$func = '';
 	++$loop;
 	continue;
 
-#===========================================================
+#===============================================================================
 # Benutzertyp löschen
-#===========================================================
+#===============================================================================
 case 'delete':
 
 	try {
@@ -98,18 +87,18 @@ case 'delete':
 	++$loop;
 	continue;
 
-#===========================================================
+#===============================================================================
 # Benutzertyp bearbeiten
-#===========================================================
+#===============================================================================
 case 'edit':
 
 	$type = _WV16_UserType::getInstance($id);
 	include _WV16_PATH.'templates/types/backend.phtml';
 	break;
 
-#===========================================================
+#===============================================================================
 # Benutzertyp speichern
-#===========================================================
+#===============================================================================
 case 'do_edit':
 
 	if (isset($_POST['delete'])) {
@@ -118,15 +107,11 @@ case 'do_edit':
 		continue;
 	}
 
-	$confirmed  = (bool) rex_post('confirmed', 'int', 0);
+	$confirmed  = wv_post('confirmed', 'boolean', false);
 	$type       = null;
-	$name       = stripslashes(rex_request('name',  'string'));
-	$title      = stripslashes(rex_request('title', 'string'));
-	$attributes = array();
-
-	if (isset($_POST['attributes']) && is_array($_POST['attributes'])) {
-		$attributes = array_map('intval', $_POST['attributes']);
-	}
+	$name       = wv_post('name',  'string');
+	$title      = wv_post('title', 'string');
+	$attributes = wv_postArray('attributes', 'int');
 	
 	try {
 		$type = _WV16_UserType::getInstance($id);
@@ -155,6 +140,7 @@ case 'do_edit':
 	*/
 
 	try {
+		
 		$type->setName($name);
 		$type->setTitle($title);
 		$type->setAttributes($attributes);
@@ -167,19 +153,13 @@ case 'do_edit':
 		continue;
 	}
 
-	WV2::success('Der Benutzertyp wurde erfolgreich gespeichert.');
-
-	if (isset($_POST['apply'])) {
-		$func = 'edit';
-		++$loop;
-		continue;
-	}
+	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	// kein break;
 
-#===========================================================
+#===============================================================================
 # Vorhandene Benutzertypen anzeigen
-#===========================================================
+#===============================================================================
 default:
 
 	$data = WV16_Users::getAllUserTypes();
