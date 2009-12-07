@@ -107,7 +107,7 @@ abstract class _WV16_DataHandler
 		// Benutzer immer alle Attribute hat, die zum Typ gehören (auch wenn sie
 		// mit ihrem jeweiligen Standardwert belegt sind).
 		
-		if (!in_array($attribute, array_keys($user->getValues()))) { // getAttributes() holt die Attribute, falls nötig!
+		if (!in_array($attribute, array_keys($user->getValues()))) { // getValues() holt die Attribute, falls nötig!
 			return false;
 		}
 		
@@ -127,7 +127,7 @@ abstract class _WV16_DataHandler
 			// nun noch den Cache aktualisieren
 			
 			$date = new _WV16_UserValue($value, $attribute, $user);
-			self::cacheData($date, $user->getId(), $user->getSetId());
+			self::cacheData($date, $user->getID(), $user->getSetID());
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
@@ -428,7 +428,8 @@ abstract class _WV16_DataHandler
 		
 		// Cache-Miss. Mist. Dann eben in die Datenbank...
 
-		$sql    = clone WV_SQLEx::getInstance();
+		#$sql1   = WV_SQLEx::getInstance();
+		$sql    = WV_SQLEx::getClone(); // clone $sql1;//WV_SQLEx::getInstance();
 		$return = array();
 		$ids    = array();
 		$params = array($userID, $setID);
@@ -441,7 +442,7 @@ abstract class _WV16_DataHandler
 			$params[] = $attribute;
 		}
 		
-		$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
+		$sql->queryEx($query, $params, '#_', false, WV_SQLEx::RETURN_FALSE);
 
 		foreach ($sql as $row) {
 			// Daten holen

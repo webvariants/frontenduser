@@ -39,9 +39,9 @@ abstract class WV16_Users extends _WV16_DataHandler
 		// http://dev.mysql.com/doc/refman/5.0/en/select.html
 		
 		$max   = $max === -1 ? 18446744073709551615 : abs((int) $max);
-		$query = 'SELECT id FROM #_wv16_users WHERE 1 ORDER BY '.$orderBy.' '.$direction.' LIMIT ?,?';
+		$query = 'SELECT id FROM #_wv16_users WHERE 1 ORDER BY '.$orderBy.' '.$direction.' LIMIT '.$offset.','.$max;
 		
-		$sql->queryEx($query, array($offset, $max), '#_');
+		$sql->queryEx($query, array(), '#_');
 		
 		foreach ($sql as $row) {
 			$users[$row['id']] = _WV16_User::getInstance($row['id']);
@@ -64,9 +64,9 @@ abstract class WV16_Users extends _WV16_DataHandler
 		$query = 'SELECT id '.
 			'FROM #_wv16_users u '.
 			'LEFT JOIN #_wv16_user_groups ug ON u.id = ug.user_id '.
-			'WHERE group_id = ? ORDER BY '.$orderBy.' '.$direction.' LIMIT ?,?';
+			'WHERE group_id = ? ORDER BY '.$orderBy.' '.$direction.' LIMIT '.$offset.','.$max;
 		
-		$sql->queryEx($query, array($group, $offset, $max), '#_');
+		$sql->queryEx($query, $group, '#_');
 		
 		foreach ($sql as $row) {
 			$users[$row['id']] = _WV16_User::getInstance($row['id']);
@@ -196,7 +196,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 	public static function protect($object, $objectType = null, $loginArticle = null, $accessDeniedArticle = null) {
 		if (self::isProtected($object, $objectType)) {
 			$user = WV16_Users::getCurrentUser();
-			$url  = 'http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+			$url  = 'http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
 			
 			/*if (!$user) {
 				rex_set_session('frontenduser_target_url', $url);

@@ -26,7 +26,7 @@ foreach ($users as $user) {
 		?></td>
 		<td><?= wv_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered()))) ?></td>
 	</tr>
-<?
+	<?
 }
 
 $table->renderFooter();

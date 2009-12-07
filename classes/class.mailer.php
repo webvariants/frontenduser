@@ -11,7 +11,6 @@
 
 abstract class WV16_Mailer
 {
-	
 	public static function sendConfirmationRequest($user, $email, $name)
 	{
 		$clang = WV_Redaxo::clang();
@@ -31,7 +30,7 @@ abstract class WV16_Mailer
 			substr(Utils::getAbsoluteURLBase(true), 0, -1).$link,
 			$body
 		);
-		$body = self::replaceAttributes($body, $user);
+		$body = self::replaceValues($body, $user);
 		
 		// Mail verschicken
 		
@@ -50,7 +49,7 @@ abstract class WV16_Mailer
 	public static function reportNewUserToAdmin($user)
 	{
 		$body = "Hallo,\n\nder Nutzer #LOGIN# hat sich soeben\nauf der Website ".Utils::getAbsoluteURLBase(true)." angemeldet.\n\n";
-		$body = self::replaceAttributes($body, $user);
+		$body = self::replaceValues($body, $user);
 		
 		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
 		$mailer      = new PHPMailer();
@@ -72,9 +71,9 @@ abstract class WV16_Mailer
 		$body    = WV16_Users::getConfig('activation_body_'.$clang);
 		$subject = WV16_Users::getConfig('activation_subject_'.$clang);
 		
-		$to      = self::replaceAttributes($to, $user);
-		$body    = self::replaceAttributes($body, $user);
-		$subject = self::replaceAttributes($subject, $user);
+		$to      = self::replaceValues($to, $user);
+		$body    = self::replaceValues($body, $user);
+		$subject = self::replaceValues($subject, $user);
 		
 		$mailer = new PHPMailer();
 		
@@ -87,13 +86,14 @@ abstract class WV16_Mailer
 		return $mailer->Send();
 	}
 	
-	public static function sendPasswordRecovery(_WV16_User $user, $email, $password){
+	public static function sendPasswordRecovery(_WV16_User $user, $email, $password)
+	{
 		global $REX;
 				
 		$body = WV16_Users::getConfig('password_recovery_body_'.$REX['CUR_CLANG']);
 		
 		$body = str_replace(array('#PASSWORD#', '#PASSWORT#'), $password, $body);
-		$body = self::replaceAttributes($body, $user);
+		$body = self::replaceValues($body, $user);
 						
 		$mailer = new PHPMailer();
 		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
@@ -106,11 +106,11 @@ abstract class WV16_Mailer
 		return $mailer->Send();
 	}
 	
-	public static function replaceAttributes($body, $user)
+	public static function replaceValues($body, $user)
 	{
 		$body = str_replace('#LOGIN#', $user->getLogin(), $body);
 		
-		foreach ($user->getAttributes() as $attr) {
+		foreach ($user->getValues() as $attr) {
 			$code  = $attr->getAttributeName();
 			$code  = preg_replace('#[^a-z0-9_]#i', '_', $code);
 			$code  = strtoupper($code);

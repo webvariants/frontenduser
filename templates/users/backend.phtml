@@ -34,15 +34,22 @@ $form->addElements(array($login, $password1, $password2, $type));
 
 $form->beginFieldset('Attribute für den aktuellen Benutzertyp');
 
-$requiredInfos = WV16_Users::getAttributesForUserType($user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE);
-$assignedData  = $user ? $user->getAttributes() : array();
+$userType      = $user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE;
+$requiredInfos = WV16_Users::getAttributesForUserType($userType);
+$assignedData  = $user ? $user->getValues() : array();
 $dataToDisplay = _WV16::getAttributesToDisplay(WV16_Users::getAllAttributes(), $assignedData, $requiredInfos);
-$attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : array();
+$attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : $requiredInfos;
+$attributeIDs  = array();
+
+foreach ($attributes as $a) {
+	$attributeIDs[] = $a->getID();
+}
 
 foreach ($dataToDisplay as $data) {
 	$value      = !empty($data['data']) ? $data['data']->getValue() : null;
 	$datatypeID = $data['attribute']->getDatatypeID();
-	$parameters = array($form, $value, false, $data['attribute']);
+	$hidden     = !in_array($data['attribute']->getID(), $attributeIDs);
+	$parameters = array($form, $value, $hidden, $data['attribute']);
 	
 	WV_Datatype::call($datatypeID, 'renderAsFormElement', $parameters);
 }
@@ -61,13 +68,13 @@ foreach ($availableGroups as $index => $group) {
 }
 
 $groups = new WV_Form_CheckboxGroup('groups', 'Benutzergruppen', $assignedGroups, $groups);
-$groups->setMultiple(false);
 
 $form->add($groups);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fertig!
 
+$form->setFocus('login');
 $form->render();
 
 ?>

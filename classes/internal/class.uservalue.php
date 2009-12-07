@@ -59,7 +59,6 @@ class _WV16_UserValue
 	 */
 	public function getCLang()           { return $this->clang;           }
 	public function getUser()            { return $this->user;            }
-	public function getAttribute()       { return $this->attribute;       }
 	public function getSerializedValue() { return $this->serializedValue; }
 	public function getAttribute()       { return $this->attribute ? $this->attribute                : null; }
 	public function getAttributeID()     { return $this->attribute ? $this->attribute->getID()       : null; }

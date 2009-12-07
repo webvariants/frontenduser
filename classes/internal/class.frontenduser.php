@@ -44,7 +44,7 @@ abstract class _WV16
 	public static function getIDForAttribute($attribute, $allowNull = true)
 	{
 		if ($attribute === null && $allowNull) return null; /* <- bedeutet im DataProvider: "gib mir alle Attribute!" */
-		if (WV2::isInteger($attribute)) return (int) $attribute;
+		if (WV_String::isInteger($attribute)) return (int) $attribute;
 		if (is_string($attribute)) return _WV16_Attribute::getIDForName($attribute);
 		if ($attribute instanceof _WV16_Attribute) return (int) $attribute->getID();
 		if ($attribute instanceof _WV16_UserValue) return (int) $attribute->getAttributeID();

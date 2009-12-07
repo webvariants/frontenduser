@@ -123,10 +123,7 @@ case 'delete':
 		$user->delete();
 	}
 	catch (Exception $e) {
-		$errormsg = $e->getMessage();
-		$func     = 'edit';
-		++$loop;
-		continue;
+		WV_Redaxo::error($e->getMessage());
 	}
 
 	$func = '';
@@ -143,37 +140,35 @@ case 'edit':
 	break;
 
 #===============================================================================
-# Metainformation speichern
+# Benutzer speichern
 #===============================================================================
 case 'do_edit':
 
-	if (isset($_POST['delete'])) {
-		$func = 'delete';
-		++$loop;
-		continue;
-	}
-
 	$user      = null;
-	$login     = trim(stripslashes(rex_post('login', 'string')));
-	$password1 = trim(stripslashes(rex_post('password', 'string')));
-	$password2 = trim(stripslashes(rex_post('password2', 'string')));
-	$userType  = rex_post('type', 'int');
-	$groups    = array();
-
-	if ( isset($_POST['groups']) && is_array($_POST['groups']) ) {
-		$groups = array_map('intval', $_POST['groups']);
-	}
+	$login     = wv_post('login', 'string');
+	$password1 = wv_post('password', 'string');
+	$password2 = wv_post('password2', 'string');
+	$userType  = wv_post('type', 'int');
+	$groups    = wv_postArray('groups', 'int');
 	
 	///////////////////////////////////////////////////////////////
 	// Passwort und Benutzertyp checken
 	
 	try {
-		if ($password1 && $password1 != $password2) throw new Exception('Die beiden Passwörter sind nicht identisch.');
+		// Wir initialisieren das Objekt jetzt schon, damit wir im catch-Block
+		// direkt ein edit-Formular anbieten können.
+		
+		$user = _WV16_User::getInstance($id);
+		
+		if ($password1 && $password1 != $password2) {
+			throw new WV_Input_Exception('Die beiden Passwörter sind nicht identisch.');
+		}
+		
 		$userTypeObj = _WV16_UserType::getInstance($userType);
 	}
 	catch (Exception $e) {
 		$errormsg = $e->getMessage();
-		$func     = 'add';
+		$func     = 'edit';
 		++$loop;
 		continue;
 	}
@@ -185,47 +180,73 @@ case 'do_edit':
 	
 	if ($valuesToStore === null) {
 		$errors = _WV16::getErrors();
-		foreach ($errors as $idx => $e) $errors[$idx] = $e['error'];
+		
+		foreach ($errors as $idx => $e) {
+			$errors[$idx] = $e['error'];
+		}
+		
 		$errormsg = implode('<br />', $errors);
 		$func     = 'edit';
 		++$loop;
 		continue;
 	}
 	
+	$wasActivated = $user->wasEverActivated();
+	
 	///////////////////////////////////////////////////////////////
 	// Attribute sind OK. Ab in die Datenbank damit.
 
 	try {
-		$user = _WV16_User::getInstance($id);
+		$sql  = WV_SQLEx::getInstance();
+		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
+		$sql->beginTransaction();
+		
 		$user->setUserType($userType); // löscht automatisch alle überhängenden Attribute
 		$user->setLogin($login);
-		if ($password1) $user->setPassword($password1);
-		$user->update();
+		
+		if (!empty($password1)) {
+			$user->setPassword($password1);
+		}
+		
+		$user->update(false);
 		
 		foreach ($valuesToStore as $value) {
-			$user->setAttribute($value['attribute'], $value['value']);
+			$user->setValue($value['attribute'], $value['value'], false);
 		}
 		
 		// Zu prüfen, in welcher Gruppe wir schon sind und in welcher nicht wäre
 		// aufwendiger als die Gruppen alle neu einzufügen.
-		$user->removeAllGroups();
-		foreach ($groups as $group) $user->addGroup($group);
+		
+		$user->removeAllGroups(false);
+		
+		foreach ($groups as $group) {
+			$user->addGroup($group, false);
+		}
+		
+		$sql->commit();
+		$sql->setErrorMode($mode);
 	}
 	catch (Exception $e) {
+		$sql->rollback();
 		$errormsg = $e->getMessage();
 		$func     = 'edit';
 		++$loop;
 		continue;
 	}
-
-	WV2::success('Der Benutzer wurde erfolgreich bearbeitet.'.(_WV16_User::$sentActivationMail ? 
-					' Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.' : ''));
-
-	if (isset($_POST['apply'])) {
-		$func = 'edit';
-		++$loop;
-		continue;
+	
+	// Bei der ersten Aktivierung benachrichtigen wir den Administrator.
+	
+	$firstTimeActivation = !$wasActivated && $user->wasEverActivated();
+	
+	if ($firstTimeActivation) {
+		WV16_Mailer::notifyUserOnActivation($user);
 	}
+
+	WV_Redaxo::success(
+		'Der Benutzer wurde erfolgreich bearbeitet.'.
+		($firstTimeActivation ? ' Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.' : '')
+	);
 
 	// kein break;
 

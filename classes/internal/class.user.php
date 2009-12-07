@@ -22,14 +22,13 @@ class _WV16_User
 	protected $typeID;
 	protected $origTypeID;
 	protected $registered;
-	protected $attributes;
+	protected $values;
 	protected $groups;
 	protected $deleted;
 	protected $wasActivated;
 	protected $currentSetID;
 	
 	private static $instances = array();
-	private static $mailSent  = false;
 	
 	public static function getInstance($userID)
 	{
@@ -57,7 +56,7 @@ class _WV16_User
 		$this->registered   = $data['registered'];
 		$this->typeID       = (int) $data['type_id'];
 		$this->origTypeID   = $this->typeID;
-		$this->attributes   = null;
+		$this->values       = null;
 		$this->deleted      = (boolean) $data['deleted'];
 		$this->wasActivated = (boolean) $data['was_activated'];
 		$this->currentSetID = WV16_Users::getFirstSetID($this->id);
@@ -80,13 +79,15 @@ class _WV16_User
 				$userType = _WV16::DEFAULT_USER_TYPE;
 			}
 			
+			if (empty($login)) {
+				throw new WV_InputException('Der Login darf nicht leer sein.', self::ERR_INVALID_LOGIN);
+			}
+			
 			if (!preg_match('#^[a-z0-9_.,;\#+-@]+$#i', $login)) {
 				throw new WV_InputException('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
 			}
 			
-			if (strlen($password) < 6) {
-				throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
-			}
+			self::testPassword($password);
 			
 			if ($sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) != 0) {
 				throw new WV_InputException('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
@@ -180,7 +181,7 @@ class _WV16_User
 					);
 				}
 				
-				$this->attributes = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
+				$this->values = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
 				$this->origTypeID = $this->typeID;
 			}
 			
@@ -245,38 +246,38 @@ class _WV16_User
 		return WV16_Users::userData($this, $attribute, $default);
 	}
 	
-	public function setAttribute($attribute, $value)
+	public function setValue($attribute, $value, $useTransaction = true)
 	{
-		return WV16_Users::setDataforUser($this, $attribute, $value);
+		return WV16_Users::setDataForUser($this, $attribute, $value, $useTransaction);
 	}
 	
 	public function getValues()
 	{
-		if ($this->attributes === null) {
-			$this->attributes = WV16_Users::getDataForUser($this->id, null, $this->currentSetID);
+		if ($this->values === null) {
+			$this->values = WV16_Users::getDataForUser($this->id, null, null, $this->currentSetID);
 			
-			if ($this->attributes === null) {
-				$this->attributes = array();
+			if ($this->values === null) {
+				$this->values = array();
 			}
-			elseif (!is_array($this->attributes)) {
-				$attr = $this->attributes;
-				unset($this->attributes);
-				$this->attributes[$attr->getAttributeName()] = $attr;
+			elseif (!is_array($this->values)) {
+				$attr = $this->values;
+				unset($this->values);
+				$this->values[$attr->getAttributeName()] = $attr;
 			}
 			
 			// von assoziativ auf normal-indiziert (IDs umschalten)
 			
 			$a = array();
 			
-			foreach ($this->attributes as $name => $attr) {
+			foreach ($this->values as $name => $attr) {
 				$a[$attr->getAttributeID()] = $attr;
 			}
 			
-			$this->attributes = null; // Speicher freigeben
-			$this->attributes = $a;
+			$this->values = null; // Speicher freigeben
+			$this->values = $a;
 		}
 		
-		return $this->attributes;
+		return $this->values;
 	}
 	
 	public function isInGroup($group)
@@ -294,22 +295,20 @@ class _WV16_User
 		try {
 			$sql->startTransaction($useTransaction);
 			
-			if ($group == _WV16_Group::GROUP_ACTIVATED && self::$mailSent == false) {
-				// wenn das die erste aktivierung des nutzers ist..
-				if (!$this->wasEverActivated()) {
-					// ..schicke ihm eine mail..
-					WV16_Mailer::notifyUserOnActivation($this);
-					// ..und merke mir die aktivierung
-					$this->storeActivation();
-					self::$mailSent = true;
+			if (_WV16_Group::exists($group)) {
+				if ($sql->count('wv16_user_groups', 'user_id = ? AND group_id = ?', array($this->id, $group)) == 0) {
+					$sql->queryEx('INSERT INTO #_wv16_user_groups (user_id,group_id) VALUES (?,?)', array($this->id, $group), '#_');
+					$this->groups[] = $group;
 				}
 			}
 			
-			if (_WV16_Group::exists($group)) {
-				if ($sql->count('wv16_user_groups', 'user_id = ? AND group_id = ?', array($this->id, $group)) == 0) {
-					$sql->query('INSERT INTO #_wv16_user_groups (user_id,group_id) VALUES (?,?)', array($this->id, $group), '#_');
-					$this->groups[] = $group;
-				}
+			// Wenn der Benutzer zum ersten Mal aktiviert wurde, merken wir uns
+			// das in der Datenbank. Dies ist eine kleine Hilfe für umliegende
+			// Funktionen, die auf die erste Aktivierung reagieren möchten.
+			
+			if (self::isInGroup(_WV16_Group::GROUP_ACTIVATED)) {
+				$this->wasActivated = true;
+				$this->update(false);
 			}
 			
 			$sql->doCommit($useTransaction);
@@ -323,27 +322,14 @@ class _WV16_User
 		}
 	}
 	
-	protected function wasEverActivated()
+	public function wasEverActivated()
 	{
 		return $this->wasActivated;
 	}
 	
-	protected function wasNeverActivated()
+	public function wasNeverActivated()
 	{
 		return !$this->wasActivated;
-	}
-	
-	/**
-	 * Diese Methode wird von addGroup() aufgerufen. Da sie intern ist, läuft
-	 * um sie herum bereits immer eine dedizierte Transaktion.
-	 */
-	protected function storeActivation()
-	{
-		$sql   = WV_SQLEx::getInstance();
-		$mode  = WV_SQLEx::RETURN_FALSE;
-		$query = 'UPDATE #_wv16_users SET was_activated = ? WHERE id = ?';
-		
-		return $sql->queryEx($query, array((int) $this->wasActivated, $this->id), '#_', $mode);
 	}
 	
 	public function removeGroup($group, $useTransaction = true)
@@ -456,12 +442,26 @@ class _WV16_User
 		}
 		
 		$password = trim($password);
-		
+		self::testPassword($password);
+		$this->password = sha1($this->id.$password.$this->registered);
+	}
+	
+	public static function testPassword($password)
+	{
 		if (strlen($password) < 6) {
-			throw new WV16_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_Input_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
 		}
 		
-		$this->password = sha1($this->id.$password.$this->registered);
+		// Besteht das Passwort nur aus Zahlen?
+		
+		if (preg_match('#^[0-9]$#', $password)) {
+			throw new WV_Input_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
+		}
+		
+		// TODO: Hier genauere und im Backend konfigurierbare Testroutine einbauen.
+		// Entsprechende Implementierungen finden sich in der class.securepwd.php.
+		
+		return true;
 	}
 	
 	public function setUserType($userType)
@@ -499,7 +499,7 @@ class _WV16_User
 		
 		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id = ?', array($this->id, $setID)) > 0) {
 			$this->currentSetID = $setID;
-			$this->attributes   = null;
+			$this->values   = null;
 			$this->getAttributes();
 			return true;
 		}
