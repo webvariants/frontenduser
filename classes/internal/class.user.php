@@ -159,25 +159,21 @@ class _WV16_User
 				$toAdd    = array_diff($newTypesAttributes, $oldTypesAttributes);
 				
 				if (!empty($toDelete)) {
-					$markers = WV_SQLEx::getMarkers(count($toDelete));
-					
-					array_unshift($toDelete, $this->id);
+					$markers = implode(',', $toDelete);
 					
 					$sql->queryEx(
 						'DELETE FROM #_wv16_user_values WHERE user_id = ? AND attribute_id IN ('.$markers.')',
-						$toDelete, '#_'
+						$this->id, '#_'
 					);
 				}
 				
 				if (!empty($toAdd)) {
-					$markers = WV_SQLEx::getMarkers(count($toAdd));
-					
-					array_unshift($toAdd, $this->id);
+					$markers = implode(',', $toAdd);
 					
 					$sql->queryEx(
 						'INSERT INTO #_wv16_user_values (user_id,attribute_id,value) '.
 						'SELECT ?,id,default_value FROM #_wv16_attributes WHERE id IN ('.$markers.')',
-						$toAdd, '#_'
+						$this->id, '#_'
 					);
 				}
 				
