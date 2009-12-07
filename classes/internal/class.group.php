@@ -9,36 +9,45 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-class _WV16_Group {
+class _WV16_Group
+{
 	const GROUP_UNCONFIRMED = 1;
 	const GROUP_CONFIRMED   = 2;
 	const GROUP_ACTIVATED   = 3;
 	const DEFAULT_GROUP     = self::GROUP_UNCONFIRMED;
 	
-	private $id;
-	private $name;
-	private $title;
-	private $internal;
-	private $parentID;
+	protected $id;
+	protected $name;
+	protected $title;
+	protected $internal;
+	protected $parentID;
 	
 	private static $instances = array();
 	
-	public static function getInstance($groupID) {
-		$groupID = intval($groupID);
-		if (empty(self::$instances[$groupID])) self::$instances[$groupID] = new self($groupID);
+	public static function getInstance($groupID)
+	{
+		$groupID = (int) $groupID;
+		
+		if (empty(self::$instances[$groupID])) {
+			self::$instances[$groupID] = new self($groupID);
+		}
+		
 		return self::$instances[$groupID];
 	}
 	
-	public static function exists($groupID) {
-		$groupID = intval($groupID);
-		return WV_SQL::getInstance()->count('wv16_groups', 'id = '.$groupID) == 1;
+	public static function exists($groupID)
+	{
+		return WV_SQLEx::getInstance()->count('wv16_groups', 'id = ?', (int) $groupID) == 1;
 	}
 	
-	private function __construct($id) {
-		$sql = WV_SQL::getInstance();
-		$data = $sql->fetch('*', 'wv16_groups', 'id = '.$id);
+	private function __construct($id)
+	{
+		$sql = WV_SQLEx::getInstance();
+		$data = $sql->saveFetch('*', 'wv16_groups', 'id = ?', $id);
 		
-		if (empty($data)) throw new Exception('Die Gruppe #'.$id.' konnte nicht gefunden werden!');
+		if (empty($data)) {
+			throw new WV16_Exception('Die Gruppe #'.$id.' konnte nicht gefunden werden!');
+		}
 		
 		$this->id       = (int) $data['id'];
 		$this->name     = $data['name'];
@@ -47,30 +56,23 @@ class _WV16_Group {
 		$this->parentID = (int) $data['parent_id'];
 	}
 	
-	public function getName() {
-		return $this->name;
-	}
+	public function getName()  { return $this->name;  }
+	public function getID()    { return $this->id;    }
+	public function getTitle() { return $this->title; }
 	
-	public function getID() {
-		return $this->id;
-	}
-	
-	public function getTitle() {
-		return $this->title;
-	}
-	
-	public function canAccess($object, $objectType = null) { /* Typ ist nur nötig, wenn die Objekt-ID nicht eindeutig ist */
+	public function canAccess($object, $objectType = null) /* Typ ist nur nötig, wenn die Objekt-ID nicht eindeutig ist */
+	{
 		list($objectID, $objectType) = _WV16::identifyObject($object, $objectType);
-		$sql = WV_SQL::getInstance();
+		$sql = WV_SQLEx::getInstance();
 		
 		// Die Berechtigung für dieses Objekt allein abrufen (explizite Erlaubnis?)
 		
-		$privilege = $sql->fetch('privilege', 'wv16_rights', 'object_id = '.$objectID.' AND object_type = '.$objectType.' AND group_id = '.$this->id);
+		$privilege = $sql->saveFetch('privilege', 'wv16_rights', 'object_id = ? AND object_type = ? AND group_id = ?', array($objectID, $objectType, $this->id));
 		if ($privilege) return true;
 		
 		// Verboten? Vielleicht gibt es für dieses Objekt einfach keine expliziten Rechte.
 		
-		$privileges = $sql->count('wv16_rights', 'object_id = '.$objectID.' AND object_type = '.$objectType);
+		$privileges = $sql->count('wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
 		if (!empty($privileges)) return false; // es gibt also durchaus Rechte für dieses Objekt.
 		
 		// In diesem Fall wäre der Zugriff erlaubt, wenn das Elternelement (soweit vorhanden)
@@ -81,7 +83,7 @@ class _WV16_Group {
 		// Prüfen, ob es sich, wenn wir einen Artikel haben, es sich
 		// gleichzeitig auch um eine Kategorie handelt.
 		
-		$isStartpage = $sql->fetch('startpage', 'article', 'id = '.$objectID) && $objectType == _WV16::TYPE_ARTICLE;
+		$isStartpage = $sql->saveFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16::TYPE_ARTICLE;
 		
 		// Artikel und Kategorien hingegen schon. Also brauchen wir jetzt das
 		// Elternelement. Bei einem Artikel ist das die ihn beinhaltende Kategorie,
@@ -89,8 +91,8 @@ class _WV16_Group {
 		// Wenn es sich um eine Startseite einer Kategorie handelt, ist die
 		// Elternkategorie logischerweise direkt "der Artikel selbst".
 
-		$parentCategory = $isStartpage ? $objectID : $sql->fetch('re_id', 'article', 'id = '.$objectID);
+		$parentCategory = $isStartpage ? $objectID : $sql->saveFetch('re_id', 'article', 'id = ?', $objectID);
 		if ($parentCategory == 0) return true; // Artikel/Kategorie der obersten Ebene, da generell alle Objekte erlaubt sind, hören wir hier auf.
-		return $this->canAccess(intval($parentCategory), _WV16::TYPE_CATEGORY);
+		return $this->canAccess((int) $parentCategory, _WV16::TYPE_CATEGORY);
 	}
 }
