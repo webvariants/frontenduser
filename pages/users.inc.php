@@ -167,7 +167,7 @@ case 'do_edit':
 		$user = _WV16_User::getInstance($id);
 		
 		if ($password1 && $password1 != $password2) {
-			throw new WV_Input_Exception('Die beiden Passwörter sind nicht identisch.');
+			throw new WV_InputException('Die beiden Passwörter sind nicht identisch.');
 		}
 		
 		$userTypeObj = _WV16_UserType::getInstance($userType);

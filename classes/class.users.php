@@ -16,6 +16,11 @@ abstract class WV16_Users extends _WV16_DataHandler
 	const ERR_INVALID_LOGIN      = 1;
 	const ERR_USER_NOT_ACTIVATED = 2;
 	
+	public static function loginExists($login)
+	{
+		return _WV16_User::exists($login);
+	}
+	
 	public static function getConfig($name, $default = null)
 	{
 		$value = WV_Registry::get('wv16_'.$name);

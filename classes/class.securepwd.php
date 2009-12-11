@@ -22,11 +22,11 @@ class _WV16_SimpleTester implements _WV16_PasswordTester
 	public function test($login, $password)
 	{
 		if (strlen($password) < 6) {
-			throw new WV_Input_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
 		}
 		
 		if ($password == $login || $password == strrev($login)) {
-			throw new WV_Input_Exception('Das Passwort darf den Loginnamen nicht enthalten!');
+			throw new WV_InputException('Das Passwort darf den Loginnamen nicht enthalten!');
 		}
 		
 		return true;
@@ -44,19 +44,19 @@ class _WV16_SecurePasswordTester implements _WV16_PasswordTester
 		$password = strtolower($password);
 		
 		if (strlen($password) < 6) {
-			throw new WV_Input_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
 		}
 		
 		// Falls der Benutzername enthalten ist...
 		
 		if (stristr($password, $login)) {
-			throw new WV_Input_Exception('Das Passwort darf den Loginnamen nicht enthalten!');
+			throw new WV_InputException('Das Passwort darf den Loginnamen nicht enthalten!');
 		}
 		
 		// Besteht das Passwort nur aus Zahlen?
 		
 		if (preg_match('#^[0-9]$#', $password)) {
-			throw new WV_Input_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
+			throw new WV_InputException('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
 		}
 			
 		// If similarity between baseword and password is less than the specified percentage, based on Oliver algorythm
@@ -65,19 +65,19 @@ class _WV16_SecurePasswordTester implements _WV16_PasswordTester
 		$chardistance = similar_text($password, $login, &$percentage);
 		
 		if ($percentage >= 20 || (strlen($password) - $chardistance) < 2) {
-			throw new WV_Input_Exception('Das Passwort ist dem Benutzernamen zu ähnlich!');
+			throw new WV_InputException('Das Passwort ist dem Benutzernamen zu ähnlich!');
 		}
 			
 		// Haben beide Daten die gleiche Aussprache?
 		
 		if (soundex($password) == soundex($login)) {
-			throw new WV_Input_Exception('Das Passwort ist dem Benutzernamen zu ähnlich!');
+			throw new WV_InputException('Das Passwort ist dem Benutzernamen zu ähnlich!');
 		}
 			
 		// Haben beide den gleichen Metaphone-Schlüssel?
 		
 		if (metaphone ($password) == metaphone ($login)) {
-			throw new WV_Input_Exception('Das Passwort ist dem Benutzernamen zu ähnlich!');
+			throw new WV_InputException('Das Passwort ist dem Benutzernamen zu ähnlich!');
 		}
 		
 		// Wörterbuch-Angriff
@@ -94,7 +94,7 @@ class _WV16_SecurePasswordTester implements _WV16_PasswordTester
 					
 					if ($password == $line || $soundexPwd == soundex($line)) {
 						fclose($fp);
-						throw new WV_Input_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
+						throw new WV_InputException('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
 					}
 				}
 				
