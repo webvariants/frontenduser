@@ -20,14 +20,14 @@ var wv16 = {};
 		$.each(required, function(idx, id) { $('div#property_container_'+id).show() });
 	};
 	
-	wv2.handleTableDrop = function(table, row, newPosition)
+	wv16.handleTableDrop = function(table, row, newPosition)
 	{
-		var metainfoID = row.id.substring(4);
+		var attributeID = row.id.substring(4);
 		$('td', $(row)).css('font-style', 'italic');
 		
-		$.post('index.php?page=metainfoex&subpage='+subpage+'&func=shift&'+
-			'id='+metainfoID+'&position='+newPosition,
-			function(response) { $('#info'+metainfoID+' td').css('font-style', 'normal'); }
+		$.post('index.php?page=frontenduser&subpage=attributes&func=shift&'+
+			'id='+attributeID+'&position='+newPosition,
+			function(response) { $('#attr'+attributeID+' td').css('font-style', 'normal'); }
 		);
 	};
 	
