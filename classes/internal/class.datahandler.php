@@ -524,7 +524,7 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getUsersWithAttribute($attribute, $userType = null, $value = null, $operator = null, $sort = null)
 	{
-		$attribute = _WV16::getIDForAttribute($metainfo, false);
+		$attribute = _WV16::getIDForAttribute($attribute, false);
 		$userType  = _WV16::getIDForUserType($userType, true);
 		
 		//////////////////////////////////////////////////////////////////////////
@@ -549,7 +549,7 @@ abstract class _WV16_DataHandler
 			'LEFT JOIN #_wv16_users u ON u.id = uv.user_id '.
 			'WHERE a.id = ?';
 
-		$sql    = clone WV_SQLEx::getInstance();
+		$sql    = WV_SQLEx::getClone();
 		$return = array();
 		$params = array($attribute);
 		

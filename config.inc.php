@@ -53,7 +53,7 @@ rex_register_extension('__AUTOLOAD', '_wv16_autoload');
 // Initialisierungen
 
 require_once _WV16_PATH.'classes/internal/class.extensions.php';
-_WV16_Extensions::plugin();
+rex_register_extension('DEVUTILS_INIT', array('_WV16_Extensions', 'plugin'));
 
 // Dateien rausschicken, die über FrontendUser geschützt sind.
 

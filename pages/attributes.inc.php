@@ -19,7 +19,7 @@ while ($loop) { --$loop; switch ($func) {
 #===============================================================================
 case 'shift':
 
-	$position = rex_get('position', 'int');
+	$position = wv_get('position', 'int');
 
 	try {
 		$attribute = _WV16_Attribute::getInstance($id);
@@ -29,7 +29,7 @@ case 'shift':
 		// pass..
 	}
 
-	while (ob_get_level()) ob_end_clean();
+	WV_Redaxo::clearOutput();
 	die;
 
 #===============================================================================
@@ -47,19 +47,18 @@ case 'add':
 case 'do_add':
 
 	$attribute = null;
-	$name      = stripslashes(rex_post('name',  'string'));
-	$title     = stripslashes(rex_post('title', 'string'));
-	$datatype  = rex_post('datatype', 'int');
-	$usertypes = array();
-
-	if (isset($_POST['utypes']) && is_array($_POST['utypes'])) {
-		$usertypes = array_map('intval', $_POST['utypes']);
-	}
+	$name      = wv_post('name',  'string');
+	$title     = wv_post('title', 'string');
+	$datatype  = wv_post('datatype', 'int');
+	$usertypes = wv_postArray('utypes', 'int');
 
 	try {
-		if (!WV2::datatypeExists($datatype)) throw new Exception('Der gewählte Datentyp existiert nicht!');
-		list($params,$defaultOption) = _WV2::callForDatatype($datatype, 'serializeBackendForm', null);
-		$attribute = _WV16_Attribute::create($name, $title, $datatype, $params, $defaultOption, $usertypes);
+		if (!WV_Datatype::exists($datatype)) {
+			throw new Exception('Der gewählte Datentyp existiert nicht!');
+		}
+		
+		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', null);
+		$attribute = _WV16_Attribute::create($name, $title, $datatype, $params, $default, $usertypes);
 	}
 	catch (Exception $e) {
 		$errormsg = $e->getMessage();
@@ -68,14 +67,7 @@ case 'do_add':
 		continue;
 	}
 
-	WV2::success('Das Attribut wurde erfolgreich gespeichert.');
-
-	if (isset($_POST['apply'])) {
-		$id   = $attribute->getID();
-		$func = 'edit';
-		++$loop;
-		continue;
-	}
+	WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
 
 	$func = '';
 	++$loop;
@@ -96,6 +88,8 @@ case 'delete':
 		++$loop;
 		continue;
 	}
+	
+	WV_Redaxo::success('Das Attribut wurde gelöscht.');
 
 	$func = '';
 	++$loop;
@@ -115,44 +109,44 @@ case 'edit':
 #===============================================================================
 case 'do_edit':
 
-	if (isset($_POST['delete'])) {
+	if (!empty($_POST['delete'])) {
 		$func = 'delete';
 		++$loop;
 		continue;
 	}
 
 	$attribute     = null;
-	$name          = stripslashes(rex_post('name',  'string'));
-	$title         = stripslashes(rex_post('title', 'string'));
-	$datatype      = rex_post('datatype', 'int');
-	$confirmed     = (bool) rex_post('confirmed',    'int', 0);
-	$noconversion  = (bool) rex_post('noconversion', 'int', 0);
-	$usertypes     = array();
-	$applyDefaults = (bool) rex_post('datatype_'.$datatype.'_applydefault', 'int', 0);
-
-	if (isset($_POST['utypes']) && is_array($_POST['utypes'])) {
-		$usertypes = array_map('intval', $_POST['utypes']);
-	}
+	$name          = wv_post('name',  'string');
+	$title         = wv_post('title', 'string');
+	$datatype      = wv_post('datatype', 'int');
+	$confirmed     = wv_post('confirmed',    'boolean', false);
+	$noconversion  = wv_post('noconversion', 'boolean', false);
+	$usertypes     = wv_postArray('utypes', 'int');
+	$applyDefaults = wv_post('datatype_'.$datatype.'_applydefault', 'boolean', false);
 
 	try {
-		if (!WV2::datatypeExists($datatype)) throw new Exception('Der gewählte Datentyp existiert nicht!');
+		if (!WV_Datatype::exists($datatype)) {
+			throw new _WV16_Exception('Der gewählte Datentyp existiert nicht!');
+		}
 		
 		$attribute = _WV16_Attribute::getInstance($id);
 
 		// VOR dem Update prüfen, ob ein Löschen von Daten notwendig ist. Falls
 		// ja, den Benutzer erst fragen, bevor wir die Daten übernehmen.
 
-		if (!_WV16_Attribute::checkCompatibility($confirmed, $attribute, $datatype)) break;
+		if (!_WV16_Attribute::checkCompatibility($confirmed, $attribute, $datatype)) {
+			break;
+		}
 
 		$attribute->setName($name);
 		$attribute->setTitle($title);
 		$attribute->setDatatype($datatype);
 		$attribute->setUserTypes($usertypes);
 
-		list($params, $defaultOption) = _WV2::callForDatatype($datatype, 'serializeBackendForm', $attribute);
+		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', $attribute);
 
 		$attribute->setParams($params);
-		$attribute->setDefaultValue($defaultOption);
+		$attribute->setDefaultValue($default);
 
 		$attribute->update(!$noconversion, $applyDefaults);
 	}
@@ -163,13 +157,7 @@ case 'do_edit':
 		continue;
 	}
 
-	WV2::success('Das Attribut wurde erfolgreich gespeichert.');
-
-	if (isset($_POST['apply'])) {
-		$func = 'edit';
-		++$loop;
-		continue;
-	}
+	WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
 
 	// kein break;
 
