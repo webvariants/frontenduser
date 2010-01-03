@@ -261,10 +261,8 @@ case 'do_edit':
 #===============================================================================
 default:
 
-	$offset  = abs(wv_get('offset', 'int', 0));
-	$perPage = WV_Registry::get('wv16_users_per_page');
-	$perPage = $perPage === null ? 20 : $perPage;
-	$users   = WV16_Users::getAllUsers('login', 'asc', $offset, $perPage);
+	$paging = WV_Table::getPagingParameters('users');
+	$users  = WV16_Users::getAllUsers('login', 'asc', $paging['start'], $paging['elements']);
 	
 	require _WV16_PATH.'templates/users/table.phtml';
-} }
+}}

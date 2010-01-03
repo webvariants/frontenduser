@@ -23,13 +23,22 @@ abstract class WV16_Users extends _WV16_DataHandler
 	
 	public static function getConfig($name, $default = null)
 	{
-		$value = WV_Registry::get('wv16_'.$name);
+		$value = WV8_Settings::getValue('wv16_'.$name);
 		return $value === null ? $default : $value;
 	}
 	
 	public static function setConfig($name, $value)
 	{
-		return WV_Registry::set('wv16_'.$name, $value);
+		try {
+			$setting = _WV8_Setting::getInstance('wv16_'.$name);
+			$setting->setValue($value, WV_Redaxo::clang());
+			$setting->update();
+			
+			return true;
+		}
+		catch (Exception $e) {
+			return false;
+		}
 	}
 	
 	// $max = -1 für unendlich
@@ -118,7 +127,8 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return null;
 	}
 	
-	public static function login($login, $password) {
+	public static function login($login, $password)
+	{
 		$userObj = self::getUser($login);
 		
 		if ($userObj->isInGroup(_WV16_Group::GROUP_ACTIVATED) && self::checkPassword($userObj, $password)) {
@@ -130,7 +140,8 @@ abstract class WV16_Users extends _WV16_DataHandler
 		}
 	}
 	
-	public static function getUser($login){
+	public static function getUser($login)
+	{
 		$sql 	= _WV_SQL::getInstance();
 		$login	= trim($login);
 		
@@ -143,7 +154,8 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return _WV16_User::getInstance((int) $userdata['id']);
 	}
 	
-	public static function checkPassword(_WV16_User $user, $password) {
+	public static function checkPassword(_WV16_User $user, $password)
+	{
 		$password = trim($password);
 
 		return sha1($user->getId().$password.$user->getRegistered()) === $user->getPasswordHash();

@@ -11,98 +11,66 @@
 
 abstract class WV16_Mailer
 {
-	public static function sendConfirmationRequest($user, $email, $name)
+	public static function sendConfirmationRequest(_WV16_User $user, $parameterName = 'confirm')
 	{
-		$clang = WV_Redaxo::clang();
-
 		// Bestätigungscode erzeugen und speichern
 		
 		$code = WV16_Users::generateConfirmationCode($email);
 		$user->setConfirmationCode($code);
 		$user->update();
 		
-		// Body erzeugen
+		// Artikel finden
 		
-		$link = OOArticle::getArticleById(WV16_Users::getConfig('mail_validation_article'))->getUrl(array('confirm' => $code));
-		$body = WV16_Users::getConfig('confirmation_body_'.$clang);
-		$body = str_replace(
-			array('#CONFIRMATION_URL#', '#CONFIRM_URL#'),
-			substr(Utils::getAbsoluteURLBase(true), 0, -1).$link,
-			$body
-		);
-		$body = self::replaceValues($body, $user);
+		$confirmArticle = OOArticle::getArticleById(WV16_Users::getConfig('validation_article'));
 		
-		// Mail verschicken
+		if ($confirmArticle) {
+			$link = $confirmArticle->getUrl(array($parameterName => $code));
+			$link = WV_Redaxo::getBaseUrl(true).'/'.$link;
+			
+			// Mail verschicken
+			
+			$mailer = self::getMailer($user, 'mail_confirmation_subject', 'mail_confirmation_body');
+			$mailer->AddAddress($email, $name);
+			
+			// Im Body ersetzen wir noch zusätzliche den Bestätigungslink
+			
+			$mailer->Body = str_replace(array('#CONFIRMATION_URL#', '#CONFIRM_URL#'), $link, $mailer->Body);
+			
+			return $mailer->Send();
+		}
 		
-		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
-		$mailer      = new PHPMailer();
-		
-		$mailer->AddAddress($email, $name);
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
-		$mailer->CharSet = 'utf-8';
-		$mailer->Body    = $body;
-		$mailer->Subject = WV16_Users::getConfig('confirmation_subject_'.$clang);
-		
-		return $mailer->Send();
+		return false;
 	}
 
-	public static function reportNewUserToAdmin($user)
+	public static function reportNewUserToAdmin(_WV16_User $user)
 	{
-		$body = "Hallo,\n\nder Nutzer #LOGIN# hat sich soeben\nauf der Website ".Utils::getAbsoluteURLBase(true)." angemeldet.\n\n";
-		$body = self::replaceValues($body, $user);
+		$name   = self::replaceValues(WV16_Users::getSetting('mail_from_name', 'Administrator'), $user);
+		$email  = self::replaceValues(WV16_Users::getSetting('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']));
+		$mailer = self::getMailer($user, 'mail_report_subject', 'mail_report_body');
 		
-		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
-		$mailer      = new PHPMailer();
-		
-		$mailer->AddAddress(WV16_Users::getConfig('admin_mail'), WV16_Users::getConfig('admin_name'));
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
-		$mailer->CharSet = 'utf-8'; 
-		$mailer->Body    = $body;
-		$mailer->Subject = 'Neuer Nutzer angemeldet.';
-		
+		$mailer->AddAddress($email, $name);
 		return $mailer->Send();
 	}
 	
 	public static function notifyUserOnActivation(_WV16_User $user)
 	{
-		$clang = WV_Redaxo::clang();
+		$address = self::replaceValues(WV16_Users::getSetting('mail_activation_to', '#EMAIL#'));
+		$mailer  = self::getMailer($user, 'mail_activation_subject', 'mail_activation_body');
 		
-		$toMail  = WV16_Users::getConfig('activation_to_'.$clang);
-		$body    = WV16_Users::getConfig('activation_body_'.$clang);
-		$subject = WV16_Users::getConfig('activation_subject_'.$clang);
-		
-		$to      = self::replaceValues($to, $user);
-		$body    = self::replaceValues($body, $user);
-		$subject = self::replaceValues($subject, $user);
-		
-		$mailer = new PHPMailer();
-		
-		$mailer->AddAddress($mail, $name);
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
-		$mailer->CharSet = 'utf-8'; 
-		$mailer->Body    = $body;
-		$mailer->Subject = $subject;
-		
+		self::addAddress($mailer, $address);
 		return $mailer->Send();
 	}
 	
-	public static function sendPasswordRecovery(_WV16_User $user, $email, $password)
+	public static function sendPasswordRecovery(_WV16_User $user, $newPassword)
 	{
-		global $REX;
-				
-		$body = WV16_Users::getConfig('password_recovery_body_'.$REX['CUR_CLANG']);
+		$address = self::replaceValues(WV16_Users::getSetting('mail_recovery_to', '#EMAIL#'));
+		$mailer  = self::getMailer($user, 'mail_recovery_subject', 'mail_recovery_body');
 		
-		$body = str_replace(array('#PASSWORD#', '#PASSWORT#'), $password, $body);
-		$body = self::replaceValues($body, $user);
-						
-		$mailer = new PHPMailer();
-		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', 'admin@domain'), WV16_Users::getConfig('admin_name', 'admin'));
-		$mailer->CharSet = 'utf-8';
-			
-		$mailer->Body    = $body;
-		$mailer->Subject = WV16_Users::getConfig('password_recovery_subject_'.$REX['CUR_CLANG']);
-		$mailer->AddAddress($email);
-			
+		// Im Body ersetzen wir noch zusätzliche den Platzhalter für das Passwort
+		
+		$mailer->Body = str_replace(array('#PASSWORD#', '#PASSWORT#'), $newPassword, $mailer->Body);
+		
+		self::addAddress($mailer, $address);
 		return $mailer->Send();
 	}
 	
@@ -120,5 +88,47 @@ abstract class WV16_Mailer
 		}
 		
 		return $body;
+	}
+	
+	protected static function getMailer($user, $subjectSetting = null, $bodySetting = null)
+	{
+		$name   = self::replaceValues(WV16_Users::getSetting('mail_from_name', 'Administrator'), $user);
+		$email  = self::replaceValues(WV16_Users::getSetting('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']));
+		$mailer = new PHPMailerLite();
+		
+		$mailer->SetFrom($email, $name);
+		$mailer->CharSet = 'utf-8';
+		
+		// Betreff setzen, falls möglich
+		
+		if ($subjectSetting !== null) {
+			$subject = WV16_Users::getConfig($subjectSetting);
+			$subject = self::replaceValues($subject, $user);
+			
+			$mailer->Subject = $subject;
+		}
+		
+		// Inhalt setzen, falls möglich
+		
+		if ($bodySetting !== null) {
+			$body = WV16_Users::getConfig($bodySetting);
+			$body = self::replaceValues($body, $user);
+			
+			$mailer->Body = $body;
+		}
+		
+		return $mailer;
+	}
+	
+	protected static function addAddress($mailer, $address)
+	{
+		$address = trim($address);
+		
+		if (preg_match('#(.+?)\s*<\s*(.+?)\s*>#', $address, $match)) {
+			$mailer->AddAddress(trim($match[2]), trim($match[1]));
+		}
+		else {
+			$mailer->AddAddress($address);
+		}
 	}
 }

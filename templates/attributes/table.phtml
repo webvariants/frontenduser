@@ -21,7 +21,7 @@ $table->setEmptyNotice('Sie haben noch keine Attribute angelegt.');
 $table->enableDragAndDrop(count($data) > 1);
 $table->setDragAndDropHandler('wv16.handleTableDrop');
 
-$table->renderHeader();
+$table->renderHeader(count($data));
 
 foreach ($data as $attr) {
 	?>

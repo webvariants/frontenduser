@@ -166,6 +166,7 @@ case 'do_edit':
 #===============================================================================
 default:
 
+	$page = abs(wv_get('p_attrtable', 'int'));
 	$data = WV16_Users::getAttributesForUserType(-1);
 	require _WV16_PATH.'templates/attributes/table.phtml';
 } }
