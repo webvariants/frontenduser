@@ -61,6 +61,110 @@ class _WV16_Extensions
 			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
 			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
 		}
+		
+		// Wenn die Global Settings verfügbar werden, nutzen wir sie.
+		
+		rex_register_extension('POST_ADDON_INSTALL', array($self, 'addonInstalled'));
+	}
+	
+	public static function addonInstalled($params)
+	{
+		$addonName = $params['subject'];
+		
+		if ($addonName != 'global_settings') {
+			return;
+		}
+		
+		try {
+			// ==== EINSTELLUNGEN LÖSCHEN ====================================
+			
+			$settings = array(
+				'mail_from_name', 'mail_from_email',
+				'mail_report_subject', 'mail_report_body', 
+				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body', 
+				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body', 
+			);
+			
+			foreach ($settings as $setting) {
+				$id = _WV8_Setting::getIDForName('wv16_'.$setting);
+				if ($id >= 0) {
+					_WV8_Setting::getInstance($id)->delete();
+				}
+			}
+			
+			// ==== EINSTELLUNGEN NEU ANLEGEN ================================
+			
+			_WV8_Setting::create(
+				/*          Name */ 'wv16_validation_article',
+				/*         Titel */ 'Validierungsartikel',
+				/*     Hilfetext */ 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.',
+				/*      Datentyp */ 4,
+				/*     Parameter */ '1',
+				/*        lokal? */ false,
+				/* vom Benutzer? */ false,
+				/*   Gruppenname */ 'Benutzverwaltung'
+			);
+			
+			$helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
+			
+			$group = 'Benutzerverwaltung: Ausgehende eMails';
+			self::createSingleLineSetting('mail_from_name',  'eMail-Name',    '', $group);
+			self::createSingleLineSetting('mail_from_email', 'eMail-Adresse', '', $group);
+			
+			$group = 'Benutzerverwaltung: eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
+			self::createSingleLineSetting('mail_report_subject', 'Betreff',            $helptext, $group);
+			self::createMultiLineSetting('mail_report_body',     'Inhalt (Template)',  $helptext, $group);
+			
+			$group = 'Benutzerverwaltung: Bestätigungsaufforderung an den neuen Benutzer';
+			self::createSingleLineSetting('mail_confirmation_subject', 'Betreff',              $helptext, $group);
+			self::createMultiLineSetting('mail_confirmation_body',     'Inhalt (Template)',    $helptext, $group);
+			self::createSingleLineSetting('mail_confirmation_to',      'Empfänger (Template)', $helptext, $group);
+			
+			$group = 'Benutzerverwaltung: Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
+			self::createSingleLineSetting('mail_activation_subject', 'Betreff',              $helptext, $group);
+			self::createMultiLineSetting('mail_activation_body',     'Inhalt (Template)',    $helptext, $group);
+			self::createSingleLineSetting('mail_activation_to',      'Empfänger (Template)', $helptext, $group);
+			
+			$group = 'Benutzerverwaltung: Passwort-vergessen-eMails';
+			self::createSingleLineSetting('mail_recovery_subject', 'Betreff',              $helptext, $group);
+			self::createMultiLineSetting('mail_recovery_body',     'Inhalt (Template)',    $helptext, $group);
+			self::createSingleLineSetting('mail_recovery_to',      'Empfänger (Template)', $helptext, $group);
+		}
+		catch (Exception $e) {
+			// pass...
+		}
+	}
+	
+	protected static function createSingleLineSetting($name, $title, $helptext = '', $group = 'Benutzerverwaltung')
+	{
+		$setting = _WV8_Setting::create(
+			/*          Name */ 'wv16_'.$name,
+			/*         Titel */ $title,
+			/*     Hilfetext */ $helptext,
+			/*      Datentyp */ 1,
+			/*     Parameter */ '0|65535',
+			/*        lokal? */ false,
+			/* vom Benutzer? */ false,
+			/*   Gruppenname */ $group
+		);
+		
+		return $setting;
+	}
+	
+	protected static function createMultiLineSetting($name, $title, $helptext = '', $group = 'Benutzerverwaltung')
+	{
+		$setting = _WV8_Setting::create(
+			/*          Name */ 'wv16_'.$name,
+			/*         Titel */ $title,
+			/*     Hilfetext */ $helptext,
+			/*      Datentyp */ 2,
+			/*     Parameter */ '0|65535',
+			/*        lokal? */ false,
+			/* vom Benutzer? */ false,
+			/*   Gruppenname */ $group
+		);
+		
+		return $setting;
 	}
 
 	/*
