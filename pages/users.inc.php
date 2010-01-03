@@ -241,18 +241,21 @@ case 'do_edit':
 		continue;
 	}
 	
-	// Bei der ersten Aktivierung benachrichtigen wir den Administrator.
+	WV_Redaxo::success('Der Benutzer wurde erfolgreich bearbeitet.');
+	
+	// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.
 	
 	$firstTimeActivation = !$wasActivated && $user->wasEverActivated();
 	
 	if ($firstTimeActivation) {
-		WV16_Mailer::notifyUserOnActivation($user);
+		try {
+			WV16_Mailer::notifyUserOnActivation($user);
+			WV_Redaxo::success('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
+		}
+		catch (Exception $e) {
+			WV_Redaxo::error('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.wv_html($e->getMessage()).'.');
+		}
 	}
-
-	WV_Redaxo::success(
-		'Der Benutzer wurde erfolgreich bearbeitet.'.
-		($firstTimeActivation ? ' Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.' : '')
-	);
 
 	// kein break;
 
