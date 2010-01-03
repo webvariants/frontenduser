@@ -143,14 +143,16 @@ class _WV16_UserType
 				
 				// TODO: Das können wir besser.
 				
-				$query =
-					'INSERT INTO #_wv16_user_values '.
-					'SELECT user_id,attribute_id,set_id,default_value '.
-					'FROM #_wv16_user_values uv, #_wv16_attributes a '.
-					'WHERE uv.attribute_id = a.id AND uv.set_id >= 0 '.
-					'AND user_id IN ('.$users.') AND id IN ('.implode(',', $newAttributes).')';
-				
-				$sql->queryEx($query, array(), '#_');
+				if (!empty($newAttributes)) {
+					$query =
+						'INSERT INTO #_wv16_user_values '.
+						'SELECT user_id,attribute_id,set_id,default_value '.
+						'FROM #_wv16_user_values uv, #_wv16_attributes a '.
+						'WHERE uv.attribute_id = a.id AND uv.set_id >= 0 '.
+						'AND user_id IN ('.$users.') AND id IN ('.implode(',', $newAttributes).')';
+					
+					$sql->queryEx($query, array(), '#_');
+				}
 			}
 			
 			$sql->doCommit($useTransaction);
