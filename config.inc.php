@@ -27,25 +27,7 @@ $REX['PERM'][] = 'frontenduser[]';
 function _wv16_autoload($params)
 {
 	$className = $params['subject'];
-	
-	static $classes = array(
-		'_WV16'             => 'internal/class.frontenduser.php',
-		'_WV16_Attribute'   => 'internal/class.attribute.php',
-		'_WV16_UserType'    => 'internal/class.usertype.php',
-		'_WV16_UserValue'   => 'internal/class.uservalue.php',
-		'_WV16_Group'       => 'internal/class.group.php',
-		'_WV16_DataHandler' => 'internal/class.datahandler.php',
-		'_WV16_User'        => 'internal/class.user.php',
-		
-		'WV16_Users'     => 'class.users.php',
-		'WV16_Mailer'    => 'class.mailer.php',
-		'WV16_Exception' => 'class.exception.php'
-	);
-	
-	if (isset($classes[$className])) {
-		require_once _WV16_PATH.'classes/'.$classes[$className];
-		return '';
-	}
+	require _WV16_PATH.'autoload.inc.php';
 }
 
 rex_register_extension('__AUTOLOAD', '_wv16_autoload');
@@ -57,22 +39,6 @@ rex_register_extension('DEVUTILS_INIT', array('_WV16_Extensions', 'plugin'));
 
 // Dateien rausschicken, die über FrontendUser geschützt sind.
 
-if (WV_Redaxo::isFrontend() && isset($_REQUEST['wv16_file'])) {
-	$filename = $_REQUEST['wv16_file'];
-	$media    = OOMedia::getMediaByFilename($filename);
-	
-	if (OOMedia::isValid($media)) {
-		if (!WV16_Users::isProtected($media) || (WV16_Users::isLoggedIn() && WV16_Users::getCurrentUser()->canAccess($media))) {
-			header('Content-Type: '.$media->getType());
-			readfile('files/'.$media->getFileName());
-		}
-		else {
-			header('HTTP/1.1 403 Forbidden');
-		}
-	}
-	else {
-		header('HTTP/1.1 404 Not Found');
-	}
-	
-	exit;
+if (WV_Redaxo::isFrontend() && !empty($_REQUEST['wv16_file'])) {
+	require_once _WV16_PATH.'proxy.inc.php';
 }
