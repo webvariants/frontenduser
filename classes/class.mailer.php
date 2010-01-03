@@ -44,8 +44,8 @@ abstract class WV16_Mailer
 
 	public static function reportNewUserToAdmin(_WV16_User $user)
 	{
-		$name   = self::replaceValues(WV16_Users::getSetting('mail_from_name', 'Administrator'), $user);
-		$email  = self::replaceValues(WV16_Users::getSetting('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']));
+		$name   = self::replaceValues(WV16_Users::getConfig('mail_from_name', 'Administrator'), $user);
+		$email  = self::replaceValues(WV16_Users::getConfig('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']), $user);
 		$mailer = self::getMailer($user, 'mail_report_subject', 'mail_report_body');
 		
 		$mailer->AddAddress($email, $name);
@@ -54,7 +54,7 @@ abstract class WV16_Mailer
 	
 	public static function notifyUserOnActivation(_WV16_User $user)
 	{
-		$address = self::replaceValues(WV16_Users::getSetting('mail_activation_to', '#EMAIL#'));
+		$address = self::replaceValues(WV16_Users::getConfig('mail_activation_to', '#EMAIL#'), $user);
 		$mailer  = self::getMailer($user, 'mail_activation_subject', 'mail_activation_body');
 		
 		self::addAddress($mailer, $address);
@@ -63,7 +63,7 @@ abstract class WV16_Mailer
 	
 	public static function sendPasswordRecovery(_WV16_User $user, $newPassword)
 	{
-		$address = self::replaceValues(WV16_Users::getSetting('mail_recovery_to', '#EMAIL#'));
+		$address = self::replaceValues(WV16_Users::getConfig('mail_recovery_to', '#EMAIL#'), $user);
 		$mailer  = self::getMailer($user, 'mail_recovery_subject', 'mail_recovery_body');
 		
 		// Im Body ersetzen wir noch zusätzliche den Platzhalter für das Passwort
@@ -74,7 +74,7 @@ abstract class WV16_Mailer
 		return $mailer->Send();
 	}
 	
-	public static function replaceValues($body, $user)
+	public static function replaceValues($body, _WV16_User $user)
 	{
 		$body = str_replace('#LOGIN#', $user->getLogin(), $body);
 		
@@ -90,11 +90,11 @@ abstract class WV16_Mailer
 		return $body;
 	}
 	
-	protected static function getMailer($user, $subjectSetting = null, $bodySetting = null)
+	protected static function getMailer(_WV16_User $user, $subjectSetting = null, $bodySetting = null)
 	{
-		$name   = self::replaceValues(WV16_Users::getSetting('mail_from_name', 'Administrator'), $user);
-		$email  = self::replaceValues(WV16_Users::getSetting('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']));
-		$mailer = new PHPMailerLite();
+		$name   = self::replaceValues(WV16_Users::getConfig('mail_from_name', 'Administrator'), $user);
+		$email  = self::replaceValues(WV16_Users::getConfig('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME']), $user);
+		$mailer = new PHPMailerLite(true);
 		
 		$mailer->SetFrom($email, $name);
 		$mailer->CharSet = 'utf-8';
@@ -120,7 +120,7 @@ abstract class WV16_Mailer
 		return $mailer;
 	}
 	
-	protected static function addAddress($mailer, $address)
+	protected static function addAddress(PHPMailerLite $mailer, $address)
 	{
 		$address = trim($address);
 		
