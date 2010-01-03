@@ -35,7 +35,7 @@ abstract class WV16_Mailer
 		// Mail verschicken
 		
 		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
-		$mailer      = new PHPMailer();
+		$mailer      = new PHPMailerLite();
 		
 		$mailer->AddAddress($email, $name);
 		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
@@ -52,7 +52,7 @@ abstract class WV16_Mailer
 		$body = self::replaceValues($body, $user);
 		
 		$defaultFrom = 'admin@'.$_SERVER['SERVER_NAME'];
-		$mailer      = new PHPMailer();
+		$mailer      = new PHPMailerLite();
 		
 		$mailer->AddAddress(WV16_Users::getConfig('admin_mail'), WV16_Users::getConfig('admin_name'));
 		$mailer->SetFrom(WV16_Users::getConfig('admin_mail', $defaultFrom), WV16_Users::getConfig('admin_name', 'admin'));
