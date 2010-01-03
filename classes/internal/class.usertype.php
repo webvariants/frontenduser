@@ -126,7 +126,7 @@ class _WV16_UserType
 			
 			if (!empty($users)) {
 				$users = implode(',', $users);
-				$query = 'DELETE FROM #_wv16_user_values WHERE user_id IN ('.$users.')';
+				$query = 'DELETE FROM #_wv16_user_values WHERE set_id >= 0 AND user_id IN ('.$users.')';
 				
 				if (empty($this->attributes)) {
 					$sql->queryEx($query, array(), '#_');
@@ -143,16 +143,14 @@ class _WV16_UserType
 				
 				// TODO: Das können wir besser.
 				
-				foreach ($newAttributes as $attr) {
-					$attr = _WV16_Attribute::getInstance($attr);
-					
-					$sql->queryEx(
-						'INSERT INTO #_wv16_user_values SELECT id,?,? FROM #_wv16_users WHERE id IN ('.$users.')',
-						array($attr->getID(), $attr->getDefault()), '#_'
-					);
-					
-					$attr = null;
-				}
+				$query =
+					'INSERT INTO #_wv16_user_values '.
+					'SELECT user_id,attribute_id,set_id,default_value '.
+					'FROM #_wv16_user_values uv, #_wv16_attributes a '.
+					'WHERE uv.attribute_id = a.id AND uv.set_id >= 0 '.
+					'AND user_id IN ('.$users.') AND id IN ('.implode(',', $newAttributes).')';
+				
+				$sql->queryEx($query, array(), '#_');
 			}
 			
 			$sql->doCommit($useTransaction);

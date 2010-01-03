@@ -215,6 +215,12 @@ class _WV16_User
 		}
 	}
 	
+	public static function exists($login)
+	{
+		$sql = WV_SQLEx::getInstance();
+		return $sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) > 0;
+	}
+	
 	public function getLogin()      { return $this->login;      }
 	public function getID()         { return $this->id;         }
 	public function getRegistered() { return $this->registered; }
@@ -445,13 +451,13 @@ class _WV16_User
 	public static function testPassword($password)
 	{
 		if (strlen($password) < 6) {
-			throw new WV_Input_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
 		}
 		
 		// Besteht das Passwort nur aus Zahlen?
 		
 		if (preg_match('#^[0-9]$#', $password)) {
-			throw new WV_Input_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
+			throw new WV_InputException('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
 		}
 		
 		// TODO: Hier genauere und im Backend konfigurierbare Testroutine einbauen.

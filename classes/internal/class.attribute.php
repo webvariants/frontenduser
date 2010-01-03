@@ -194,30 +194,24 @@ class _WV16_Attribute implements _WV_IProperty
 				// Benutzertypen angehören (else).
 				
 				if ($applyDefaults) {
-					$markers = WV_SQLEx::getMarkers(count($this->userTypes));
-					$users   = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id IN ('.$markers.')', $this->userTypes, '#_');
+					$users = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id IN ('.implode(',', $this->userTypes).')', array(), '#_');
 				}
 				else {
 					$newTypes = array_diff($this->userTypes, $this->origUserTypes);
-					$markers  = WV_SQLEx::getMarkers(count($newTypes));
-					$users    = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id IN ('.$markers.')', $newTypes, '#_');
+					$users    = array();
+					
+					if (!empty($newTypes)) {
+						$users = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id IN ('.implode(',', $newTypes).')', array(), '#_');
+					}
 				}
 				
-				$markers = null;
-				
 				if (!empty($users)) {
-					$markers = WV_SQLEx::getMarkers(count($users));
-					
-					array_unshift($users, $this->id, $this->defaultValue);
-					
 					$sql->queryEx(
 						'REPLACE INTO #_wv16_user_values '.
 						'SELECT user_id,?,set_id,? FROM #_wv16_user_values '.
-						'WHERE user_id IN ('.$markers.') AND set_id >= 0',
-						$users, '#_'
+						'WHERE user_id IN ('.implode(',', $users).') AND set_id >= 0',
+						array($this->id, $this->defaultValue) , '#_'
 					);
-					
-					$markers = null;
 				}
 				
 				$this->origUserTypes = $this->userTypes;
@@ -285,14 +279,14 @@ class _WV16_Attribute implements _WV_IProperty
 	/**
 	 * Neues Attribut erzeugen
 	 *
-	 * @throws Exception               falls der interne Name nicht eindeutig ist
-	 * @param  string  $name           interner Name
-	 * @param  string  $title          angezeigter Titel
-	 * @param  int     $datatype       Datentyp-ID
-	 * @param  string  $params         Datentyp-Parameter
-	 * @param  string  $defaultOption  der Standardwert (abhängig vom Datentyp)
-	 * @param  array   $userTypes      Liste von Benutzertyp-IDs (int)
-	 * @return _WV16_Attribute         das neu erzeugte Objekt
+	 * @throws Exception              falls der interne Name nicht eindeutig ist
+	 * @param  string  $name          interner Name
+	 * @param  string  $title         angezeigter Titel
+	 * @param  int     $datatype      Datentyp-ID
+	 * @param  string  $params        Datentyp-Parameter
+	 * @param  string  $defaultValue  der Standardwert (abhängig vom Datentyp)
+	 * @param  array   $userTypes     Liste von Benutzertyp-IDs (int)
+	 * @return _WV16_Attribute        das neu erzeugte Objekt
 	 */
 	public static function create($name, $title, $datatype, $params, $defaultValue, $userTypes, $useTransaction = true)
 	{
@@ -589,11 +583,11 @@ class _WV16_Attribute implements _WV_IProperty
 		list($newParams,)     = WV_Datatype::call($newDatatype, 'serializeBackendForm', $attribute);
 		$oldParams            = $attribute->getParams();
 		$convertible          = null;
-		$datatypeChanged      = $newDatatype != $attribute->getDatatype();
+		$datatypeChanged      = $newDatatype != $attribute->getDatatypeID();
 		$errorInfo            = array(array(), array()); // array(nachrichten, objekte)
 
 		if ($datatypeChanged) {
-			$converter   = new _WV_ConvertManager($attribute->getDatatype(), $newDatatype, $oldParams, $newParams);
+			$converter   = new _WV_ConvertManager($attribute->getDatatypeID(), $newDatatype, $oldParams, $newParams);
 			$convertible = $converter->isConvertible();
 			$errorInfo   = 'Der Datentyp hat sich geändert. Eine Konvertierung ist '.($convertible ? 'jedoch <u>automatisiert</u>' : '<u>nicht</u>').' möglich.';
 			$errorInfo   = array($errorInfo, WV16_Users::getUsersWithAttribute($attribute));

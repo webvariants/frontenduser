@@ -162,4 +162,27 @@ abstract class _WV16
 		
 		return $return;
 	}
+
+	/**
+	 * POST-Daten ausgeben
+	 *
+	 * Diese Methode erzeugt versteckte Formular-Elemente fÃ¼r alle Daten im
+	 * superglobalen Array $_POST. Damit wird das erneute Versenden eines
+	 * Formulars mÃ¶glich. Es wird davon ausgegangen, dass die auszugebenden
+	 * Daten bereits mit einem Escaping versehen wurden. Sie werden daher
+	 * durch stripslashes() gejagt.
+	 */
+	public static function printPOSTData()
+	{
+		foreach ($_POST as $key => $value) {
+			if (!is_array($value)) {
+				print '<input type="hidden" name="'.wv_html($key).'" value="'.wv_html(stripslashes($value)).'" />';
+			}
+			else {
+				foreach ($value as $v) {
+					print '<input type="hidden" name="'.wv_html($key).'[]" value="'.wv_html(stripslashes($v)).'" />';
+				}
+			}
+		}
+	}
 }

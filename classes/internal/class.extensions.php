@@ -32,7 +32,8 @@ class _WV16_Extensions
 		// HTML-Kopf
 
 		if (in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content'))) {
-			rex_register_extension('PAGE_HEADER', array($self, 'pageHeader'));
+			WV_Redaxo::addCSSFile('frontenduser/css/wv16.css');
+			WV_Redaxo::addJavaScriptFile('frontenduser/js/frontenduser.js');
 		}
 
 		// Reagieren, falls Artikel gelöscht werden, um unsere Daten aktuell zu halten
@@ -60,24 +61,6 @@ class _WV16_Extensions
 			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
 			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
 		}
-	}
-
-	/*
-	   ************************************************************
-	     Extension Points - Allgemein
-	   ************************************************************
-	*/
-
-	/**
-	 * Handler für PAGE_HEADER
-	 *
-	 * Generiert die HTML-Codes zur Einbindung der CSS- und JavaScript-Dateien.
-	 *
-	 * @param array $params  die von Redaxo übergebenen Parameter
-	 */
-	public static function pageHeader($params)
-	{
-		WV_Redaxo::addCSSFile('frontenduser/css/wv16.css');
 	}
 
 	/*
