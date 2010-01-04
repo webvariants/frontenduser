@@ -23,11 +23,37 @@ class _WV16_UserType
 	{
 		$id = self::getIDForName($idOrName);
 		
-		if (empty(self::$instances[$id])) {
-			self::$instances[$id] = new self($id, $prefetchedData);
+		if (isset(self::$instances[$id])) {
+			return self::$instances[$id];
 		}
 		
-		return self::$instances[$id];
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.usertypes';
+		$instance  = $cache->get($namespace, $id);
+		
+		if (!$instance) {
+			if ($cache->lock($namespace, $id)) {
+				try {
+					$instance = new self($id, $prefetchedData);
+					$cache->set($namespace, $id, $instance);
+					$cache->unlock($namespace, $id);
+				}
+				catch (Exception $e) {
+					$cache->unlock($namespace, $id);
+					throw $e;
+				}
+			}
+			else {
+				$instance = $cache->waitForObject($namespace, $id);
+				
+				if (!$instance) {
+					$instance = new self($id, $prefetchedData);
+				}
+			}
+		}
+		
+		self::$instances[$key] = $instance;
+		return self::$instances[$key];
 	}
 	
 	private function __construct($id, $prefetchedData = array())
@@ -48,7 +74,15 @@ class _WV16_UserType
 	
 	public static function exists($typeID)
 	{
-		return WV_SQLEx::getInstance()->count('wv16_utypes', 'id = ?', (int) $typeID) == 1;
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.usertypes';
+		
+		if ($cache->exists($namespace, $typeID)) {
+			return true;
+		}
+		
+		$sql = WV_SQLEx::getInstance();
+		return $sql->count('wv16_utypes', 'id = ?', (int) $typeID) == 1;
 	}
 	
 	/**
@@ -67,12 +101,24 @@ class _WV16_UserType
 			return (int) $name;
 		}
 		
-		$id = WV_SQLEx::getInstance()->saveFetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.usertypes';
+		$key       = WV_Cache::generateKey('mapping', strtolower($name));
+		
+		$id = $cache->get($namespace, $key, -1);
+		
+		if ($id > 0) {
+			return (int) $id;
+		}
+		
+		$sql = WV_SQLEx::getInstance();
+		$id  = $sql->saveFetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
 		
 		if (!$id) {
 			throw new WV16_Exception('Der Benutzertyp "'.$name.'" konnte nicht gefunden werden!');
 		}
 		
+		$cache->set($namespace, $key, (int) $id);
 		return (int) $id;
 	}
 	
@@ -158,6 +204,9 @@ class _WV16_UserType
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
 			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
+			
 			$this->origAttributes = $this->attributes;
 		}
 		catch (Exception $e) {
@@ -208,6 +257,9 @@ class _WV16_UserType
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.internal', true); // external kann bestehen bleiben, sind nur unberührte Nutzerwerte
 			
 			return self::getInstance($id);
 		}
@@ -261,6 +313,9 @@ class _WV16_UserType
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			$attrToDelete    = null;
 			$attrDefaultType = null;
@@ -321,7 +376,29 @@ class _WV16_UserType
 	
 	public function setAttributes($value)
 	{
-		$this->attributes = array_unique(array_map('intval', wv_makeArray($value)));
+		$attributes = wv_makeArray($value);
+		
+		$this->attributes = array();
+		
+		foreach ($attributes as $attr) {
+			if (WV_String::isInteger($attr)) {
+				$this->attributes[] = (int) $attr;
+			}
+			elseif ($attr instanceof self) {
+				$this->attributes[] = $attr->getID();
+			}
+			elseif (is_string($attr)) {
+				try {
+					$id = self::getIDForName($attr);
+					$this->attributes[] = $id;
+				}
+				catch (Exception $e) {
+					// pass...
+				}
+			}
+		}
+		
+		$this->attributes = array_unique($this->attributes);
 	}
 	
 	/* @} */
