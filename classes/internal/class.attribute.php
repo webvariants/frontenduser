@@ -29,10 +29,36 @@ class _WV16_Attribute implements _WV_IProperty
 	{
 		$id = self::getIDForName($idOrName);
 		
-		if (empty(self::$instances[$id])) {
-			self::$instances[$id] = new self($id, $prefetchedData);
+		if (isset(self::$instances[$id])) {
+			return self::$instances[$id];
 		}
 		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.objects.attributes';
+		$instance  = $cache->get($namespace, $id);
+		
+		if (!$instance) {
+			if ($cache->lock($namespace, $id)) {
+				try {
+					$instance = new self($id, $prefetchedData);
+					$cache->set($namespace, $id, $instance);
+					$cache->unlock($namespace, $id);
+				}
+				catch (Exception $e) {
+					$cache->unlock($namespace, $id);
+					throw $e;
+				}
+			}
+			else {
+				$instance = $cache->waitForObject($namespace, $id);
+				
+				if (!$instance) {
+					$instance = new self($id, $prefetchedData);
+				}
+			}
+		}
+		
+		self::$instances[$id] = $instance;
 		return self::$instances[$id];
 	}
 

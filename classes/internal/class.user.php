@@ -11,10 +11,10 @@
 
 class _WV16_User
 {
-	const ERR_UNKNOWN_USER  = 1; 
-	const ERR_INVALID_LOGIN = 2; 
-	const ERR_PWD_TOO_SHORT = 3; 
-	const ERR_LOGIN_EXISTS  = 4; 
+	const ERR_UNKNOWN_USER  = 1;
+	const ERR_INVALID_LOGIN = 2;
+	const ERR_PWD_TOO_SHORT = 3;
+	const ERR_LOGIN_EXISTS  = 4;
 	
 	protected $id;
 	protected $login;
@@ -34,10 +34,36 @@ class _WV16_User
 	{
 		$userID = (int) $userID;
 		
-		if (empty(self::$instances[$userID])) {
-			self::$instances[$userID] = new self($userID);
+		if (isset(self::$instances[$userID])) {
+			return self::$instances[$userID];
 		}
 		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.users';
+		$instance  = $cache->get($namespace, $userID);
+		
+		if (!$instance) {
+			if ($cache->lock($namespace, $userID)) {
+				try {
+					$instance = new self($userID);
+					$cache->set($namespace, $userID, $instance);
+					$cache->unlock($namespace, $userID);
+				}
+				catch (Exception $e) {
+					$cache->unlock($namespace, $userID);
+					throw $e;
+				}
+			}
+			else {
+				$instance = $cache->waitForObject($namespace, $userID);
+				
+				if (!$instance) {
+					$instance = new self($userID);
+				}
+			}
+		}
+		
+		self::$instances[$userID] = $instance;
 		return self::$instances[$userID];
 	}
 	
@@ -87,11 +113,11 @@ class _WV16_User
 				throw new WV_InputException('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
 			}
 			
-			self::testPassword($password);
-			
 			if ($sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) != 0) {
 				throw new WV_InputException('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
 			}
+			
+			self::testPassword($password);
 			
 			$registered = date('Y-m-d H:i:s');
 			
@@ -176,13 +202,20 @@ class _WV16_User
 						$this->id, '#_'
 					);
 				}
-				
-				$this->values = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
-				$this->origTypeID = $this->typeID;
 			}
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			if ($this->typeID != $this->origTypeID) {
+				$this->values     = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
+				$this->origTypeID = $this->typeID;
+			}
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.uservalues', true);
+			$cache->flush('frontenduser.lists', true);
 			
 			return true;
 		}
@@ -207,6 +240,11 @@ class _WV16_User
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
 			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.uservalues', true);
+			$cache->flush('frontenduser.lists', true);
+			
 			return true;
 		}
 		catch (Exception $e) {
@@ -217,8 +255,23 @@ class _WV16_User
 	
 	public static function exists($login)
 	{
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.users';
+		$cacheKey  = WV_Cache::generateKey('mapping', $login);
+		
+		if ($cache->exists($namespace, $cacheKey)) {
+			return true;
+		}
+		
 		$sql = WV_SQLEx::getInstance();
-		return $sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) > 0;
+		$id  = $sql->saveFetch('id', 'wv16_users','LOWER(login) = ?', strtolower($login));
+		
+		if ($id !== false) {
+			$cache->set($namespace, $cacheKey, (int) $id);
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public function getLogin()      { return $this->login;      }
@@ -277,6 +330,13 @@ class _WV16_User
 			
 			$this->values = null; // Speicher freigeben
 			$this->values = $a;
+			
+			// Benutzer neu cachen
+			
+			$cache     = WV_DeveloperUtils::getCache();
+			$namespace = 'frontenduser.users';
+			
+			$cache->set($namespace, $this->id, $this);
 		}
 		
 		return $this->values;
@@ -315,6 +375,10 @@ class _WV16_User
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.lists', true);
 			
 			return true;
 		}
@@ -355,6 +419,10 @@ class _WV16_User
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
 			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.lists', true);
+			
 			return true;
 		}
 		catch (Exception $e) {
@@ -376,6 +444,10 @@ class _WV16_User
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.lists', true);
 			
 			return true;
 		}
@@ -404,6 +476,10 @@ class _WV16_User
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.users', true);
+			$cache->flush('frontenduser.lists', true);
 			
 			return true;
 		}
@@ -501,8 +577,8 @@ class _WV16_User
 		
 		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id = ?', array($this->id, $setID)) > 0) {
 			$this->currentSetID = $setID;
-			$this->values   = null;
-			$this->getAttributes();
+			$this->values       = null;
+			$this->getValues();
 			return true;
 		}
 		
@@ -521,6 +597,16 @@ class _WV16_User
 	
 	public function getSetIDs($includeReadOnly = false)
 	{
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('set_ids', $this->id, $includeReadOnly);
+		
+		$ids = $cache->get($namespace, $cachekey, null);
+		
+		if (is_array($ids)) {
+			return $ids;
+		}
+		
 		$includeReadOnly = $includeReadOnly ? '' : ' AND set_id >= 0';
 		
 		$ids = WV_SQLEx::getInstance()->getArray(
@@ -528,7 +614,9 @@ class _WV16_User
 			$this->id, '#_', WV_SQLEx::RETURN_FALSE
 		);
 		
-		return array_map('intval', $ids);
+		$ids = array_map('intval', $ids);
+		$cache->set($namespace, $cacheKey, $ids);
+		return $ids;
 	}
 	
 	public function createSetCopy($sourceSetID = null)
@@ -537,6 +625,9 @@ class _WV16_User
 		$newID = WV_SQLEx::getInstance()->saveFetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) + 1;
 		
 		$this->copySet($setID, $newID);
+		
+		$cache = WV_DeveloperUtils::getCache();
+		$cache->flush('frontenduser.lists', true);
 		return $newID;
 	}
 	
@@ -554,6 +645,9 @@ class _WV16_User
 		}
 		
 		$this->copySet($setID, $newID);
+		
+		$cache = WV_DeveloperUtils::getCache();
+		$cache->flush('frontenduser.lists', true);
 		return $newID;
 	}
 	
