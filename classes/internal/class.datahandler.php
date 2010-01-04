@@ -146,14 +146,23 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getFirstSetID($user)
 	{
-		$userID = _WV16::getIDForUser($user, false);
-		$sql    = WV_SQLEx::getInstance();
-		$id     = $sql->saveFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
+		$userID     = _WV16::getIDForUser($user, false);
+		$cache      = WV_DeveloperUtils::getCache();
+		$namespace  = 'frontenduser.users.firstsets';
+		$firstSetID = $cache->get($namespace, $userID, null);
 		
-		// Die kleinste erlaubte ID ist 1. Wenn noch keine Werte vorhanden sein
-		// sollten, müssen wir dies hier dennoch sicherstellen.
+		if ($firstSetID === null) {
+			$sql = WV_SQLEx::getInstance();
+			$id  = $sql->saveFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
+			
+			// Die kleinste erlaubte ID ist 1. Wenn noch keine Werte vorhanden sein
+			// sollten, müssen wir dies hier dennoch sicherstellen.
+			
+			$firstSetID = $id == 0 ? 1 : (int) $id;
+			$cache->set($namespace, $userID, $firstSetID);
+		}
 		
-		return $id == 0 ? 1 : (int) $id;
+		return $firstSetID;
 	}
 	
 	/**
@@ -168,11 +177,20 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getUserType($user)
 	{
-		$userID = _WV16::getIDForUser($user, false);
-		$sql    = WV_SQLEx::getInstance();
-		$type   = $sql->saveFetch('type_id', 'wv16_users', 'id = ?', $userID);
+		$userID     = _WV16::getIDForUser($user, false);
+		$cache      = WV_DeveloperUtils::getCache();
+		$namespace  = 'frontenduser.users.typeids';
+		$typeID     = $cache->get($namespace, $userID, null);
 		
-		return $type ? (int) $type : -1;
+		if ($typeID === null) {
+			$sql  = WV_SQLEx::getInstance();
+			$type = $sql->saveFetch('type_id', 'wv16_users', 'id = ?', $userID);
+			
+			$typeID = $type ? (int) $type : -1;
+			$cache->set($namespace, $userID, $typeID);
+		}
+		
+		return $typeID;
 	}
 
 	/**
@@ -212,11 +230,19 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getAllUserTypes($sortby = 'title', $direction = 'ASC')
 	{
-		$types = array();
-		$sql   = WV_SQLEx::getInstance();
-		$mode  = WV_SQLEx::RETURN_FALSE;
-		$data  = $sql->getArray('SELECT * FROM #_wv16_utypes WHERE 1 ORDER BY '.$sortby.' '.$direction, array(), '#_', $mode);
-
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.lists';
+		$cacheKey  = WV_Cache::generateKey('usertypes', $sortby, $direction);
+		$data      = $cache->get($namespace, $cacheKey, false);
+		
+		if (!is_array($data)) {
+			$sql  = WV_SQLEx::getInstance();
+			$mode = WV_SQLEx::RETURN_FALSE;
+			$data = $sql->getArray('SELECT * FROM #_wv16_utypes WHERE 1 ORDER BY '.$sortby.' '.$direction, array(), '#_', $mode);
+			
+			$cache->set($namespace, $cacheKey, $data);
+		}
+		
 		foreach ($data as $id => $row) {
 			$types[] = _WV16_UserType::getInstance($id, array_merge(array('id' => $id), $row));
 		}
@@ -240,15 +266,24 @@ abstract class _WV16_DataHandler
 			return self::getAllAttributes();
 		}
 		
-		$sql      = WV_SQLEx::getInstance();
-		$mode     = WV_SQLEx::RETURN_FALSE;
-		$return   = array();
-		$userType = _WV16::getIDForUserType($userType, false);
+		$userType   = _WV16::getIDForUserType($userType, false);
+		$cache      = WV_DeveloperUtils::getCache();
+		$namespace  = 'frontenduser.internal.lists';
+		$cacheKey   = WV_Cache::generateKey('attr_by_type', $userType);
+		$attributes = $cache->get($namespace, $cacheKey, false);
+		$return     = array();
 		
-		// In utype_attrib stehen immer nur Live-Attribute (deleted=0), daher ist kein JOIN notwendig, um nur
-		// die Live-Attribute zu selektieren.
-		
-		$attributes = $sql->getArray('SELECT attribute_id FROM #_wv16_utype_attrib WHERE user_type = ?', $userType, '#_', $mode);
+		if (!is_array($attributes)) {
+			$sql  = WV_SQLEx::getInstance();
+			$mode = WV_SQLEx::RETURN_FALSE;
+			
+			// In utype_attrib stehen immer nur Live-Attribute (deleted=0), daher ist kein JOIN notwendig, um nur
+			// die Live-Attribute zu selektieren.
+			
+			$attributes = $sql->getArray('SELECT attribute_id FROM #_wv16_utype_attrib WHERE user_type = ?', $userType, '#_', $mode);
+			
+			$cache->set($namespace, $cacheKey, $attributes);
+		}
 		
 		foreach ($attributes as $id) {
 			$return[] = $returnAsIDs ? $id : _WV16_Attribute::getInstance($id);
@@ -280,7 +315,20 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getUserCountByType($userType)
 	{
-		return WV_SQLEx::getInstance()->count('wv16_users', 'type_id = ?', _WV16::getIDForUserType($userType, false));
+		$userType  = _WV16::getIDForUserType($userType, false);
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.counts';
+		$cacheKey  = WV_Cache::generateKey('users_by_type', $userType);
+		$count     = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($count < 0) {
+			$sql   = WV_SQLEx::getInstance();
+			$count = $sql->count('wv16_users', 'type_id = ?', $userType);
+			
+			$cache->set($namespace, $cacheKey, $count);
+		}
+		
+		return $count;
 	}
 	
 	/**
@@ -304,17 +352,25 @@ abstract class _WV16_DataHandler
 	 */
 	public static function getUsersByType($userType, $sortby = 'login', $direction = 'ASC', $limitClause = '')
 	{
-		$userType = _WV16::getIDForUserType($userType, false);
-		$return   = array();
-		$sql      = WV_SQLEx::getInstance();
+		$userType  = _WV16::getIDForUserType($userType, false);
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('users_by_type', $userType, $sortby, $direction, $limitClause);
+		$users     = $cache->get($namespace, $cacheKey, false);
+		$return    = array();
+		
+		if (!is_array($users)) {
+			$sql   = WV_SQLEx::getInstance();
+			$users = $sql->getArray(
+				'SELECT id FROM #_wv16_users at, #_article a WHERE type_id = ? '.
+				'ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
+				$userType, '#_'
+			);
+			
+			$cache->set($namespace, $cacheKey, $users);
+		}
 
-		$sql->queryEx(
-			'SELECT id FROM #_wv16_users at, #_article a WHERE type_id = ? '.
-			'ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
-			$userType, '#_'
-		);
-
-		foreach ($sql as $row) {
+		foreach ($users as $userID) {
 			$return[] = _WV16_User::getInstance($row['id']);
 		}
 
@@ -338,19 +394,28 @@ abstract class _WV16_DataHandler
 		if (empty($where)) $where = 'deleted = 0';
 		else $where .= ' AND deleted = 0';
 		
-		$attr = array();
-		$sql  = WV_SQLEx::getInstance();
-		$mode = WV_SQLEx::RETURN_FALSE;
-		$data = $sql->getArray(
-			'SELECT * FROM #_wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction,
-			array(), '#_', $mode
-		);
-
-		foreach ($data as $id => $row) {
-			$attr[] = _WV16_Attribute::getInstance($id, array_merge(array('id' => $id), $row));
+		$cache      = WV_DeveloperUtils::getCache();
+		$namespace  = 'frontenduser.lists';
+		$cacheKey   = WV_Cache::generateKey('attributes', $where, $sortby, $direction);
+		$attributes = $cache->get($namespace, $cacheKey, false);
+		$return     = array();
+		
+		if (!is_array($attributes)) {
+			$sql        = WV_SQLEx::getInstance();
+			$mode       = WV_SQLEx::RETURN_FALSE;
+			$attributes = $sql->getArray(
+				'SELECT * FROM #_wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction,
+				array(), '#_', $mode
+			);
+			
+			$cache->set($namespace, $cacheKey, $attributes);
 		}
 
-		return $attr;
+		foreach ($attributes as $id => $row) {
+			$return[] = _WV16_Attribute::getInstance($id, array_merge(array('id' => $id), $row));
+		}
+
+		return $return;
 	}
 	
 	/**
@@ -527,75 +592,95 @@ abstract class _WV16_DataHandler
 		$attribute = _WV16::getIDForAttribute($attribute, false);
 		$userType  = _WV16::getIDForUserType($userType, true);
 		
-		//////////////////////////////////////////////////////////////////////////
-		// Objekte finden, die die gesuchte Metainformation besitzen
-		// Ob der gesuchte Wert enthalten ist, prüfen später die Datentypen
-		// selbstständig.
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('users_by_attribute', $attribute, $userType, $value, $operator, $sort);
+		$users     = $cache->get($namespace, $cacheKey, false);
+		$return    = array();
 		
-		$sortTable  = strpos($sort, '.') === false ? ''    : substr($sort, 0, strpos($sort,'.'));
-		$sortColumn = strpos($sort, '.') === false ? $sort : substr($sort, strpos($sort,'.') + 1);
+		if (!is_array($users)) {
+			//////////////////////////////////////////////////////////////////////////
+			// Objekte finden, die die gesuchte Metainformation besitzen
+			// Ob der gesuchte Wert enthalten ist, prüfen später die Datentypen
+			// selbstständig.
+			
+			$sortTable  = strpos($sort, '.') === false ? ''    : substr($sort, 0, strpos($sort,'.'));
+			$sortColumn = strpos($sort, '.') === false ? $sort : substr($sort, strpos($sort,'.') + 1);
 
-		switch ( $sortTable ) {
-			case 'user_values': $sortTable = 'uv';   break;
-			case 'attributes':  $sortTable = 'attr'; break;
-			case 'users':       $sortTable = 'u';    break;
-			default:            $sortTable = '';
-		}
-		
-		$query =
-			'SELECT uv.* '.
-			'FROM #_wv16_user_values uv '.
-			'LEFT JOIN #_wv16_attributes attr ON uv.attribute_id = attr.id '.
-			'LEFT JOIN #_wv16_users u ON u.id = uv.user_id '.
-			'WHERE a.id = ?';
-
-		$sql    = WV_SQLEx::getClone();
-		$return = array();
-		$params = array($attribute);
-		
-		if ($userType !== null) {
-			$query   .= ' AND type_id = ?';
-			$params[] = $userType;
-		}
-		
-		if ($sortTable) {
-			$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
-		}
-
-		$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
-
-		// Nichts gefunden? Und tschüss!
-
-		if ($sql->rows() == 0) {
-			$sql = null;
-			unset($sql);
-			return array();
-		}
-
-		// Datentyp ermitteln
-
-		$datatype = _WV16_Attribute::getDatatypeWithParams($attribute);
-		$params   = $datatype['params'];
-
-		// Gefundene Daten durchgehen
-
-		foreach ($sql as $row) {
-			if ($value === null) {
-				$return[] = _WV16_User::getInstance($row['user_id']);
+			switch ($sortTable) {
+				case 'user_values': $sortTable = 'uv';   break;
+				case 'attributes':  $sortTable = 'attr'; break;
+				case 'users':       $sortTable = 'u';    break;
+				default:            $sortTable = '';
 			}
-			else {
-				$contained = WV_Datatype::call($datatype['datatype'], 'isValueContained', array($value, $row['value'], $params, $operator));
+			
+			$query =
+				'SELECT uv.* '.
+				'FROM #_wv16_user_values uv '.
+				'LEFT JOIN #_wv16_attributes attr ON uv.attribute_id = attr.id '.
+				'LEFT JOIN #_wv16_users u ON u.id = uv.user_id '.
+				'WHERE a.id = ?';
 
-				if ($contained) {
-					$return[] = _WV16_User::getInstance($row['user_id']);
+			$sql    = WV_SQLEx::getClone();
+			$return = array();
+			$params = array($attribute);
+			
+			if ($userType !== null) {
+				$query   .= ' AND type_id = ?';
+				$params[] = $userType;
+			}
+			
+			if ($sortTable) {
+				$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
+			}
+
+			$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
+
+			// Nichts gefunden? Und tschüss!
+
+			if ($sql->rows() == 0) {
+				$sql = null;
+				unset($sql);
+				return array();
+			}
+
+			// Datentyp ermitteln
+
+			$datatype  = _WV16_Attribute::getDatatypeWithParams($attribute);
+			$params    = $datatype['params'];
+			$cacheData = array();
+
+			// Gefundene Daten durchgehen
+
+			foreach ($sql as $row) {
+				if ($value === null) {
+					$return[]    = _WV16_User::getInstance($row['user_id']);
+					$cacheData[] = (int) $row['user_id'];
+				}
+				else {
+					$contained = WV_Datatype::call($datatype['datatype'], 'isValueContained', array($value, $row['value'], $params, $operator));
+
+					if ($contained) {
+						$return[]    = _WV16_User::getInstance($row['user_id']);
+						$cacheData[] = (int) $row['user_id'];
+					}
 				}
 			}
+			
+			// Mach's gut, Dolly!
+			
+			$sql = null;
+			unset($sql);
+			
+			// Daten cachen
+			
+			$cache->set($namespace, $cacheKey, $cacheData);
 		}
-		
-		// Mach's gut, Dolly!
-		
-		$sql = null;
-		unset($sql);
+		else {
+			foreach ($users as $user) {
+				$return[] = _WV16_User::getInstance($user);
+			}
+		}
 
 		return $return;
 	}
@@ -761,12 +846,17 @@ abstract class _WV16_DataHandler
 		$typeIDs = wv_makeArray(isset($params['typeID']) ? $params['typeID'] : null);
 		$names   = wv_makeArray(isset($params['name'])   ? $params['name']   : null);
 		$ids     = wv_makeArray(isset($params['id'])     ? $params['id']     : null);
+		
+		// Attributnamen zu -IDs umformen, um einfachere und eindeutigere Queries zu erzeugen.
+		
+		foreach ($names as $name) {
+			$ids[] = _WV16_Attribute::getIDForName($name);
+		}
 
 		// Minimieren
 
 		$userIDs = array_unique($userIDs);
 		$typeIDs = array_unique($typeIDs);
-		$names   = array_unique($names);
 		$ids     = array_unique($ids);
 
 		// In Query einsetzen
@@ -774,27 +864,18 @@ abstract class _WV16_DataHandler
 		$params = array();
 		
 		if (!empty($userIDs)) {
-			$markers = WV_SQLEx::getMarkers(count($userIDs));
+			$markers = implode(',', array_map('intval', $userIDs));
 			$query   = str_replace('%where%', 'user_id IN ('.$markers.') AND %where%', $query);
-			$params  = $userIDs;
 		}
 		
 		if (!empty($typeIDs)) {
-			$markers = WV_SQLEx::getMarkers(count($typeIDs));
+			$markers = implode(',', array_map('intval', $typeIDs));
 			$query   = str_replace('%where%', 'type_id IN ('.$markers.') AND %where%', $query);
-			$params  = array_merge($params, $userIDs);
-		}
-		
-		if (!empty($names)) {
-			$markers = WV_SQLEx::getMarkers(count($names));
-			$query   = str_replace('%where%', 'attr.name IN ('.$markers.') AND %where%', $query);
-			$params  = array_merge($params, $names);
 		}
 		
 		if (!empty($ids)) {
-			$markers = WV_SQLEx::getMarkers(count($ids));
+			$markers = implode(',', array_map('intval', $ids));
 			$query   = str_replace('%where%', 'attr.id IN ('.$markers.') AND %where%', $query);
-			$params  = array_merge($params, $ids);
 		}
 
 		$query = str_replace('%where%', '', $query);
@@ -804,13 +885,30 @@ abstract class _WV16_DataHandler
 		$orderby   = isset($params['orderby'])   ? $params['orderby']   : 'u.id';
 		$direction = isset($params['direction']) ? $params['direction'] : 'ASC';
 		$query    .= ' ORDER BY '.$orderby.' '.$direction;
-		$result    = array();
 		
 		// Daten sammeln
 		
-		$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
-
-		foreach ($sql as $row) {
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('userdata', md5($query));
+		$data      = $cache->get($namespace, $cacheKey, false);
+		$result    = array();
+		
+		if (!is_array($data)) {
+			$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
+			$data = array();
+			
+			foreach ($sql as $row) {
+				$row['attribute_id'] = (int) $row['attribute_id'];
+				$row['user_id']      = (int) $row['user_id'];
+				
+				$data[] = $row;
+			}
+			
+			$cache->set($namespace, $cacheKey, $data);
+		}
+		
+		foreach ($data as $row) {
 			$result[] = new _WV16_UserValue($row['value'], $row['attribute_id'], $row['user_id']);
 		}
 

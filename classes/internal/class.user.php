@@ -149,6 +149,10 @@ class _WV16_User
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
 			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser.counts', true);
+			$cache->flush('frontenduser.lists', true);
+			
 			return $user;
 		}
 		catch (Exception $e) {
@@ -213,9 +217,11 @@ class _WV16_User
 			}
 			
 			$cache = WV_DeveloperUtils::getCache();
-			$cache->flush('frontenduser.users', true);
-			$cache->flush('frontenduser.uservalues', true);
+			$cache->delete('frontenduser.users', $this->id);
+			$cache->delete('frontenduser.users.firstsets', $this->id);
+			$cache->delete('frontenduser.users.typeids', $this->id);
 			$cache->flush('frontenduser.lists', true);
+			$cache->flush('frontenduser.counts', true);
 			
 			return true;
 		}
@@ -244,6 +250,7 @@ class _WV16_User
 			$cache->flush('frontenduser.users', true);
 			$cache->flush('frontenduser.uservalues', true);
 			$cache->flush('frontenduser.lists', true);
+			$cache->flush('frontenduser.counts', true);
 			
 			return true;
 		}
@@ -303,7 +310,16 @@ class _WV16_User
 	
 	public function setValue($attribute, $value, $useTransaction = true)
 	{
-		return WV16_Users::setDataForUser($this, $attribute, $value, $useTransaction);
+		$retval = WV16_Users::setDataForUser($this, $attribute, $value, $useTransaction);
+		
+		if ($retval) {
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->delete('frontenduser.users', $this->id);
+			$cache->delete('frontenduser.users.firstsets', $this->id);
+			$cache->flush('frontenduser.lists', true);
+		}
+	
+		return $retval;
 	}
 	
 	public function getValues()
@@ -628,6 +644,7 @@ class _WV16_User
 		
 		$cache = WV_DeveloperUtils::getCache();
 		$cache->flush('frontenduser.lists', true);
+		$cache->delete('frontenduser.users.firstsets', $this->id);
 		return $newID;
 	}
 	
@@ -648,6 +665,7 @@ class _WV16_User
 		
 		$cache = WV_DeveloperUtils::getCache();
 		$cache->flush('frontenduser.lists', true);
+		$cache->delete('frontenduser.users.firstsets', $this->id);
 		return $newID;
 	}
 	

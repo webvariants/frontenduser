@@ -34,7 +34,7 @@ class _WV16_Attribute implements _WV_IProperty
 		}
 		
 		$cache     = WV_DeveloperUtils::getCache();
-		$namespace = 'frontenduser.objects.attributes';
+		$namespace = 'frontenduser.internal.attributes';
 		$instance  = $cache->get($namespace, $id);
 		
 		if (!$instance) {
@@ -71,7 +71,7 @@ class _WV16_Attribute implements _WV_IProperty
 			$prefetchedData = $sql->saveFetch('*', 'wv16_attributes', 'id = ?', $id);
 			
 			if (!$prefetchedData) {
-				throw new Exception('Das Attribut #'.$id.' konnte nicht gefunden werden!');
+				throw new WV16_Exception('Das Attribut #'.$id.' konnte nicht gefunden werden!');
 			}
 		}
 
@@ -184,30 +184,19 @@ class _WV16_Attribute implements _WV_IProperty
 				$users = $sql->getArray('SELECT id FROM #_wv16_users WHERE 1', array(), '#_');
 			}
 			else {
-				$markers = WV_SQLEx::getMarkers(count($this->userTypes));
-				$users   = $sql->getArray(
-					'SELECT id FROM #_wv16_users WHERE type_id NOT IN ('.$markers.')',
-					$this->userTypes, '#_'
-				);
+				$users = $sql->getArray('SELECT id FROM #_wv16_users WHERE type_id NOT IN ('.implode(',', $this->userTypes).')', array(), '#_');
 			}
 			
 			// Von allen *anderen* Benutzern entfernen wir nun dieses Attribut.
 			// Allerdings betrifft dies nur Sets, die nicht als read-only markiert sind.
 			
 			if (!empty($users)) {
-				$markers = WV_SQLEx::getMarkers(count($users));
-				$params  = $users;
-				
-				array_unshift($params, $this->id);
-				
 				$sql->queryEx(
-					'DELETE FROM #_wv16_user_values WHERE attribute_id = ? AND set_id >= 0 AND user_id IN ('.$markers.')',
-					$params, '#_'
+					'DELETE FROM #_wv16_user_values WHERE attribute_id = ? AND set_id >= 0 AND user_id IN ('.implode(',', $users).')',
+					$this->id, '#_'
 				);
 				
-				$params  = null;
-				$markers = null;
-				$users   = null;
+				$users = null;
 			}
 			
 			///////////////////////////////////////////////////////////////////////
@@ -239,12 +228,15 @@ class _WV16_Attribute implements _WV_IProperty
 						array($this->id, $this->defaultValue) , '#_'
 					);
 				}
-				
-				$this->origUserTypes = $this->userTypes;
 			}
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$this->origUserTypes = $this->userTypes;
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			return true;
 		}
@@ -293,6 +285,9 @@ class _WV16_Attribute implements _WV_IProperty
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			return true;
 		}
@@ -374,7 +369,7 @@ class _WV16_Attribute implements _WV_IProperty
 				///////////////////////////////////////////////////////////////////////
 				// Standardwert übernehmen
 				
-				$markers = WV_SQLEx::getMarkers(count($userTypes));
+				$markers = implode(',', $userTypes);
 				
 				// 1. Selektiere all diejenigen Benutzer, die schon Werte (= Sets) haben.
 				
@@ -399,7 +394,7 @@ class _WV16_Attribute implements _WV_IProperty
 				// 4. Verwende dieses SELECT, um damit das INSERT-Statement zu befeuern.
 				
 				$query = 'INSERT INTO #_wv16_user_values (user_id,attribute_id,set_id,value) '.$select;
-				$sql->queryEx($query, $userTypes, '#_');
+				$sql->queryEx($query, array(), '#_');
 				
 				$markers = null;
 			}
@@ -409,6 +404,9 @@ class _WV16_Attribute implements _WV_IProperty
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			return self::getInstance($id);
 		}
@@ -452,6 +450,9 @@ class _WV16_Attribute implements _WV_IProperty
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			return true;
 		}
@@ -515,6 +516,9 @@ class _WV16_Attribute implements _WV_IProperty
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
+			
+			$cache = WV_DeveloperUtils::getCache();
+			$cache->flush('frontenduser', true);
 			
 			return true;
 		}
@@ -651,25 +655,19 @@ class _WV16_Attribute implements _WV_IProperty
 			return array('datatype' => $attribute->getDatatypeID(), 'params' => $attribute->getParams());
 		}
 
-		if (WV_String::isInteger($attribute)) {
-			$attribute = (int) $attribute;
-		}
-		else {
-			$attribute = self::getIDForName($attribute);
-		}
-		
-		return WV_SQLEx::getInstance()->saveFetch('datatype,params', 'wv16_attributes', 'id = ?', $attribute);
+		$attribute = self::getIDForName($attribute);
+		return WV_SQLEx::getInstance()->saveFetch('datatype, params', 'wv16_attributes', 'id = ?', $attribute);
 	}
 
 	/**
 	 * ID ermitteln
 	 *
-	 * Gibt die ID eines Attributes für dessen Namen zurück. Vorrang
+	 * Gibt die ID eines Attributes für dessen Namen zurück.
 	 *
-	 * @throws Exception     falls der Name nicht gefunden wurde
-	 * @param  string $name  der interne Name der Metainformation
-	 * @param  int    $type  der Typ der Metainformation
-	 * @return int           die ID
+	 * @throws WV16_Exception  falls der Name nicht gefunden wurde
+	 * @param  string $name    der interne Name der Metainformation
+	 * @param  int    $type    der Typ der Metainformation
+	 * @return int             die ID
 	 */
 	public static function getIDForName($name)
 	{
@@ -677,9 +675,19 @@ class _WV16_Attribute implements _WV_IProperty
 			return (int) $name;
 		}
 		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.mappings';
+		$cacheKey  = WV_Cache::generateKey('attribute', strtolower($name));
+		
+		$id = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($id > 0) {
+			return (int) $id;
+		}
+		
 		// Wir sortieren nach dem deleted-Status. Auf diese Weise wird, falls es ein
 		// altes gelöschtes Attribut mit dem Namen X und ein Live-Attribut mit dem Namen
-		// X gibt, das neuere selektiert. Das gelöschte Attribute (bzw. die gelöschten)
+		// X gibt, das neuere selektiert. Das gelöschte Attribut (bzw. die gelöschten)
 		// können dann nur noch über ihre ID im Konstruktur aufgerufen werden.
 		// Sind mehrere gelöschte mit dem gleichen Namen vorhanden, wird das letzte
 		// (jüngste) mit dem Namen selektiert.
@@ -691,6 +699,7 @@ class _WV16_Attribute implements _WV_IProperty
 			throw new WV16_Exception('Das Attribut "'.$name.'" konnte nicht gefunden werden!');
 		}
 		
+		$cache->set($namespace, $cacheKey, (int) $id);
 		return (int) $id;
 	}
 	

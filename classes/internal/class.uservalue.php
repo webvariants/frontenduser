@@ -11,10 +11,17 @@
 
 class _WV16_UserValue
 {
-	protected $serializedValue; ///< string          der noch serialisierte Wert
-	protected $value;           ///< mixed           der vom Datentyp deserialisierte Wert
-	protected $attribute;       ///< _WV16_Attribute das Attribut
-	protected $user;            ///< mixed           der Benutzer
+	protected $serializedValue; ///< string  der noch serialisierte Wert
+	protected $value;           ///< mixed   der vom Datentyp deserialisierte Wert
+	protected $attributeID;     ///< int     die ID des Attributs
+	protected $userID;          ///< int     die ID des Benutzers
+	
+	private $attribute; ///< _WV16_Attribute  Hilfsobjekt, um nicht dauernd die Referenz holen zu müssen
+	
+	public function __sleep()
+	{
+		return array('serializedValue', 'value', 'attributeID', 'userID');
+	}
 	
 	/**
 	 * Konstruktor
@@ -31,13 +38,15 @@ class _WV16_UserValue
 	public function __construct($value, $attribute, $user)
 	{
 		$this->serializedValue = $value;
+		$this->attributeID     = null;
 		$this->attribute       = null;
-		$this->user            = null;
+		$this->userID          = null;
 		$this->value           = $value;
 		
 		if ($attribute != null) {
-			$this->user      = is_int($user) ? _WV16_User::getInstance($user) : $user;
-			$this->attribute = $attribute instanceof _WV16_Attribute ? $attribute : _WV16_Attribute::getInstance($attribute);
+			$this->userID      = _WV16::getIDForUser($user);
+			$this->attributeID = _WV16::getIDForAttribute($attribute);
+			$this->attribute   = _WV16_Attribute::getInstance($this->attributeID);
 			
 			// Wert über den Datentyp automatisch deserialisieren
 			
@@ -57,8 +66,11 @@ class _WV16_UserValue
 	 * 
 	 * @return mixed  die entsprechende Eigenschaft
 	 */
-	public function getCLang()           { return $this->clang;           }
-	public function getUser()            { return $this->user;            }
+	public function getUser()
+	{
+		return $this->userID !== null ? _WV16_User::getInstance($this->userID) : null;
+	}
+	
 	public function getSerializedValue() { return $this->serializedValue; }
 	public function getAttribute()       { return $this->attribute ? $this->attribute                : null; }
 	public function getAttributeID()     { return $this->attribute ? $this->attribute->getID()       : null; }
