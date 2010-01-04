@@ -68,6 +68,7 @@ CREATE TABLE `%TABLE_PREFIX%wv16_users` (
   `type_id` smallint(5) unsigned NOT NULL DEFAULT '1',
   `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `was_activated` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `confirmation_code` varchar(20) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),
   UNIQUE KEY `login` (`login`)
 ) ENGINE = InnoDB;

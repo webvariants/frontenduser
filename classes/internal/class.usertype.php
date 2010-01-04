@@ -381,20 +381,10 @@ class _WV16_UserType
 		$this->attributes = array();
 		
 		foreach ($attributes as $attr) {
-			if (WV_String::isInteger($attr)) {
-				$this->attributes[] = (int) $attr;
-			}
-			elseif ($attr instanceof self) {
-				$this->attributes[] = $attr->getID();
-			}
-			elseif (is_string($attr)) {
-				try {
-					$id = self::getIDForName($attr);
-					$this->attributes[] = $id;
-				}
-				catch (Exception $e) {
-					// pass...
-				}
+			$id = @_WV16::getIDForAttribute($attr, false);
+			
+			if ($id > 0) {
+				$this->attributes[] = $id;
 			}
 		}
 		

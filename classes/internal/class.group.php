@@ -28,16 +28,37 @@ class _WV16_Group
 	{
 		$groupID = (int) $groupID;
 		
-		if (empty(self::$instances[$groupID])) {
-			self::$instances[$groupID] = new self($groupID);
+		if (isset(self::$instances[$groupID])) {
+			return self::$instances[$groupID];
 		}
 		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.groups';
+		$instance  = $cache->get($namespace, $groupID);
+		
+		if (!$instance) {
+			if ($cache->lock($namespace, $groupID)) {
+				try {
+					$instance = new self($groupID);
+					$cache->set($namespace, $groupID, $instance);
+					$cache->unlock($namespace, $groupID);
+				}
+				catch (Exception $e) {
+					$cache->unlock($namespace, $groupID);
+					throw $e;
+				}
+			}
+			else {
+				$instance = $cache->waitForObject($namespace, $groupID);
+				
+				if (!$instance) {
+					$instance = new self($groupID);
+				}
+			}
+		}
+		
+		self::$instances[$groupID] = $instance;
 		return self::$instances[$groupID];
-	}
-	
-	public static function exists($groupID)
-	{
-		return WV_SQLEx::getInstance()->count('wv16_groups', 'id = ?', (int) $groupID) == 1;
 	}
 	
 	private function __construct($id)
@@ -56,6 +77,19 @@ class _WV16_Group
 		$this->parentID = (int) $data['parent_id'];
 	}
 	
+	public static function exists($groupID)
+	{
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.groups';
+		
+		if ($cache->exists($namespace, $groupID)) {
+			return true;
+		}
+		
+		$sql = WV_SQLEx::getInstance();
+		return $sql->count('wv16_groups', 'id = ?', (int) $groupID) == 1;
+	}
+	
 	public function getName()  { return $this->name;  }
 	public function getID()    { return $this->id;    }
 	public function getTitle() { return $this->title; }
@@ -63,22 +97,43 @@ class _WV16_Group
 	public function canAccess($object, $objectType = null) /* Typ ist nur nötig, wenn die Objekt-ID nicht eindeutig ist */
 	{
 		list($objectID, $objectType) = _WV16::identifyObject($object, $objectType);
+		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.rights';
+		$cacheKey  = WV_Cache::generateKey('can_access', $this->id, $objectID, $objectType);
+		$canAccess = $cache->get($namespace, $cacheKey, null);
+		
+		if (is_bool($canAccess)) {
+			return $canAccess;
+		}
+		
 		$sql = WV_SQLEx::getInstance();
 		
 		// Die Berechtigung für dieses Objekt allein abrufen (explizite Erlaubnis?)
 		
 		$privilege = $sql->saveFetch('privilege', 'wv16_rights', 'object_id = ? AND object_type = ? AND group_id = ?', array($objectID, $objectType, $this->id));
-		if ($privilege) return true;
+		
+		if ($privilege) {
+			$cache->set($namespace, $cacheKey, true);
+			return true;
+		}
 		
 		// Verboten? Vielleicht gibt es für dieses Objekt einfach keine expliziten Rechte.
 		
 		$privileges = $sql->count('wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
-		if (!empty($privileges)) return false; // es gibt also durchaus Rechte für dieses Objekt.
+		
+		if (!empty($privileges)) {
+			$cache->set($namespace, $cacheKey, false);
+			return false; // es gibt also durchaus Rechte für dieses Objekt.
+		}
 		
 		// In diesem Fall wäre der Zugriff erlaubt, wenn das Elternelement (soweit vorhanden)
 		// den Zugriff erlaubt. Medien vererben keine Rechte.
 		
-		if ($objectType == _WV16::TYPE_MEDIUM) return false;
+		if ($objectType == _WV16::TYPE_MEDIUM) {
+			$cache->set($namespace, $cacheKey, false);
+			return false;
+		}
 		
 		// Prüfen, ob es sich, wenn wir einen Artikel haben, es sich
 		// gleichzeitig auch um eine Kategorie handelt.
@@ -92,7 +147,12 @@ class _WV16_Group
 		// Elternkategorie logischerweise direkt "der Artikel selbst".
 
 		$parentCategory = $isStartpage ? $objectID : $sql->saveFetch('re_id', 'article', 'id = ?', $objectID);
-		if ($parentCategory == 0) return true; // Artikel/Kategorie der obersten Ebene, da generell alle Objekte erlaubt sind, hören wir hier auf.
+		
+		if ($parentCategory == 0) {
+			$cache->set($namespace, $cacheKey, true);
+			return true; // Artikel/Kategorie der obersten Ebene, da generell alle Objekte erlaubt sind, hören wir hier auf.
+		}
+		
 		return $this->canAccess((int) $parentCategory, _WV16::TYPE_CATEGORY);
 	}
 }

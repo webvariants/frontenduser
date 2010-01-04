@@ -27,6 +27,7 @@ class _WV16_User
 	protected $deleted;
 	protected $wasActivated;
 	protected $currentSetID;
+	protected $confirmationCode;
 	
 	private static $instances = array();
 	
@@ -76,17 +77,18 @@ class _WV16_User
 			throw new WV16_Exception('Der Benutzer #'.$id.' konnte nicht gefunden werden!', self::ERR_UNKNOWN_USER);
 		}
 		
-		$this->id           = (int) $data['id'];
-		$this->login        = $data['login'];
-		$this->password     = $data['password'];
-		$this->registered   = $data['registered'];
-		$this->typeID       = (int) $data['type_id'];
-		$this->origTypeID   = $this->typeID;
-		$this->values       = null;
-		$this->deleted      = (boolean) $data['deleted'];
-		$this->wasActivated = (boolean) $data['was_activated'];
-		$this->currentSetID = WV16_Users::getFirstSetID($this->id);
-		$this->groups       = $sql->getArray('SELECT group_id FROM #_wv16_user_groups WHERE user_id = ?', $this->id, '#_');
+		$this->id               = (int) $data['id'];
+		$this->login            = $data['login'];
+		$this->password         = $data['password'];
+		$this->registered       = $data['registered'];
+		$this->typeID           = (int) $data['type_id'];
+		$this->origTypeID       = $this->typeID;
+		$this->values           = null;
+		$this->deleted          = (boolean) $data['deleted'];
+		$this->wasActivated     = (boolean) $data['was_activated'];
+		$this->currentSetID     = WV16_Users::getFirstSetID($this->id);
+		$this->groups           = $sql->getArray('SELECT group_id FROM #_wv16_user_groups WHERE user_id = ?', $this->id, '#_');
+		$this->confirmationCode = $data['confirmation_code'];
 	}
 	
 	public static function register($login, $password, $userType = null, $useTransaction = true)
@@ -119,11 +121,12 @@ class _WV16_User
 			
 			self::testPassword($password);
 			
-			$registered = date('Y-m-d H:i:s');
+			$registered       = date('Y-m-d H:i:s');
+			$confirmationCode = WV16_Users::generateConfirmationCode($this->login);
 			
 			$sql->queryEx(
-				'INSERT INTO #_wv16_users (login,password,registered,type_id) VALUES (?,"",?,?)',
-				array($login, $registered, $userType), '#_'
+				'INSERT INTO #_wv16_users (login,password,registered,type_id,confirmation_code) VALUES (?,"",?,?,?)',
+				array($login, $registered, $userType, $confirmationCode), '#_'
 			);
 			
 			$userID = $sql->lastID();
@@ -281,11 +284,12 @@ class _WV16_User
 		return false;
 	}
 	
-	public function getLogin()      { return $this->login;      }
-	public function getID()         { return $this->id;         }
-	public function getRegistered() { return $this->registered; }
-	public function getTypeID()     { return $this->typeID;     }
-	public function getGroupIDs()   { return $this->groups;     }
+	public function getLogin()            { return $this->login;            }
+	public function getID()               { return $this->id;               }
+	public function getRegistered()       { return $this->registered;       }
+	public function getTypeID()           { return $this->typeID;           }
+	public function getGroupIDs()         { return $this->groups;           }
+	public function getConfirmationCode() { return $this->confirmationCode; }
 	
 	public function getType()
 	{
@@ -473,10 +477,18 @@ class _WV16_User
 		}
 	}
 	
-	public function setConfirmed($isConfirmed = true, $useTransaction = true)
+	public function setConfirmed($isConfirmed = true, $confirmationCode = null, $useTransaction = true)
 	{
-		$sql  = WV_SQLEx::getInstance();
-		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		$sql     = WV_SQLEx::getInstance();
+		$mode    = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		$oldCode = $this->confirmationCode;
+		
+		// Auf Wunsch kann auch diese Methode die Überprüfung auf den
+		// Bestätigungscode selbst durchführen.
+		
+		if (is_string($confirmationCode)) {
+			$isConfirmed = $oldCode == $confirmationCode;
+		}
 		
 		try {
 			$sql->startTransaction($useTransaction);
@@ -484,22 +496,29 @@ class _WV16_User
 			if ($isConfirmed) {
 				$this->removeGroup(_WV16_Group::GROUP_UNCONFIRMED, false);
 				$this->addGroup(_WV16_Group::GROUP_CONFIRMED, false);
+				$this->confirmationCode = '';
 			}
 			else {
 				$this->removeAllGroups(false);
 				$this->addGroup(_WV16_Group::GROUP_UNCONFIRMED, false);
+				$this->confirmationCode = WV16_Users::generateConfirmationCode($this->login);
 			}
+			
+			$this->update(false); // Bestätigungscode neu abspeichern
 			
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
 			
-			$cache = WV_DeveloperUtils::getCache();
+			$oldCode = $this->confirmationCode; // falls hier eine Exception auftritt, das Zurücksetzen des Codes umgehen
+			$cache   = WV_DeveloperUtils::getCache();
+			
 			$cache->flush('frontenduser.users', true);
 			$cache->flush('frontenduser.lists', true);
 			
 			return true;
 		}
 		catch (Exception $e) {
+			$this->confirmationCode = $oldCode;
 			$sql->cleanEndTransaction($useTransaction, $mode, $e, 'WV16_Exception');
 			return false;
 		}
