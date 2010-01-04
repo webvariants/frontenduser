@@ -16,16 +16,14 @@ $subpages = array(
 	array('',           'Benutzer'),
 //	array('groups',     'Gruppen'),
 	array('types',      'Benutzertypen'),
-	array('attributes', 'Attribute'),
-//	array('settings',   'Einstellungen')
+	array('attributes', 'Attribute')
 );
 
 $subpageFiles = array(
 	''           => 'users',
 //	'groups'     => 'groups',
 	'types'      => 'types',
-	'attributes' => 'attributes',
-//	'settings'   => 'settings',
+	'attributes' => 'attributes'
 );
 
 rex_title('Benutzerverwaltung', $subpages);
