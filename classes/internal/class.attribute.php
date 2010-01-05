@@ -374,7 +374,7 @@ class _WV16_Attribute implements _WV_IProperty
 				// 1. Selektiere all diejenigen Benutzer, die schon Werte (= Sets) haben.
 				
 				$select1 =
-					'SELECT DISTINCT user_id,set_id '.
+					'SELECT DISTINCT user_id,?,set_id,? '.
 					'FROM #_wv16_user_values uv, #_wv16_users u '.
 					'WHERE uv.user_id = u.id AND u.type_id IN ('.$markers.') AND set_id >= 0';
 				
@@ -383,8 +383,8 @@ class _WV16_Attribute implements _WV_IProperty
 				// keine Attribute hatten.
 				
 				$select2 =
-					'SELECT DISTINCT id,1 FROM #_wv16_users '.
-					'WHERE u.type_id IN ('.$markers.') AND id NOT IN '.
+					'SELECT DISTINCT id,?,1,? FROM #_wv16_users u '.
+					'WHERE u.type_id IN ('.$markers.') AND u.id NOT IN '.
 					'(SELECT DISTINCT user_id FROM #_wv16_user_values)';
 				
 				// 3. Vereinige diese beiden Mengen
@@ -394,7 +394,7 @@ class _WV16_Attribute implements _WV_IProperty
 				// 4. Verwende dieses SELECT, um damit das INSERT-Statement zu befeuern.
 				
 				$query = 'INSERT INTO #_wv16_user_values (user_id,attribute_id,set_id,value) '.$select;
-				$sql->queryEx($query, array(), '#_');
+				$sql->queryEx($query, array($id, $defaultValue, $id, $defaultValue), '#_');
 				
 				$markers = null;
 			}
