@@ -287,6 +287,7 @@ class _WV16_User
 	public function getLogin()            { return $this->login;            }
 	public function getID()               { return $this->id;               }
 	public function getRegistered()       { return $this->registered;       }
+	public function getPasswordHash()     { return $this->password;         }
 	public function getTypeID()           { return $this->typeID;           }
 	public function getGroupIDs()         { return $this->groups;           }
 	public function getConfirmationCode() { return $this->confirmationCode; }
