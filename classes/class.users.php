@@ -13,8 +13,8 @@ abstract class WV16_Users extends _WV16_DataHandler
 {
 	const ANONYMOUS              = 0;
 	const ERR_USER_UNKNOWN       = 1;
-	const ERR_INVALID_LOGIN      = 1;
-	const ERR_USER_NOT_ACTIVATED = 2;
+	const ERR_INVALID_LOGIN      = 2;
+	const ERR_USER_NOT_ACTIVATED = 3;
 	
 	public static function loginExists($login)
 	{
