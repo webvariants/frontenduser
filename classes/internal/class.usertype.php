@@ -52,8 +52,8 @@ class _WV16_UserType
 			}
 		}
 		
-		self::$instances[$key] = $instance;
-		return self::$instances[$key];
+		self::$instances[$id] = $instance;
+		return self::$instances[$id];
 	}
 	
 	private function __construct($id, $prefetchedData = array())
