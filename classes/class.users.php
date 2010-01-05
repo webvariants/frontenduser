@@ -145,23 +145,14 @@ abstract class WV16_Users extends _WV16_DataHandler
 		
 		if (!is_array($users)) {
 			$sql    = WV_SQLEx::getInstance();
-			$params = array();
 			$query  = 'SELECT id FROM #_wv16_users WHERE 1 ORDER BY '.$orderBy.' '.$direction;
 			
 			if ($offset > 0 || $max < 0) {
-				$max = $max < 0 ? 18446744073709551615 : (int) $max;
-				
-				if ($offset > 0) {
-					$query .= ' LIMIT ?,?';
-					$params = array($offset, $max);
-				}
-				else {
-					$query .= ' LIMIT ?';
-					$params = $max;
-				}
+				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
+				$query .= ' LIMIT '.$offset.','.$max;
 			}
 			
-			$users = $sql->getArray($query, $params, '#_');
+			$users = $sql->getArray($query, array(), '#_');
 			$cache->set($namespace, $cacheKey, $users);
 		}
 		
@@ -187,26 +178,17 @@ abstract class WV16_Users extends _WV16_DataHandler
 		
 		if (!is_array($users)) {
 			$sql    = WV_SQLEx::getInstance();
-			$params = array($groupID);
 			$query  = 'SELECT id '.
 				'FROM #_wv16_users u '.
 				'LEFT JOIN #_wv16_user_groups ug ON u.id = ug.user_id '.
 				'WHERE group_id = ? ORDER BY '.$orderBy.' '.$direction;
 			
 			if ($offset > 0 || $max < 0) {
-				$max = $max < 0 ? 18446744073709551615 : (int) $max;
-				
-				if ($offset > 0) {
-					$query .= ' LIMIT ?,?';
-					$params = array($groupID, $offset, $max);
-				}
-				else {
-					$query .= ' LIMIT ?';
-					$params = array($groupID, $max);
-				}
+				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
+				$query .= ' LIMIT '.$offset.','.$max;
 			}
 			
-			$users = $sql->getArray($query, $params, '#_');
+			$users = $sql->getArray($query, $groupID, '#_');
 			$cache->set($namespace, $cacheKey, $users);
 		}
 		
@@ -231,23 +213,14 @@ abstract class WV16_Users extends _WV16_DataHandler
 		
 		if (!is_array($groups)) {
 			$sql    = WV_SQLEx::getInstance();
-			$params = array();
 			$query  = 'SELECT id FROM #_wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
 			
 			if ($offset > 0 || $max < 0) {
-				$max = $max < 0 ? 18446744073709551615 : (int) $max;
-				
-				if ($offset > 0) {
-					$query .= ' LIMIT ?,?';
-					$params = array($offset, $max);
-				}
-				else {
-					$query .= ' LIMIT ?';
-					$params = $max;
-				}
+				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
+				$query .= ' LIMIT '.$offset.','.$max;
 			}
 			
-			$groups = $sql->getArray($query, $params, '#_');
+			$groups = $sql->getArray($query, array(), '#_');
 			$cache->set($namespace, $cacheKey, $groups);
 		}
 		
