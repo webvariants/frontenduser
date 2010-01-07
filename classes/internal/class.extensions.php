@@ -43,14 +43,14 @@ class _WV16_Extensions
 		// Artikel verarbeiten
 
 		if ($page == 'content') {
-			rex_register_extension('ART_META_FORM_SECTION', array($self, 'artMetaSectionForm'));
+//			rex_register_extension('ART_META_FORM_SECTION', array($self, 'artMetaSectionForm'));
 		}
 
 		// Kategorie verarbeiten
 
 		if ($page == 'structure') {
 			rex_register_extension('CAT_UPDATED',   array($self, 'catUpdated'));
-			rex_register_extension('CAT_FORM_EDIT', array($self, 'catFormEdit'));
+//			rex_register_extension('CAT_FORM_EDIT', array($self, 'catFormEdit'));
 			rex_register_extension('CAT_DELETED',   array($self, 'catDeleted'));
 		}
 
@@ -58,7 +58,7 @@ class _WV16_Extensions
 
 		if ($page == 'medienpool' /* 4.1 */ || $page == 'mediapool' /* 4.2 */) {
 			rex_register_extension('MEDIA_UPDATED',   array($self, 'mediaUpdated'));
-			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
+//			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
 			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
 		}
 		
