@@ -54,7 +54,7 @@ case 'do_add':
 
 	try {
 		if (!WV_Datatype::exists($datatype)) {
-			throw new Exception('Der gewählte Datentyp existiert nicht!');
+			throw new WV16_Exception('Der gewählte Datentyp existiert nicht!');
 		}
 		
 		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', null);
@@ -121,12 +121,12 @@ case 'do_edit':
 	$datatype      = wv_post('datatype', 'int');
 	$confirmed     = wv_post('confirmed',    'boolean', false);
 	$noconversion  = wv_post('noconversion', 'boolean', false);
-	$usertypes     = wv_postArray('utypes', 'int');
 	$applyDefaults = wv_post('datatype_'.$datatype.'_applydefault', 'boolean', false);
+	$usertypes     = wv_postArray('utypes', 'int');
 
 	try {
 		if (!WV_Datatype::exists($datatype)) {
-			throw new _WV16_Exception('Der gewählte Datentyp existiert nicht!');
+			throw new WV16_Exception('Der gewählte Datentyp existiert nicht!');
 		}
 		
 		$attribute = _WV16_Attribute::getInstance($id);
@@ -166,7 +166,7 @@ case 'do_edit':
 #===============================================================================
 default:
 
-	$page = abs(wv_get('p_attrtable', 'int'));
+	$page = abs(wv_get('p_attributes', 'int'));
 	$data = WV16_Users::getAttributesForUserType(-1);
 	require _WV16_PATH.'templates/attributes/table.phtml';
-} }
+}}
