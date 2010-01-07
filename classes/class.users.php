@@ -13,8 +13,8 @@ abstract class WV16_Users extends _WV16_DataHandler
 {
 	const ANONYMOUS              = 0;
 	const ERR_USER_UNKNOWN       = 1;
-	const ERR_INVALID_LOGIN      = 1;
-	const ERR_USER_NOT_ACTIVATED = 2;
+	const ERR_INVALID_LOGIN      = 2;
+	const ERR_USER_NOT_ACTIVATED = 3;
 	
 	public static function loginExists($login)
 	{
@@ -25,30 +25,14 @@ abstract class WV16_Users extends _WV16_DataHandler
 	{
 		global $REX;
 		
-		if (0 && rex_addon::isAvailable('global_settings')) {
+		if (rex_addon::isAvailable('global_settings')) {
 			$value = WV8_Settings::getValue('wv16_'.$name);
 			return $value === null ? $default : $value;
 		}
 		
-		$configFile = $REX['MEDIAFOLDER'].'/frontenduser.config.xml';
+		// Keine Global Settings :-( Also ab die Registry
 		
-		if (!file_exists($configFile)) {
-			return $default;
-		}
-		
-		try {
-			$xml    = new SimpleXMLElement($configFile, null, true);
-			$config = $xml->config->$name;
-			
-			if ($config) {
-				return json_decode((string) $config, true);
-			}
-			
-			return $default;
-		}
-		catch (Exception $e) {
-			return $default;
-		}
+		return WV_Registry::get('wv16_'.$name, $default);
 	}
 	
 	public static function setConfig($name, $value)
@@ -68,68 +52,10 @@ abstract class WV16_Users extends _WV16_DataHandler
 			}
 		}
 		
-		// Keine Global Settings :-( Also ab ins Dateisystem.
+		// Keine Global Settings :-( Also ab die Registry
 		
-		$configFile = $REX['MEDIAFOLDER'].'/frontenduser.config.xml';
-		
-		if (!file_exists($configFile) || strlen(trim(file_get_contents($configFile))) == 0) {
-			self::createEmptyConfigFile($configFile);
-		}
-		
-		$configFile = realpath($configFile);
-		
-		// XML-Datei öffnen, Node suchen und ggf. ändern/hinzufügen
-		
-		try {
-			$xml = new DOMDocument();
-			$xml->load($configFile, LIBXML_NOBLANKS);
-			
-			$xpath    = new DOMXPath($xml);
-			$elements = $xpath->query('/frontenduser/config/'.$name.'[1]');
-			$config   = $xml->documentElement->firstChild;
-			$node     = $xml->createElement($name, json_encode($value));
-			
-			if ($elements->length > 0) {
-				$element = $elements->item(0);
-//				$element->textContent = $value; // irgendwas muss ich übersehen haben, dass das nicht funktioniert...
-				$config->replaceChild($node, $element);
-			}
-			else {
-				$config->appendChild($node);
-			}
-			
-			// Änderungen speichern
-			
-			return $xml->save($configFile) > 0;
-		}
-		catch (Exception $e) {
-			return false;
-		}
-	}
-	
-	protected static function createEmptyConfigFile($configFile)
-	{
-		$config = new XMLWriter();
-		$config->openMemory();
-		$config->setIndent(true);
-		$config->setIndentString("\t");
-		
-		$config->startDocument('1.0', 'UTF-8');
-		
-		$config->startElement('frontenduser');
-			$config->startElement('config');
-				$config->writeElement('installpath', _WV16_PATH);
-			$config->endElement();
-		$config->endElement();
-		
-		$xml    = $config->flush();
-		$config = null;
-		
-		@file_put_contents($configFile, $xml);
-		
-		if (!file_exists($configFile)) {
-			throw new WV16_Exception('Konnte Konfigurationsdatei weder öffnen noch erzeugen.');
-		}
+		WV_Registry::set('wv16_'.$name, $value);
+		return true;
 	}
 	
 	// $max < 0 für unendlich
