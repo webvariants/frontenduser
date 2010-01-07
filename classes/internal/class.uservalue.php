@@ -23,6 +23,13 @@ class _WV16_UserValue
 		return array('serializedValue', 'value', 'attributeID', 'userID');
 	}
 	
+	public function __wakeup()
+	{
+		if ($this->attributeID !== null) {
+			$this->attribute = _WV16_Attribute::getInstance($this->attributeID);
+		}
+	}
+	
 	/**
 	 * Konstruktor
 	 * 
