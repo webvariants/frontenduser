@@ -11,7 +11,7 @@ if ( $datatypeChanged ) {
 
 	if ( !$convertible ) {
 		print '<br />&nbsp;</p>';
-		WV2::error($errorInfo[0]);
+		WV_Redaxo::error(implode("<br>\n", $errorInfo[0]));
 	} else {
 		print ' Diese Konvertierung ist automatisch möglich und wird vom System vorgenommen.';
 		print '<br />&nbsp;</p>';
@@ -22,7 +22,7 @@ if ( $datatypeChanged ) {
 	print '</strong> hat folgendes Problem gemeldet, das er nicht ohne Ihre ';
 	print 'Bestätigung korrigieren kann:<br />&nbsp;</p>';
 
-	WV_Redaxo::error($errorInfo[0]);
+	WV_Redaxo::error(implode("<br>\n", $errorInfo[0]));
 }
 
 // Betroffene Objekte auflisten
