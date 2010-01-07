@@ -10,7 +10,7 @@ var wv16 = {};
 	
 	wv16.changeUserType = function(selectbox)
 	{
-		var required = wv16.attrsPerType[$(selectbox).val()];
+		var required = wv16.attributesPerType[$(selectbox).val()];
 		if (!required) required = [];
 		
 		// Formulare erstmal verstecken
@@ -29,23 +29,6 @@ var wv16 = {};
 			'id='+attributeID+'&position='+newPosition,
 			function(response) { $('#attr'+attributeID+' td').css('font-style', 'normal'); }
 		);
-	};
-	
-	wv2.toggleForm = function()
-	{
-		var container = $('#wv2_meta_form');
-		var link      = $('#wv2_meta_form_toggler');
-		
-		if (!container.is(':visible')) {
-			container.show();
-			link.attr('title', 'Metainformationen ausblenden').attr('src', 'include/addons/metainfoex/images/up.png');
-			$.cookie('wv2_display_form','1', {expires: 30});
-		}
-		else {
-			container.hide();
-			link.attr('title', 'Metainformationen einblenden').attr('src', 'include/addons/metainfoex/images/down.png');
-			$.cookie('wv2_display_form','0', {expires: 30});
-		}
 	};
 
 })(jQuery);
