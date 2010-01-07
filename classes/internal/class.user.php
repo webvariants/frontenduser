@@ -122,7 +122,7 @@ class _WV16_User
 			self::testPassword($password);
 			
 			$registered       = date('Y-m-d H:i:s');
-			$confirmationCode = WV16_Users::generateConfirmationCode($this->login);
+			$confirmationCode = WV16_Users::generateConfirmationCode($login);
 			
 			$sql->queryEx(
 				'INSERT INTO #_wv16_users (login,password,registered,type_id,confirmation_code) VALUES (?,"",?,?,?)',
