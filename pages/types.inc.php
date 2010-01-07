@@ -83,6 +83,8 @@ case 'delete':
 		continue;
 	}
 
+	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gelöscht.');
+
 	$func = '';
 	++$loop;
 	continue;

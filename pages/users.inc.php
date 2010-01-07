@@ -126,6 +126,8 @@ case 'delete':
 		WV_Redaxo::error($e->getMessage());
 	}
 
+	WV_Redaxo::success('Der Benutzer wurde erfolgreich gelöscht.');
+
 	$func = '';
 	++$loop;
 	continue;
