@@ -27,7 +27,7 @@ class _WV16_Extensions
 		}
 
 		$self = __CLASS__;
-		$page = WV_Redaxo::getCurrentPage();
+		$page = wv_request('page', 'string'); // WV_Redaxo::getCurrentPage(); steht noch nicht bereit!
 		
 		// HTML-Kopf
 
