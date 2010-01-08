@@ -15,24 +15,6 @@ $loop = 1;
 
 while ($loop) { --$loop; switch ($func) {
 #===============================================================================
-# Benutzertyp verschieben
-#===============================================================================
-case 'shift':
-
-	$position = wv_get('position', 'int');
-
-	try {
-		$attribute = _WV16_Attribute::getInstance($id);
-		$attribute->shift($position);
-	}
-	catch (Exception $e) {
-		// pass..
-	}
-
-	WV_Redaxo::clearOutput();
-	die;
-
-#===============================================================================
 # Benutzertyp hinzufügen
 #===============================================================================
 case 'add':
