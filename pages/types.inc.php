@@ -15,24 +15,6 @@ $loop = 1;
 
 while ($loop) { --$loop; switch ($func) {
 #===============================================================================
-# Benutzertyp verschieben
-#===============================================================================
-case 'shift':
-
-	$position = wv_get('position', 'int');
-
-	try {
-		$attribute = _WV16_Attribute::getInstance($id);
-		$attribute->shift($position);
-	}
-	catch (Exception $e) {
-		// pass..
-	}
-
-	WV_Redaxo::clearOutput();
-	die;
-
-#===============================================================================
 # Benutzertyp hinzufügen
 #===============================================================================
 case 'add':
@@ -61,6 +43,7 @@ case 'do_add':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_ADDED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	$func = '';
@@ -83,6 +66,7 @@ case 'delete':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_DELETED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gelöscht.');
 
 	$func = '';
@@ -155,6 +139,7 @@ case 'do_edit':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_UPDATED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	// kein break;

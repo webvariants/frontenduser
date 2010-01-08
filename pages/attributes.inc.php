@@ -29,6 +29,7 @@ case 'shift':
 		// pass..
 	}
 
+	rex_register_extension_point('WV16_ATTRIBUTE_SHIFTED', $attribute);
 	WV_Redaxo::clearOutput();
 	die;
 
@@ -67,6 +68,7 @@ case 'do_add':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_ATTRIBUTE_ADDED', $attribute);
 	WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
 
 	$func = '';
@@ -89,6 +91,7 @@ case 'delete':
 		continue;
 	}
 	
+	rex_register_extension_point('WV16_ATTRIBUTE_DELETED', $attribute);
 	WV_Redaxo::success('Das Attribut wurde gelöscht.');
 
 	$func = '';
@@ -157,6 +160,7 @@ case 'do_edit':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_ATTRIBUTE_UPDATED', $attribute);
 	WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
 
 	// kein break;

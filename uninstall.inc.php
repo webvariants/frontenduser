@@ -9,12 +9,4 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-$required = $REX['ADDON']['status']['developer_utils'] && WV_Redaxo::isRequired('frontenduser');
-
-if ($required && !wv_get('force', 'int', 0)) {
-	$required = WV_Redaxo::isRequired('frontenduser');
-	$REX['ADDON']['installmsg']['frontenduser'] = 'Es wird von den folgenden AddOns benötigt:<br />'.$required;
-}
-else {
-	$REX['ADDON']['install']['frontenduser'] = 0;
-}
+$REX['ADDON']['install']['frontenduser'] = 0;
