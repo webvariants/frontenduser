@@ -75,20 +75,28 @@ class _WV16_Extensions
 			return;
 		}
 		
+		$sql  = WV_SQLEx::getInstance();
+		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
+		
 		try {
+			$sql->startTransaction(true);
+			
 			// ==== EINSTELLUNGEN LÖSCHEN ====================================
 			
 			$settings = array(
+				'validation_article',
 				'mail_from_name', 'mail_from_email',
 				'mail_report_subject', 'mail_report_body', 
 				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body', 
 				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body', 
+				'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body', 
 			);
 			
 			foreach ($settings as $setting) {
-				$id = _WV8_Setting::getIDForName('wv16_'.$setting);
-				if ($id >= 0) {
-					_WV8_Setting::getInstance($id)->delete();
+				$name = 'wv16_'.$setting;
+				
+				if (WV8_Settings::exists($name)) {
+					_WV8_Setting::getInstance($name)->delete();
 				}
 			}
 			
@@ -129,9 +137,15 @@ class _WV16_Extensions
 			self::createSingleLineSetting('mail_recovery_subject', 'Betreff',              $helptext, $group);
 			self::createMultiLineSetting('mail_recovery_body',     'Inhalt (Template)',    $helptext, $group);
 			self::createSingleLineSetting('mail_recovery_to',      'Empfänger (Template)', $helptext, $group);
+			
+			$sql->doCommit(true);
+			$sql->setErrorMode($mode);
+			
+			return true;
 		}
 		catch (Exception $e) {
-			// pass...
+			$sql->cleanEndTransaction(true, $mode, $e, '');
+			return false;
 		}
 	}
 	
