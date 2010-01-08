@@ -107,6 +107,7 @@ case 'do_add':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USER_ADDED', $user);
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich angelegt.');
 
 	$func = '';
@@ -126,6 +127,7 @@ case 'delete':
 		WV_Redaxo::error($e->getMessage());
 	}
 
+	rex_register_extension_point('WV16_USER_DELETED', $user);
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich gelöscht.');
 
 	$func = '';
@@ -243,6 +245,7 @@ case 'do_edit':
 		continue;
 	}
 	
+	rex_register_extension_point('WV16_USER_UPDATED', $user);
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich bearbeitet.');
 	
 	// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.

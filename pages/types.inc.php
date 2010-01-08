@@ -61,6 +61,7 @@ case 'do_add':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_ADDED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	$func = '';
@@ -83,6 +84,7 @@ case 'delete':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_DELETED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gelöscht.');
 
 	$func = '';
@@ -155,6 +157,7 @@ case 'do_edit':
 		continue;
 	}
 
+	rex_register_extension_point('WV16_USERTYPE_UPDATED', $type);
 	WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 	// kein break;
