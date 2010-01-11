@@ -107,7 +107,7 @@ case 'do_add':
 		continue;
 	}
 
-	rex_register_extension_point('WV16_USER_ADDED', $user);
+	rex_register_extension_point('WV16_USER_ADDED', $user, array('password' => $password1));
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich angelegt.');
 
 	$func = '';
@@ -120,14 +120,15 @@ case 'do_add':
 case 'delete':
 	
 	try {
-		$user = _WV16_User::getInstance($id);
+		$user   = _WV16_User::getInstance($id);
+		$values = $user->getValues(); // für den EP vor der Vernichtung retten
 		$user->delete();
 	}
 	catch (Exception $e) {
 		WV_Redaxo::error($e->getMessage());
 	}
 
-	rex_register_extension_point('WV16_USER_DELETED', $user);
+	rex_register_extension_point('WV16_USER_DELETED', $user, array('values' => $values));
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich gelöscht.');
 
 	$func = '';
@@ -245,7 +246,8 @@ case 'do_edit':
 		continue;
 	}
 	
-	rex_register_extension_point('WV16_USER_UPDATED', $user);
+	$params = !empty($password1) ? array('password' => $password1) : array();
+	rex_register_extension_point('WV16_USER_UPDATED', $user, $params);
 	WV_Redaxo::success('Der Benutzer wurde erfolgreich bearbeitet.');
 	
 	// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.
@@ -269,8 +271,20 @@ case 'do_edit':
 #===============================================================================
 default:
 
-	$paging = WV_Table::getPagingParameters('users');
-	$users  = WV16_Users::getAllUsers('login', 'asc', $paging['start'], $paging['elements']);
+	$search  = WV_Table::getSearchParameters('users');
+	$paging  = WV_Table::getPagingParameters('users', true, false);
+	$sorting = WV_Table::getSortingParameters('login', array('login', 'registered'));
+	$where   = '1';
 	
+	if (!empty($search)) {
+		$searchSQL = ' AND (`login` = ? OR `registered` = ? OR `type_id` = ?)';
+		$searchSQL = str_replace('=', 'LIKE', $searchSQL);
+		$searchSQL = str_replace('?', '"%'.WV_SQL::escape($search).'%"', $searchSQL);
+		
+		$where .= $searchSQL;
+	}
+	
+	$users = WV16_Users::getAllUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
+	$total = WV16_Users::getTotalUsers($where);
 	require _WV16_PATH.'templates/users/table.phtml';
 }}

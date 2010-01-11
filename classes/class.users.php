@@ -58,25 +58,39 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return true;
 	}
 	
-	// $max < 0 für unendlich
-	public static function getAllUsers($orderBy = 'id', $direction = 'asc', $offset = 0, $max = -1)
+	public static function getTotalUsers($where = '1')
 	{
-		$direction = $direction == 'desc' ? 'DESC' : 'ASC';
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('total_users', $where);
+		$total     = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($total < 0) {
+			$sql   = WV_SQLEx::getInstance();
+			$total = $sql->count('wv16_users', $where, array(), '#_');
+			$total = $total === false ? -1 : (int) $total;
+			$cache->set($namespace, $cacheKey, $total);
+		}
+		
+		return $total;
+	}
+	
+	// $max < 0 für unendlich
+	public static function getAllUsers($where, $orderBy = 'id', $direction = 'asc', $offset = 0, $max = -1)
+	{
+		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = WV_Cache::generateKey('users_by', $orderBy, $direction, $offset, $max);
+		$cacheKey  = WV_Cache::generateKey('users_by', $where, $orderBy, $direction, $offset, $max);
 		
 		$users = $cache->get($namespace, $cacheKey, -1);
 		
 		if (!is_array($users)) {
 			$sql    = WV_SQLEx::getInstance();
-			$query  = 'SELECT id FROM #_wv16_users WHERE 1 ORDER BY '.$orderBy.' '.$direction;
-			
-			if ($offset > 0 || $max < 0) {
-				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
-				$query .= ' LIMIT '.$offset.','.$max;
-			}
+			$query  = 'SELECT id FROM #_wv16_users WHERE '.$where.' ORDER BY '.$orderBy.' '.$direction;
+			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
+			$query .= ' LIMIT '.$offset.','.$max;
 			
 			$users = $sql->getArray($query, array(), '#_');
 			$cache->set($namespace, $cacheKey, $users);
@@ -93,7 +107,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 	
 	public static function getAllUsersInGroup($group, $orderBy = 'id', $direction = 'asc', $offset = 0, $max = -1)
 	{
-		$direction = $direction == 'desc' ? 'DESC' : 'ASC';
+		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
@@ -129,7 +143,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 	
 	public static function getAllGroups($orderBy = 'title', $direction = 'asc', $offset = 0, $max = -1)
 	{
-		$direction = $direction == 'desc' ? 'DESC' : 'ASC';
+		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
