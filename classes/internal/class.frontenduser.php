@@ -38,7 +38,7 @@ abstract class _WV16
 	{
 		if ($group === null && $allowNull) return null;
 		if ($group instanceof _WV6_Group) return $group->getID();
-		return (int) $group;
+		return _WV16_Group::getIDForName($group);
 	}
 	
 	public static function getIDForAttribute($attribute, $allowNull = true)

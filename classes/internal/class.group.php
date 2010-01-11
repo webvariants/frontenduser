@@ -77,17 +77,32 @@ class _WV16_Group
 		$this->parentID = (int) $data['parent_id'];
 	}
 	
-	public static function exists($groupID)
+	public static function getIDForName($group)
 	{
-		$cache     = WV_DeveloperUtils::getCache();
-		$namespace = 'frontenduser.internal.groups';
-		
-		if ($cache->exists($namespace, $groupID)) {
-			return true;
+		if (WV_String::isInteger($group)) {
+			return (int) $group;
 		}
 		
-		$sql = WV_SQLEx::getInstance();
-		return $sql->count('wv16_groups', 'id = ?', (int) $groupID) == 1;
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.internal.groups';
+		$cacheKey  = WV_Cache::generateKey('id_for_name', $group);
+		
+		$id = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($id < 0) {
+			$sql = WV_SQLEx::getInstance();
+			$id  = $sql->saveFetch('id', 'wv16_groups', 'name = ?', $group);
+			$id  = $id === false ? -1 : (int) $id;
+			$cache->set($namespace, $cacheKey, $id);
+		}
+		
+		return (int) $id;
+	}
+	
+	public static function exists($group)
+	{
+		$groupID = self::getIDForName($group);
+		return $groupID > 0;
 	}
 	
 	public function getName()  { return $this->name;  }
