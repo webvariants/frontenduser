@@ -9,21 +9,21 @@ WV_Redaxo::p(
 
 $base  = 'index.php?page=frontenduser&amp;subpage=attributes&amp;func=';
 $id    = '<a href="'.$base.'add"><img src="media/metainfo_plus.gif" alt="" title="Hinzufügen" /></a>';
-$table = new WV_Table('attrtable');
+$table = new WV_Table('attributes');
 $table->addColumn(new WV_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
 $table->addColumn(new WV_Table_Column('Attributename'));
 $table->addColumn(new WV_Table_Column('Feldtyp'));
 $table->addColumn(new WV_Table_Column('Feldbezeichnung'));
 
-$table->setIsEmpty(empty($data));
+$table->setIsEmpty(empty($attributes));
 $table->setEmptyNotice('Sie haben noch keine Attribute angelegt.');
-
-$table->enableDragAndDrop(count($data) > 1);
+$table->enableDragAndDrop(count($attributes) > 1);
 $table->setDragAndDropHandler('wv16.handleTableDrop');
+$table->enableSearching(true);
 
-$table->renderHeader(count($data));
+$table->renderHeader($total);
 
-foreach ($data as $attr) {
+foreach ($attributes as $attr) {
 	?>
 	<tr id="attr<?= $attr->getID() ?>">
 		<td class="rex-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="media/metainfo.gif" alt="" title="Attribut bearbeiten" /></a></td>

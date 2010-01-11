@@ -228,26 +228,50 @@ abstract class _WV16_DataHandler
 	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
 	 * @return array              eine Liste von _WV2_ArticleType-Objekten, die passen
 	 */
-	public static function getAllUserTypes($sortby = 'title', $direction = 'ASC')
+	public static function getAllUserTypes($where = '1', $sortby = 'title', $direction = 'ASC', $offset = 0, $max = 20)
 	{
 		$cache     = WV_DeveloperUtils::getCache();
-		$namespace = 'frontenduser.internal.lists';
-		$cacheKey  = WV_Cache::generateKey('usertypes', $sortby, $direction);
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('usertypes', $where, $sortby, $direction, $offset, $max);
 		$data      = $cache->get($namespace, $cacheKey, false);
 		
 		if (!is_array($data)) {
-			$sql  = WV_SQLEx::getInstance();
-			$mode = WV_SQLEx::RETURN_FALSE;
-			$data = $sql->getArray('SELECT * FROM #_wv16_utypes WHERE 1 ORDER BY '.$sortby.' '.$direction, array(), '#_', $mode);
+			$sql   = WV_SQLEx::getInstance();
+			$mode  = WV_SQLEx::RETURN_FALSE;
+			$query = 'SELECT * FROM #_wv16_utypes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction;
 			
+			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
+			$query .= ' LIMIT '.$offset.','.$max;
+			
+			$data = $sql->getArray($query, array(), '#_', $mode);
 			$cache->set($namespace, $cacheKey, $data);
 		}
+		
+		$types = array();
 		
 		foreach ($data as $id => $row) {
 			$types[] = _WV16_UserType::getInstance($id, array_merge(array('id' => $id), $row));
 		}
 
 		return $types;
+	}
+	
+	public static function getTotalUserTypes($where = '1')
+	{
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('total_usertypes', $where);
+		$total     = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($total < 0) {
+			$sql   = WV_SQLEx::getInstance();
+			$mode  = WV_SQLEx::RETURN_FALSE;
+			$total = $sql->count('wv16_utypes', $where, array(), '#_', $mode);
+			$total = $total === false ? -1 : (int) $total;
+			$cache->set($namespace, $cacheKey, $total);
+		}
+
+		return $total;
 	}
 	
 	/**
@@ -263,12 +287,12 @@ abstract class _WV16_DataHandler
 	public static function getAttributesForUserType($userType, $returnAsIDs = false)
 	{
 		if ($userType === -1) {
-			return self::getAllAttributes();
+			return self::getAllAttributes('', 'position', 'ASC', 0, -1);
 		}
 		
 		$userType   = _WV16::getIDForUserType($userType, false);
 		$cache      = WV_DeveloperUtils::getCache();
-		$namespace  = 'frontenduser.internal.lists';
+		$namespace  = 'frontenduser.lists';
 		$cacheKey   = WV_Cache::generateKey('attr_by_type', $userType);
 		$attributes = $cache->get($namespace, $cacheKey, false);
 		$return     = array();
@@ -290,6 +314,62 @@ abstract class _WV16_DataHandler
 		}
 		
 		return $return;
+	}
+	
+	/**
+	 * Benutzertypen ermitteln
+	 *
+	 * Diese Methode gibt eine Liste aller Artikeltypen als _WV2_ArticleType-Objekte zurück.
+	 *
+	 * @param  string $sortby     das Sortierkriterium (kann jedes Attribut der Relation sein)
+	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
+	 * @return array              eine Liste von _WV2_ArticleType-Objekten, die passen
+	 */
+	public static function getAllAttributes($where = '', $sortby = 'position', $direction = 'ASC', $offset = 0, $max = 20)
+	{
+		if (empty($where)) $where = 'deleted = 0';
+		else $where .= ' AND deleted = 0';
+		
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('attributes', $where, $sortby, $direction, $offset, $max);
+		$data      = $cache->get($namespace, $cacheKey, false);
+		
+		if (!is_array($data)) {
+			$sql   = WV_SQLEx::getInstance();
+			$mode  = WV_SQLEx::RETURN_FALSE;
+			$max   = $max < 0 ? '18446744073709551615' : (int) $max;
+			$query = 'SELECT * FROM #_wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction.' LIMIT '.$offset.','.$max;
+			
+			$data = $sql->getArray($query, array(), '#_', $mode);
+			$cache->set($namespace, $cacheKey, $data);
+		}
+		
+		$result = array();
+		
+		foreach ($data as $id => $row) {
+			$result[] = _WV16_Attribute::getInstance($id);
+		}
+
+		return $result;
+	}
+	
+	public static function getTotalAttributes($where = '1')
+	{
+		$cache     = WV_DeveloperUtils::getCache();
+		$namespace = 'frontenduser.lists';
+		$cacheKey  = WV_Cache::generateKey('total_attributes', $where);
+		$total     = $cache->get($namespace, $cacheKey, -1);
+		
+		if ($total < 0) {
+			$sql   = WV_SQLEx::getInstance();
+			$mode  = WV_SQLEx::RETURN_FALSE;
+			$total = $sql->count('wv16_attributes', $where, array(), '#_', $mode);
+			$total = $total === false ? -1 : (int) $total;
+			$cache->set($namespace, $cacheKey, $total);
+		}
+
+		return $total;
 	}
 	
 	/**
@@ -372,47 +452,6 @@ abstract class _WV16_DataHandler
 
 		foreach ($users as $userID) {
 			$return[] = _WV16_User::getInstance($row['id']);
-		}
-
-		return $return;
-	}
-	
-	/**
-	 * Alle verfügbaren Attribute holen
-	 *
-	 * Diese Methode gibt alle vorhandenen Metainfos (nicht die Metadaten!)
-	 * zurück. Dabei kann ein WHERE-Statement für die wv2_metainfo-Relation
-	 * sowie Sortierkriterium und -richtung angegeben werden.
-	 *
-	 * @param  string $where      das WHERE-Kriterium
-	 * @param  string $sortby     das Sortierkriterium (kann jedes Attribut der Relation sein)
-	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
-	 * @return array              eine Liste von _WV16_Attribute-Objekten, die passen
-	 */
-	public static function getAllAttributes($where = '1', $sortby = 'position', $direction = 'ASC')
-	{
-		if (empty($where)) $where = 'deleted = 0';
-		else $where .= ' AND deleted = 0';
-		
-		$cache      = WV_DeveloperUtils::getCache();
-		$namespace  = 'frontenduser.lists';
-		$cacheKey   = WV_Cache::generateKey('attributes', $where, $sortby, $direction);
-		$attributes = $cache->get($namespace, $cacheKey, false);
-		$return     = array();
-		
-		if (!is_array($attributes)) {
-			$sql        = WV_SQLEx::getInstance();
-			$mode       = WV_SQLEx::RETURN_FALSE;
-			$attributes = $sql->getArray(
-				'SELECT * FROM #_wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction,
-				array(), '#_', $mode
-			);
-			
-			$cache->set($namespace, $cacheKey, $attributes);
-		}
-
-		foreach ($attributes as $id => $row) {
-			$return[] = _WV16_Attribute::getInstance($id, array_merge(array('id' => $id), $row));
 		}
 
 		return $return;

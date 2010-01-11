@@ -58,7 +58,7 @@ case 'do_add':
 			throw new WV16_Exception('Der gewählte Datentyp existiert nicht!');
 		}
 		
-		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', null);
+		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', array(null));
 		$attribute = _WV16_Attribute::create($name, $title, $datatype, $params, $default, $usertypes);
 	}
 	catch (Exception $e) {
@@ -169,8 +169,20 @@ case 'do_edit':
 # Vorhandene Attribute anzeigen
 #===============================================================================
 default:
-
-	$page = abs(wv_get('p_attributes', 'int'));
-	$data = WV16_Users::getAttributesForUserType(-1);
+	
+	$search = WV_Table::getSearchParameters('attributes');
+	$paging = WV_Table::getPagingParameters('attributes', true, false);
+	$where  = 'deleted = 0';
+	
+	if (!empty($search)) {
+		$searchSQL = ' AND (`name` = ? OR `title` = ? OR `params` = ? OR `default_value` = ?)';
+		$searchSQL = str_replace('=', 'LIKE', $searchSQL);
+		$searchSQL = str_replace('?', '"%'.WV_SQL::escape($search).'%"', $searchSQL);
+		
+		$where .= $searchSQL;
+	}
+	
+	$attributes = WV16_Users::getAllAttributes($where, 'position', 'asc', $paging['start'], $paging['elements']);
+	$total      = WV16_Users::getTotalAttributes($where);
 	require _WV16_PATH.'templates/attributes/table.phtml';
 }}
