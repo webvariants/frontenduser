@@ -148,7 +148,20 @@ case 'do_edit':
 # Vorhandene Benutzertypen anzeigen
 #===============================================================================
 default:
+	
+	$search = WV_Table::getSearchParameters('usertypes');
+	$paging = WV_Table::getPagingParameters('usertypes');
+	$where  = '1';
+	
+	if (!empty($search)) {
+		$searchSQL = ' AND (`name` = ? OR `title` = ?)';
+		$searchSQL = str_replace('=', 'LIKE', $searchSQL);
+		$searchSQL = str_replace('?', '"%'.WV_SQL::escape($search).'%"', $searchSQL);
+		
+		$where .= $searchSQL;
+	}
 
-	$data = WV16_Users::getAllUserTypes();
+	$types = WV16_Users::getAllUserTypes($where, 'title', 'ASC', $paging['start'], $paging['elements']);
+	$total = WV16_Users::getTotalUserTypes($where);
 	require _WV16_PATH.'templates/types/table.phtml';
-} }
+}}
