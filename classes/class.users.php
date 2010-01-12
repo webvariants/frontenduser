@@ -16,6 +16,12 @@ abstract class WV16_Users extends _WV16_DataHandler
 	const ERR_INVALID_LOGIN      = 2;
 	const ERR_USER_NOT_ACTIVATED = 3;
 	
+	public static function clearCache()
+	{
+		$cache = WV_DeveloperUtils::getCache();
+		$cache->flush('frontenduser', true);
+	}
+	
 	public static function loginExists($login)
 	{
 		return _WV16_User::exists($login);
@@ -195,6 +201,11 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return _WV16_User::register($login, $password, $userType);
 	}
 	
+	/**
+	 * @param string $login
+	 * @param string $password
+	 * @return _WV16_User
+	 */
 	public static function login($login, $password)
 	{
 		$userObj = self::getUser($login);

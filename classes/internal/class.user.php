@@ -31,6 +31,9 @@ class _WV16_User
 	
 	private static $instances = array();
 	
+	/**
+	 * @return _WV16_User  der entsprechende Benutzer
+	 */
 	public static function getInstance($userID)
 	{
 		$userID = (int) $userID;
@@ -68,6 +71,9 @@ class _WV16_User
 		return self::$instances[$userID];
 	}
 	
+	/**
+	 * @return void
+	 */
 	private function __construct($id)
 	{
 		$sql  = WV_SQLEx::getInstance();
@@ -91,6 +97,9 @@ class _WV16_User
 		$this->confirmationCode = $data['confirmation_code'];
 	}
 	
+	/**
+	 * @return _WV16_User  der neu erzeugte Benutzer
+	 */
 	public static function register($login, $password, $userType = null, $useTransaction = true)
 	{
 		$sql  = WV_SQLEx::getInstance();
@@ -164,6 +173,9 @@ class _WV16_User
 		}
 	}
 	
+	/**
+	 * @return boolean  true im Erfolgsfall, sonst false
+	 */
 	public function update($useTransaction = true)
 	{
 		$sql  = WV_SQLEx::getInstance();
@@ -234,6 +246,9 @@ class _WV16_User
 		}
 	}
 	
+	/**
+	 * @return boolean  true im Erfolgsfall, sonst false
+	 */
 	public function delete($useTransaction = true)
 	{
 		$sql  = WV_SQLEx::getInstance();
@@ -263,6 +278,9 @@ class _WV16_User
 		}
 	}
 	
+	/**
+	 * @return boolean  true, falls ja, sonst false
+	 */
 	public static function exists($login)
 	{
 		$cache     = WV_DeveloperUtils::getCache();
@@ -292,11 +310,17 @@ class _WV16_User
 	public function getGroupIDs()         { return $this->groups;           }
 	public function getConfirmationCode() { return $this->confirmationCode; }
 	
+	/**
+	 * @return _WV16_UserType  der Benutzertyp als Objekt
+	 */
 	public function getType()
 	{
 		return _WV16_UserType::getInstance($this->typeID);
 	}
 	
+	/**
+	 * @return array  Liste aller Gruppen als Objekte
+	 */
 	public function getGroups()
 	{
 		$obj = array();
@@ -308,11 +332,17 @@ class _WV16_User
 		return $obj;
 	}
 	
+	/**
+	 * @return _WV16_UserValue  der Benutzerwert
+	 */
 	public function getValue($attribute, $default = null)
 	{
 		return WV16_Users::userData($this, $attribute, $default);
 	}
 	
+	/**
+	 * @return boolean  true im Erfolgsfall, sonst false
+	 */
 	public function setValue($attribute, $value, $useTransaction = true)
 	{
 		$retval = WV16_Users::setDataForUser($this, $attribute, $value, $useTransaction);
@@ -389,9 +419,9 @@ class _WV16_User
 			// das in der Datenbank. Dies ist eine kleine Hilfe für umliegende
 			// Funktionen, die auf die erste Aktivierung reagieren möchten.
 			
-			if (self::isInGroup(_WV16_Group::GROUP_ACTIVATED)) {
+			if ($this->wasActivated == false && $this->isInGroup(_WV16_Group::GROUP_ACTIVATED)) {
+				$sql->queryEx('UPDATE #_wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '#_');
 				$this->wasActivated = true;
-				$this->update(false);
 			}
 			
 			$sql->doCommit($useTransaction);
