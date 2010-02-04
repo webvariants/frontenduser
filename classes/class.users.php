@@ -362,4 +362,31 @@ abstract class WV16_Users extends _WV16_DataHandler
 	{
 		return _WV16_User::isReadOnlySet($setID);
 	}
+	
+	public static function replaceAttributes($text, _WV16_User $user)
+	{
+		$matches = array();
+		preg_match_all('/#([a-z0-9_.,;:+~§$%&-]+)#/i', $text, $matches, PREG_SET_ORDER);
+		
+		foreach ($matches as $match) {
+			$attributeName = strtolower($match[1]);
+			$replacement   = '';
+			
+			try {
+				$value       = $user->getValue($attributeName);
+				$replacement = $value->getValue();
+				
+				if (is_array($replacement)) {
+					$replacement = implode(', ', $replacement);
+				}
+			}
+			catch (Exception $e) {
+				// Eingabefehler, Tippfehler, Random Noise -> pass...
+			}
+			
+			$text = str_replace($match[0], $replacement, $text);
+		}
+		
+		return $text;
+	}
 }
