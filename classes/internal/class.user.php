@@ -352,6 +352,7 @@ class _WV16_User
 			$cache->delete('frontenduser.users', $this->id);
 			$cache->delete('frontenduser.users.firstsets', $this->id);
 			$cache->flush('frontenduser.lists', true);
+			$this->values = null;
 		}
 	
 		return $retval;
