@@ -9,16 +9,15 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz 
  */
 
-if (!rex_addon::isAvailable('developer_utils')) {
-	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Developer Utils-AddOn.';
+if (!rex_addon::isAvailable('developer_utils') || version_compare($REX['ADDON']['version']['developer_utils'], '1.2.4', '<')) {
+	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Developer Utils-AddOn (>= 1.2.4).';
+}
+elseif (!rex_addon::isAvailable('global_settings') || version_compare($REX['ADDON']['version']['global_settings'], '3.0', '<')) {
+	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Global Settings-AddOn (>= v3.0).';
 }
 else {
-	$success = true;
-	
-	if (rex_addon::isAvailable('global_settings')) {
-		require_once $REX['INCLUDE_PATH'].'/addons/frontenduser/classes/internal/class.extensions.php';
-		$success = _WV16_Extensions::addonInstalled(array('subject' => 'global_settings'));
-	}
+	require_once $REX['INCLUDE_PATH'].'/addons/frontenduser/classes/internal/class.extensions.php';
+	$success = _WV16_Extensions::addonInstalled(array('subject' => 'global_settings'));
 	
 	if (!$success) {
 		$REX['ADDON']['installmsg']['frontenduser'] = 'Es trat ein Fehler beim Anlegen der Global Settings auf.';

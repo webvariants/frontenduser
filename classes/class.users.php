@@ -32,13 +32,13 @@ abstract class WV16_Users extends _WV16_DataHandler
 		global $REX;
 		
 		if (rex_addon::isAvailable('global_settings')) {
-			$value = WV8_Settings::getValue('wv16_'.$name);
+			$value = WV8_Settings::getValue('frontenduser', $name);
 			return $value === null ? $default : $value;
 		}
 		
 		// Keine Global Settings :-( Also ab die Registry
 		
-		return WV_Registry::get('wv16_'.$name, $default);
+		return WV_Registry::get('frontenduser_'.$name, $default);
 	}
 	
 	public static function setConfig($name, $value)
@@ -47,7 +47,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 		
 		if (rex_addon::isAvailable('global_settings')) {
 			try {
-				$setting = _WV8_Setting::getInstance('wv16_'.$name);
+				$setting = _WV8_Setting::getInstance('frontenduser', $name);
 				$setting->setValue($value, WV_Redaxo::clang());
 				$setting->update();
 				
@@ -60,7 +60,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 		
 		// Keine Global Settings :-( Also ab die Registry
 		
-		WV_Registry::set('wv16_'.$name, $value);
+		WV_Registry::set('frontenduser_'.$name, $value);
 		return true;
 	}
 	

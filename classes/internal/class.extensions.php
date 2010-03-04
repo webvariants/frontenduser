@@ -83,7 +83,9 @@ class _WV16_Extensions
 			
 			// ==== EINSTELLUNGEN LÖSCHEN ====================================
 			
-			$settings = array(
+			$pagename  = 'translate:frontenduser_title';
+			$namespace = 'frontenduser';
+			$settings  = array(
 				'validation_article',
 				'mail_from_name', 'mail_from_email',
 				'mail_report_subject', 'mail_report_body', 
@@ -93,50 +95,48 @@ class _WV16_Extensions
 			);
 			
 			foreach ($settings as $setting) {
-				$name = 'wv16_'.$setting;
-				
-				if (WV8_Settings::exists($name)) {
-					_WV8_Setting::getInstance($name)->delete();
-				}
+				WV8_Settings::deleteIfExists($namespace, $setting);
 			}
 			
 			// ==== EINSTELLUNGEN NEU ANLEGEN ================================
 			
-			_WV8_Setting::create(
-				/*          Name */ 'wv16_validation_article',
+			WV8_Settings::create(
+				/*     Namespace */ $namespace,
+				/*          Name */ 'validation_article',
 				/*         Titel */ 'Validierungsartikel',
 				/*     Hilfetext */ 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.',
 				/*      Datentyp */ 4,
 				/*     Parameter */ '1',
 				/*        lokal? */ false,
-				/* vom Benutzer? */ false,
-				/*   Gruppenname */ 'Benutzverwaltung'
+				/*    Seitenname */ $pagename,
+				/*        Gruppe */ 'Validierungsartikel',
+				/* mehrsprachig? */ true
 			);
 			
 			$helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
 			
-			$group = 'Benutzerverwaltung: Ausgehende eMails';
-			self::createSingleLineSetting('mail_from_name',  'eMail-Name',    '', $group);
-			self::createSingleLineSetting('mail_from_email', 'eMail-Adresse', '', $group);
+			$group = 'Ausgehende eMails';
+			self::createSingleLineSetting($namespace, 'mail_from_name',  'eMail-Name',    '', $group, $pagename);
+			self::createSingleLineSetting($namespace, 'mail_from_email', 'eMail-Adresse', '', $group, $pagename);
 			
-			$group = 'Benutzerverwaltung: eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
-			self::createSingleLineSetting('mail_report_subject', 'Betreff',            $helptext, $group);
-			self::createMultiLineSetting('mail_report_body',     'Inhalt (Template)',  $helptext, $group);
+			$group = 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
+			self::createSingleLineSetting($namespace, 'mail_report_subject', 'Betreff',            $helptext, $group, $pagename);
+			self::createMultiLineSetting($namespace,  'mail_report_body',    'Inhalt (Template)',  $helptext, $group, $pagename);
 			
-			$group = 'Benutzerverwaltung: Bestätigungsaufforderung an den neuen Benutzer';
-			self::createSingleLineSetting('mail_confirmation_subject', 'Betreff',              $helptext, $group);
-			self::createMultiLineSetting('mail_confirmation_body',     'Inhalt (Template)',    $helptext, $group);
-			self::createSingleLineSetting('mail_confirmation_to',      'Empfänger (Template)', $helptext, $group);
+			$group = 'Bestätigungsaufforderung an den neuen Benutzer';
+			self::createSingleLineSetting($namespace, 'mail_confirmation_subject', 'Betreff',              $helptext, $group, $pagename);
+			self::createMultiLineSetting($namespace,  'mail_confirmation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+			self::createSingleLineSetting($namespace, 'mail_confirmation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
 			
-			$group = 'Benutzerverwaltung: Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
-			self::createSingleLineSetting('mail_activation_subject', 'Betreff',              $helptext, $group);
-			self::createMultiLineSetting('mail_activation_body',     'Inhalt (Template)',    $helptext, $group);
-			self::createSingleLineSetting('mail_activation_to',      'Empfänger (Template)', $helptext, $group);
+			$group = 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
+			self::createSingleLineSetting($namespace, 'mail_activation_subject', 'Betreff',              $helptext, $group, $pagename);
+			self::createMultiLineSetting($namespace,  'mail_activation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+			self::createSingleLineSetting($namespace, 'mail_activation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
 			
-			$group = 'Benutzerverwaltung: Passwort-vergessen-eMails';
-			self::createSingleLineSetting('mail_recovery_subject', 'Betreff',              $helptext, $group);
-			self::createMultiLineSetting('mail_recovery_body',     'Inhalt (Template)',    $helptext, $group);
-			self::createSingleLineSetting('mail_recovery_to',      'Empfänger (Template)', $helptext, $group);
+			$group = 'Passwort-vergessen-eMails';
+			self::createSingleLineSetting($namespace, 'mail_recovery_subject', 'Betreff',              $helptext, $group, $pagename);
+			self::createMultiLineSetting($namespace,  'mail_recovery_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+			self::createSingleLineSetting($namespace, 'mail_recovery_to',      'Empfänger (Template)', $helptext, $group, $pagename);
 			
 			$sql->doCommit(true);
 			$sql->setErrorMode($mode);
@@ -144,38 +144,43 @@ class _WV16_Extensions
 			return true;
 		}
 		catch (Exception $e) {
+			print $e;
 			$sql->cleanEndTransaction(true, $mode, $e, '');
 			return false;
 		}
 	}
 	
-	protected static function createSingleLineSetting($name, $title, $helptext = '', $group = 'Benutzerverwaltung')
+	protected static function createSingleLineSetting($namespace, $name, $title, $helptext, $group, $pagename)
 	{
-		$setting = _WV8_Setting::create(
-			/*          Name */ 'wv16_'.$name,
+		$setting = WV8_Settings::create(
+			/*     Namespace */ $namespace,
+			/*          Name */ $name,
 			/*         Titel */ $title,
 			/*     Hilfetext */ $helptext,
 			/*      Datentyp */ 1,
 			/*     Parameter */ '0|65535',
 			/*        lokal? */ false,
-			/* vom Benutzer? */ false,
-			/*   Gruppenname */ $group
+			/*    Seitenname */ $pagename,
+			/*        Gruppe */ $group,
+			/* mehrsprachig? */ true
 		);
 		
 		return $setting;
 	}
 	
-	protected static function createMultiLineSetting($name, $title, $helptext = '', $group = 'Benutzerverwaltung')
+	protected static function createMultiLineSetting($namespace, $name, $title, $helptext, $group, $pagename)
 	{
-		$setting = _WV8_Setting::create(
-			/*          Name */ 'wv16_'.$name,
+		$setting = WV8_Settings::create(
+			/*     Namespace */ $namespace,
+			/*          Name */ $name,
 			/*         Titel */ $title,
 			/*     Hilfetext */ $helptext,
 			/*      Datentyp */ 2,
 			/*     Parameter */ '0|65535',
 			/*        lokal? */ false,
-			/* vom Benutzer? */ false,
-			/*   Gruppenname */ $group
+			/*    Seitenname */ $pagename,
+			/*        Gruppe */ $group,
+			/* mehrsprachig? */ true
 		);
 		
 		return $setting;
