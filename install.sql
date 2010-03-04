@@ -11,16 +11,18 @@ CREATE TABLE `%TABLE_PREFIX%wv16_attributes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(200) NOT NULL,
   `title` varchar(200) NOT NULL,
+  `helptext` varchar(1024) NOT NULL,
   `position` int(10) unsigned NOT NULL,
   `datatype` int(2) unsigned NOT NULL,
   `params` text NOT NULL,
   `default_value` text NOT NULL,
+  `hidden` tinyint(1) unsigned not null default '0',
   `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
-INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `position`, `datatype`, `params`, `default_value`,`deleted`) VALUES ('1','firstname','Vorname','1','2','0|65535','',0);
-INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `position`, `datatype`, `params`, `default_value`,`deleted`) VALUES ('2','email','E-Mail','1','2','0|65535','',0);
+INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES ('1','firstname','Vorname','','1','2','0|65535','',0,0);
+INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES ('2','email','E-Mail','','1','2','0|65535','',0,0);
 
 CREATE TABLE `%TABLE_PREFIX%wv16_groups` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,

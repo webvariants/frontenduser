@@ -14,10 +14,12 @@ class _WV16_Attribute implements _WV_IProperty
 	protected $id;           ///< int      die interne ID
 	protected $name;         ///< string   der interne Name
 	protected $title;        ///< string   der angezeigte Name (Titel)
+	protected $helptext;     ///< string   der Hilfetext
 	protected $position;     ///< int      Position in der Sortierreihenfolge
 	protected $datatype;     ///< int      die Datentyp-ID
 	protected $params;       ///< string   die Datentyp-Parameter
 	protected $defaultValue; ///< string   der Standardwert
+	protected $hidden;       ///< boolean  wenn true, soll das Attribut im Backend nicht angezeigt werden
 	protected $userTypes;    ///< array    Liste von Benutzertypen, denen diese Information zugewiesen ist
 	protected $deleted;      ///< boolean  Ist dieses Attribut gelöscht (und nur noch für die read-only Werte in der Datenbank)?
 	
@@ -78,10 +80,12 @@ class _WV16_Attribute implements _WV_IProperty
 		$this->id            = (int) $prefetchedData['id'];
 		$this->name          = $prefetchedData['name'];
 		$this->title         = $prefetchedData['title'];
+		$this->helptext      = $prefetchedData['helptext'];
 		$this->position      = (int) $prefetchedData['position'];
 		$this->datatype      = (int) $prefetchedData['datatype'];
 		$this->params        = $prefetchedData['params'];
 		$this->defaultValue  = $prefetchedData['default_value'];
+		$this->hidden        = (boolean) $prefetchedData['hidden'];
 		$this->deleted       = (boolean) $prefetchedData['deleted'];
 		$this->userTypes     = $sql->getArray('SELECT user_type FROM #_wv16_utype_attrib WHERE attribute_id = ?', $this->id, '#_', $mode);
 		$this->origUserTypes = $this->userTypes;
@@ -146,8 +150,10 @@ class _WV16_Attribute implements _WV_IProperty
 			// Daten aktualisieren
 			
 			$sql->queryEx(
-				'UPDATE #_wv16_attributes SET name = ?, title = ?, datatype = ?, params = ?, default_value = ? WHERE id = ?',
-				array($this->name, $this->title, $this->datatype, $this->params, $this->defaultValue, $this->id), '#_'
+				'UPDATE #_wv16_attributes SET name = ?, title = ?, helptext = ?, '.
+				'datatype = ?, params = ?, default_value = ?, hidden = ? WHERE id = ?',
+				array($this->name, $this->title, $this->helptext, $this->datatype,
+				$this->params, $this->defaultValue, $this->hidden ? 1 : 0, $this->id), '#_'
 			);
 			
 			///////////////////////////////////////////////////////////////////////
@@ -260,7 +266,7 @@ class _WV16_Attribute implements _WV_IProperty
 			
 			$sql->queryEx(
 				'INSERT INTO #_wv16_attributes '.
-				'SELECT NULL,name,title,position,datatype,params,default_value,0 '.
+				'SELECT NULL,name,title,helptext,position,datatype,params,default_value,hidden,0 '.
 				'FROM #_wv16_attributes WHERE id = ?',
 				$this->id, '#_'
 			);
@@ -303,13 +309,15 @@ class _WV16_Attribute implements _WV_IProperty
 	 * @throws Exception              falls der interne Name nicht eindeutig ist
 	 * @param  string  $name          interner Name
 	 * @param  string  $title         angezeigter Titel
+	 * @param  string  $helptext      der Hilfetext
 	 * @param  int     $datatype      Datentyp-ID
 	 * @param  string  $params        Datentyp-Parameter
 	 * @param  string  $defaultValue  der Standardwert (abhängig vom Datentyp)
+	 * @param  boolean $hidden        wenn true, wird das Attribut im Backend nicht angezeigt
 	 * @param  array   $userTypes     Liste von Benutzertyp-IDs (int)
 	 * @return _WV16_Attribute        das neu erzeugte Objekt
 	 */
-	public static function create($name, $title, $datatype, $params, $defaultValue, $userTypes, $useTransaction = true)
+	public static function create($name, $title, $helptext, $datatype, $params, $defaultValue, $hidden, $userTypes, $useTransaction = true)
 	{
 		$sql  = WV_SQLEx::getInstance();
 		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
@@ -341,8 +349,10 @@ class _WV16_Attribute implements _WV_IProperty
 			$pos = (int) $sql->fetch('MAX(position)', 'wv16_attributes');
 			
 			$sql->queryEx(
-				'INSERT INTO #_wv16_attributes (name,title,datatype,params,default_value,position,deleted) VALUES (?,?,?,?,?,?,?)',
-				array($name, $title, (int) $datatype, $params, $defaultValue, $pos + 1, 0), '#_'
+				'INSERT INTO #_wv16_attributes (name,title,helptext,datatype,params,default_value,'.
+				'position,hidden,deleted) VALUES (?,?,?,?,?,?,?,?,?)',
+				array($name, $title, $helptext, (int) $datatype, $params, $defaultValue,
+				$pos + 1, $hidden ? 1 : 0, 0), '#_'
 			);
 			
 			$id = (int) $sql->lastID();
@@ -721,7 +731,9 @@ class _WV16_Attribute implements _WV_IProperty
 	public function getParams()     { return $this->params;       }
 	public function getDefault()    { return $this->defaultValue; }
 	public function getUserTypes()  { return $this->userTypes;    }
-	public function getHelpText()   { return '';                  }
+	public function getHelpText()   { return $this->helptext;     }
+	public function isVisible()     { return !$this->hidden;      }
+	public function isHidden()      { return $this->hidden;       }
 	
 	/*@}*/
 	
@@ -768,6 +780,16 @@ class _WV16_Attribute implements _WV_IProperty
 		}
 		
 		$this->title = $value;
+	}
+
+	public function setHelpText($helptext)
+	{
+		$this->helptext = trim($helptext);
+	}
+
+	public function setHidden($hidden)
+	{
+		$this->hidden = (boolean) $hidden;
 	}
 
 	public function setUserTypes($value)

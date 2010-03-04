@@ -32,7 +32,7 @@ $form->addElements(array($login, $password1, $password2, $type));
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
 
-$form->beginFieldset('Attribute für den aktuellen Benutzertyp');
+$form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
 
 $userType      = $user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE;
 $requiredInfos = WV16_Users::getAttributesForUserType($userType);
@@ -83,8 +83,29 @@ if ($user) {
 ////////////////////////////////////////////////////////////////////////////////
 // Fertig!
 
+ob_start();
 $form->setFocus('login');
 $form->render();
+$form = ob_get_clean();
+
+////////////////////////////////////////////////////////////////////////////////
+// Versteckte Attribute ausblenden
+
+$hidden = array();
+
+foreach ($dataToDisplay as $data) {
+	$attribute = $data['attribute'];
+	
+	if ($attribute->isVisible()) {
+		continue;
+	}
+	
+	$attributeID = $attribute->getID();
+	$hidden[] = $attributeID;
+	$form = preg_replace('#<div(.+?)(id="property_container_'.$attributeID.'")(.*?)class="(.*?)"(.*?)>#i', '<div$1$2$3class="$4 hidden"$5>', $form);
+}
+
+print $form;
 
 ?>
 
@@ -101,6 +122,10 @@ foreach (WV16_Users::getAllUserTypes() as $type) {
 	print 'wv16.attributesPerType['.$type->getID().'] = [];';
 	
 	foreach ($type->getAttributeIDs() as $attr) {
+		if (in_array($attr, $hidden)) {
+			continue;
+		}
+		
 		print "\n";
 		print 'wv16.attributesPerType['.$type->getID().'].push('.$attr.');';
 	}
@@ -109,5 +134,10 @@ foreach (WV16_Users::getAllUserTypes() as $type) {
 }
 
 ?>
+
+<? if (!empty($hidden)): ?>
+$('#wv16attributes > legend').append('<a href="javascript:;" id="wv16togglehidden">Klicken Sie hier, um die versteckten Attribute anzuzeigen.</a>');
+$('#wv16togglehidden').click(function() { $('div[id^=property_container_]').show(); });
+<? endif ?>
 /* ]]> */
 </script>

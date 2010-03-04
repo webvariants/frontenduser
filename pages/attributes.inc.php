@@ -48,9 +48,11 @@ case 'add':
 case 'do_add':
 
 	$attribute = null;
-	$name      = wv_post('name',  'string');
-	$title     = wv_post('title', 'string');
+	$name      = wv_post('name',     'string');
+	$title     = wv_post('title',    'string');
+	$helptext  = wv_post('helptext', 'string');
 	$datatype  = wv_post('datatype', 'int');
+	$hidden    = wv_post('hidden',   'boolean', false);
 	$usertypes = wv_postArray('utypes', 'int');
 
 	try {
@@ -59,7 +61,7 @@ case 'do_add':
 		}
 		
 		list($params, $default) = WV_Datatype::call($datatype, 'serializeBackendForm', array(null));
-		$attribute = _WV16_Attribute::create($name, $title, $datatype, $params, $default, $usertypes);
+		$attribute = _WV16_Attribute::create($name, $title, $helptext, $datatype, $params, $default, $hidden, $usertypes);
 	}
 	catch (Exception $e) {
 		$errormsg = $e->getMessage();
@@ -121,7 +123,9 @@ case 'do_edit':
 	$attribute     = null;
 	$name          = wv_post('name',  'string');
 	$title         = wv_post('title', 'string');
+	$helptext      = wv_post('helptext', 'string');
 	$datatype      = wv_post('datatype', 'int');
+	$hidden        = wv_post('hidden',       'boolean', false);
 	$confirmed     = wv_post('confirmed',    'boolean', false);
 	$noconversion  = wv_post('noconversion', 'boolean', false);
 	$applyDefaults = wv_post('datatype_'.$datatype.'_applydefault', 'boolean', false);
@@ -143,6 +147,8 @@ case 'do_edit':
 
 		$attribute->setName($name);
 		$attribute->setTitle($title);
+		$attribute->setHelpText($helptext);
+		$attribute->setHidden($hidden);
 		$attribute->setDatatype($datatype);
 		$attribute->setUserTypes($usertypes);
 

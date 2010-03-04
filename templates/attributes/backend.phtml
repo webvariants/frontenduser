@@ -20,6 +20,14 @@ $name->setHelpText('Über diesen Namen wird das Attribut programmseitig angsproc
 $title = new WV_Form_Input_Text('title', 'Titel', $attribute ? $attribute->getTitle() : '');
 $title->setHelpText('Der Titel wird innerhalb von REDAXO in allen Formularen angezeigt.');
 
+$helptext = new WV_Form_Textarea('helptext', 'Hilfetext', $attribute ? $attribute->getHelpText() : '');
+$helptext->setHelpText('Hier können Sie eine kurze Erklärung zum Attribut eingeben, die im Frontend angezeigt wird.');
+$helptext->setAttribute('rows', 2);
+$helptext->setAttribute('cols', 50);
+
+$hidden = new WV_Form_Checkbox('hidden', 'Anzeige', '1', 'Dieses Attribut soll im Backend nicht angezeigt werden.');
+$hidden->setChecked($attribute && $attribute->isHidden());
+
 ////////////////////////////////////////////////////////////////////////////////
 // Datentypauswahl und -formularteile zusammenbauen
 
@@ -36,7 +44,7 @@ foreach ($datatypes as $id => &$className) {
 $datatype = new WV_Form_Select('datatype', 'Datentyp', $attribute ? $attribute->getDatatypeID() : -1, $datatypeList);
 $datatype->setAttribute('onchange', 'wv16.changeDatatype(this)');
 
-$form->addElements(array($name, $title, $datatype));
+$form->addElements(array($name, $title, $helptext, $hidden, $datatype));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Neuen Bereich anlegen, in dem die Datentypen sich austoben dürfen
