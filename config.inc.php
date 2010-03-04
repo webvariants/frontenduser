@@ -14,8 +14,12 @@ define('_WV16_PATH', $REX['INCLUDE_PATH'].'/addons/frontenduser/');
 
 // AddOn-Konfiguration
 
+if ($REX['REDAXO']) {
+	$I18N->appendFile(_WV16_PATH.'lang');
+}
+
 $REX['ADDON']['page']['frontenduser']        = 'frontenduser';
-$REX['ADDON']['name']['frontenduser']        = 'Benutzerverwaltung';
+$REX['ADDON']['name']['frontenduser']        = $REX['REDAXO'] ? $I18N->msg('frontenduser_title') : 'Benutzerverwaltung';
 $REX['ADDON']['version']['frontenduser']     = file_get_contents(_WV16_PATH.'version');
 $REX['ADDON']['author']['frontenduser']      = 'Christoph Mewes';
 $REX['ADDON']['perm']['frontenduser']        = 'frontenduser[]';
