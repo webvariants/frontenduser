@@ -720,6 +720,28 @@ class _WV16_User
 		return $newID;
 	}
 
+	public function deleteSet($setID = null)
+	{
+		$setID = $setID === null ? WV16_Users::getFirstSetID($this->id) : (int) $setID;
+
+		if (self::isReadOnlySet($setID)) {
+			throw new WV16_Exception('Schreibgeschützte Sets können nicht gelöscht werden.');
+		}
+
+		$sql    = WV_SQLEx::getInstance();
+		$params = array($this->id, $setID);
+
+		$sql->queryEx('DELETE FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?', $params, '~');
+
+		$cache = WV_DeveloperUtils::getCache();
+		$cache->delete('frontenduser.users', $this->id);
+		$cache->delete('frontenduser.users.firstsets', $this->id);
+		$cache->flush('frontenduser.lists', true);
+		$cache->flush('frontenduser.counts', true);
+
+		return $sql->affectedRows() == 1;
+	}
+
 	protected function copySet($sourceSet, $targetSet)
 	{
 		return WV_SQLEx::getInstance()->queryEx(
