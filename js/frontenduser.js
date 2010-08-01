@@ -7,13 +7,13 @@ var wv16 = (function($) {
 
 		changeUserType: function(selectbox) {
 			var required = wv16.attributesPerType[$(selectbox).val()];
-			if (!required) required = [];
+			if (!required) { required = []; }
 
 			// Formulare erstmal verstecken
 			$('#wv2_meta_form div[id^=property_container]').hide();
 
 			// Die benötigten anzeigen
-			$.each(required, function(idx, id) { $('div#property_container_'+id).show() });
+			$.each(required, function(idx, id) { $('div#property_container_'+id).show(); });
 		},
 
 		handleTableDrop: function(table, row, newPosition) {
