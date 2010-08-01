@@ -33,7 +33,7 @@ class _WV16_Extensions
 
 		if (in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content'))) {
 			WV_Redaxo::addCSSFile('frontenduser/css/wv16.css');
-			WV_Redaxo::addJavaScriptFile('frontenduser/js/frontenduser.js');
+			WV_Redaxo::addJavaScriptFile('frontenduser/js/frontenduser.min.js');
 		}
 
 		// Reagieren, falls Artikel gelöscht werden, um unsere Daten aktuell zu halten

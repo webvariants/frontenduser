@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2009, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
  *
  * Diese Datei steht unter der MIT-Lizenz. Der Lizenztext befindet sich in der
  * beiliegenden LICENSE Datei und unter:
@@ -10,7 +10,7 @@
  */
 
 WV_Redaxo::addJavaScriptFile('developer_utils/js/jquery.tablednd.js');
-require $REX['INCLUDE_PATH'].'/layout/top.php';
+if (!defined('IS_SALLY')) include $REX['INCLUDE_PATH'].'/layout/top.php';
 
 $subpages = array(
 	array('',           'Benutzer'),
@@ -34,4 +34,4 @@ if (isset($subpageFiles[$subpage])) {
 	require _WV16_PATH.'pages/'.$subpageFiles[$subpage].'.inc.php';
 }
 
-require $REX['INCLUDE_PATH'].'/layout/bottom.php';
+if (!defined('IS_SALLY')) include $REX['INCLUDE_PATH'].'/layout/bottom.php';

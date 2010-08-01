@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2009, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
  *
  * Diese Datei steht unter der MIT-Lizenz. Der Lizenztext befindet sich in der
  * beiliegenden LICENSE Datei und unter:
@@ -18,20 +18,23 @@ if ($REX['REDAXO']) {
 	$I18N->appendFile(_WV16_PATH.'lang');
 }
 
-$REX['ADDON']['page']['frontenduser']        = 'frontenduser';
-$REX['ADDON']['name']['frontenduser']        = $REX['REDAXO'] ? $I18N->msg('frontenduser_title') : 'Benutzerverwaltung';
-$REX['ADDON']['version']['frontenduser']     = file_get_contents(_WV16_PATH.'version');
-$REX['ADDON']['author']['frontenduser']      = 'Christoph Mewes';
-$REX['ADDON']['perm']['frontenduser']        = 'frontenduser[]';
-$REX['ADDON']['supportpage']['frontenduser'] = 'www.webvariants.de';
-$REX['PERM'][] = 'frontenduser[]';
+if (!defined('IS_SALLY')) {
+	$REX['ADDON']['page']['frontenduser']        = 'frontenduser';
+	$REX['ADDON']['name']['frontenduser']        = $REX['REDAXO'] ? $I18N->msg('frontenduser_title') : 'Benutzerverwaltung';
+	$REX['ADDON']['version']['frontenduser']     = file_get_contents(_WV16_PATH.'version');
+	$REX['ADDON']['author']['frontenduser']      = 'Christoph Mewes';
+	$REX['ADDON']['perm']['frontenduser']        = 'frontenduser[]';
+	$REX['ADDON']['supportpage']['frontenduser'] = 'www.webvariants.de';
+	$REX['ADDON']['requires']['frontenduser']    = array('developer_utils', 'global_settings');
+	$REX['PERM'][] = 'frontenduser[]';
+}
 
 // Autoloading
 
-function _wv16_autoload($params)
-{
+function _wv16_autoload($params) {
 	$className = $params['subject'];
 	require _WV16_PATH.'autoload.inc.php';
+	return $className;
 }
 
 rex_register_extension('__AUTOLOAD', '_wv16_autoload');
