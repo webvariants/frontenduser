@@ -21,8 +21,8 @@ CREATE TABLE `%TABLE_PREFIX%wv16_attributes` (
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
-INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES ('1','firstname','Vorname','','1','2','0|65535','',0,0);
-INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES ('2','email','E-Mail','','1','2','0|65535','',0,0);
+INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES (1,'firstname','Vorname','',1,1,'0|65535','',0,0);
+INSERT INTO `%TABLE_PREFIX%wv16_attributes` (`id`, `name`, `title`, `helptext`, `position`, `datatype`, `params`, `default_value`, `hidden`, `deleted`) VALUES (2,'email','E-Mail','',2,1,'0|65535','',0,0);
 
 CREATE TABLE `%TABLE_PREFIX%wv16_groups` (
   `id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
@@ -34,9 +34,9 @@ CREATE TABLE `%TABLE_PREFIX%wv16_groups` (
   KEY `parent_id` (`parent_id`)
 ) ENGINE = InnoDB;
 
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES ('1','0','unconfirmed','Unbestätigt','1');
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES ('2','0','confirmed','Bestätigt','1');
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES ('3','0','activated','Freigeschaltet','1');
+INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (1,0,'unconfirmed','Unbestätigt',1);
+INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (2,0,'confirmed','Bestätigt',1);
+INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (3,0,'activated','Freigeschaltet',1);
 
 CREATE TABLE `%TABLE_PREFIX%wv16_rights` (
   `group_id` smallint(5) unsigned NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE `%TABLE_PREFIX%wv16_utype_attrib` (
   PRIMARY KEY (`user_type`,`attribute_id`)
 ) ENGINE = InnoDB;
 
-INSERT INTO `%TABLE_PREFIX%wv16_utype_attrib` (`user_type`, `attribute_id`) VALUES ('1','1');
+INSERT INTO `%TABLE_PREFIX%wv16_utype_attrib` (`user_type`, `attribute_id`) VALUES (1,1), (1,2);
 
 CREATE TABLE `%TABLE_PREFIX%wv16_utypes` (
   `id` int(5) unsigned NOT NULL AUTO_INCREMENT,
