@@ -25,16 +25,16 @@ $table->renderHeader($total);
 
 foreach ($attributes as $attr) {
 	$icon = WV_Datatype::call($attr->getDatatypeID(), 'getIconURL', array());
-	
+
 	if (empty($icon)) {
 		$icon = 'include/addons/frontenduser/images/attribute.png';
 	}
-	
+
 	?>
 	<tr id="attr<?= $attr->getID() ?>">
 		<td class="rex-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="<?= $icon ?>" alt="" title="Attribut bearbeiten" /></a></td>
 		<td><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><?= wv_html($attr->getName()) ?></a></td>
-		<td><?= wv_html(WV_Datatype::getTitle($attr->getDatatypeID())) ?></td>
+		<td><?= rex_translate(WV_Datatype::getTitle($attr->getDatatypeID())) ?></td>
 		<td><?= wv_html($attr->getTitle()) ?></td>
 	</tr>
 	<?
