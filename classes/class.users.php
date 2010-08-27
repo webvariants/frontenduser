@@ -363,7 +363,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return _WV16_User::isReadOnlySet($setID);
 	}
 
-	public static function replaceAttributes($text, _WV16_User $user)
+	public static function replaceAttributes($text, WV16_User $user)
 	{
 		$matches = array();
 		preg_match_all('/#([a-z0-9_.,;:+~§$%&-]+)#/i', $text, $matches, PREG_SET_ORDER);

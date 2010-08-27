@@ -18,6 +18,7 @@ $classes = array(
 	'_WV16_DataHandler' => 'internal/class.datahandler.php',
 	'_WV16_User'        => 'internal/class.user.php',
 
+	'WV16_User'      => 'interface.user.php',
 	'WV16_Users'     => 'class.users.php',
 	'WV16_Mailer'    => 'class.mailer.php',
 	'WV16_Exception' => 'class.exception.php',

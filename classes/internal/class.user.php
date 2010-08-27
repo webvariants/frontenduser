@@ -9,7 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-class _WV16_User
+class _WV16_User implements WV16_User
 {
 	const ERR_UNKNOWN_USER  = 1;
 	const ERR_INVALID_LOGIN = 2;
