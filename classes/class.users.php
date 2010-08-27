@@ -33,7 +33,7 @@ abstract class WV16_Users extends _WV16_DataHandler
 
 		if (rex_addon::isAvailable('global_settings')) {
 			$value = WV8_Settings::getValue('frontenduser', $name);
-			return $value === null ? $default : $value;
+			return empty($value) ? $default : $value; //Wenn leere Felder abgespeichert werden, sind sie ja nicht NULL
 		}
 
 		// Keine Global Settings :-( Also ab die Registry
