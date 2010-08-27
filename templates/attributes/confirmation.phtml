@@ -69,10 +69,10 @@ Andernfalls gehen Sie bitte zurück und korrigieren Ihre Eingaben.<br />&nbsp;&n
 		oder
 		<input type="button" style="color:green;background:white;border:2px outset #9F9;padding:3px" value="zurückgehen und korrigieren" onclick="javascript:history.go(-1)" />
 	</p>
-	
+
 	<div>
 		<input type="hidden" name="confirmed" value="1" />
-		<? _WV16::printPOSTData(); ?>
+		<? _WV16_FrontendUser::printPOSTData(); ?>
 	</div>
 </form>
 
@@ -82,10 +82,10 @@ Andernfalls gehen Sie bitte zurück und korrigieren Ihre Eingaben.<br />&nbsp;&n
 		<a style="color:#F66" href="javascript:;" onclick="if (confirm('Wirklich sicher?')) jQuery('#noconversion').submit()">Fortsetzen, ohne Daten zu <?php print $convertible ? 'konvertieren' : 'löschen'; ?></a> &ndash;
 		Kann irreparable Inkonsistenzen erzeugen! &ndash; Vorher Backup anlegen!)
 	</p>
-	
+
 	<div>
 		<input type="hidden" name="confirmed" value="1" />
 		<input type="hidden" name="noconversion" value="1" />
-		<? _WV16::printPOSTData(); ?>
+		<? _WV16_FrontendUser::printPOSTData(); ?>
 	</div>
 </form>

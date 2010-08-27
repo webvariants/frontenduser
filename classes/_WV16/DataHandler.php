@@ -20,119 +20,115 @@
  * @author  Christoph, Zozi
  * @since   1.0
  */
-abstract class _WV16_DataHandler
-{
+abstract class _WV16_DataHandler {
 	private static $dataCache = array();
-	
+
 	/**
 	 * Daten prefetchen
-	 * 
+	 *
 	 * Diese Methode wird für einen bestimmten Benutzer sämtliche Attributwerte aus dem gerade
 	 * aktuellen ValueSet abrufen und im Cache zwischenspeichern. Um danach kenntlich zu machen,
 	 * dass wirklich alle verfügbaren Daten geholt werden, wird sich die API merken, dass alle
 	 * Daten geholt wurden.
-	 * 
+	 *
 	 * Eine Abfrage kann dann zuerst prüfen, ob ein bestimmter Wert bereits
 	 * geholt wurde. Falls nicht, kann sie prüfen, ob für diesen Benutzer und das aktuelle Set
 	 * bereits alle Daten geholt werden. Ist dies der Fall, muss nicht von einem Cache-Miss
 	 * ausgegangen werden, sondern von einer Abfrage auf ein nicht existentes Attribut. Dann
 	 * muss die Abfrage gar nicht erst in die Datenbank laufen, um dort festzustellen, dass es
 	 * das Attribut nicht gibt.
-	 * 
+	 *
 	 * @param  mxied $user  der Benutzer (_WV16_User oder seine ID (int))
 	 * @return int          die Anzahl der gecachten Attribute
 	 */
-	private static function prefetchData($user)
-	{
-		$userID = _WV16::getIDForUser($user, false);
+	private static function prefetchData($user) {
+		$userID = _WV16_FrontendUser::getIDForUser($user, false);
 		$setID  = self::getFirstSetID($user);
 		$data   = self::getDataForUser($userID);
 		$ids    = array();
-		
+
 		if ($data === null) return 0;
 		if (!is_array($data)) $data = array($data);
-		
+
 		$ids = array();
-		
+
 		foreach ($data as $date) {
 			self::cacheData($date, $userID, $setID);
 			$ids[] = $date->getAttributeID();
 		}
-		
+
 		// Kennzeichnen, dass wir für dieses Objekt definitv alle im Moment verfügbaren Daten geholt haben.
 		// Dann können andere Methoden davon ausgehen, dass es nicht mehr zu holen gibt, als hier vorliegen.
 		self::$dataCache[$userID.'_'.$setID] = $ids;
-		
+
 		return count(self::$dataCache[$userID.'_'.$setID]);
 	}
-	
+
 	/**
 	 * Einzelnen Attributwert cachen
-	 * 
+	 *
 	 * Hier wird ein einzelner Attributwert für einen bestimmten Benutzer gecached.
-	 * 
+	 *
 	 * Achtung: Hier darf nicht die Stelle [userID_setID] auf true gesetzt werden, da durch das Cachen
 	 * eines einzelnen Wertes noch nicht sichergestellt ist, dass wirklich *alle* Werte aus der Datenbank
 	 * geholt wurden!
-	 * 
+	 *
 	 * @param   _WV16_UserValue $value   der Benutzerwert
 	 * @param  int              $userID  die Benutzer-ID
 	 * @param  int              $setID   die ValueSet-ID des Benutzers
 	 */
-	private static function cacheData($value, $userID, $setID)
-	{
+	private static function cacheData($value, $userID, $setID) {
 		$key = $userID.'_'.$setID.'_'.$value->getAttributeID();
 		self::$dataCache[$key]['object'] = $value;
 		self::$dataCache[$key]['name']   = $value->getAttributeName();
 	}
-	
-	public static function setDataForUser($user, $attribute, $value, $useTransaction = true)
-	{
+
+	public static function setDataForUser($user, $attribute, $value, $useTransaction = true) {
 		// Wenn das aktuelle Objekt auf read-only Daten operiert (z.B. weil varisale
 		// die Daten persistent gespeichert hat), darf man den Wert eines Attributs
 		// nicht mehr ändern. Bei gelöschten Benutzern darf man ebenfalls keine
 		// Werte mehr ändern.
-		
+
 		if ($user->isDeleted() || WV16_Users::isReadOnlySet($user->getSetID())) {
 			return false;
 		}
-		
+
 		// Daten vorbereiten
-		
+
 		$value      = strval($value);
-		$attribute  = _WV16::getIDForAttribute($attribute);
+		$attribute  = _WV16_FrontendUser::getIDForAttribute($attribute);
 		$attributes = WV16_Users::getAttributesForUserType($user->getTypeID(), true);
-		
+
 		// Prüfen, ob das Attribut überhaupt zu dem aktuellen Benutzertyp gehört.
 		// Dazu reicht es, die Liste der geholten Attribute durchzugehen, da ein
 		// Benutzer immer alle Attribute hat, die zum Typ gehören (auch wenn sie
 		// mit ihrem jeweiligen Standardwert belegt sind).
-		
+
 		if (!in_array($attribute, $attributes)) { // getValues() holt die Attribute, falls nötig!
 			return false;
 		}
-		
+
 		// OK, das Attribut darf gesetzt werden. :-)
-		
+
 		$sql  = WV_SQLEx::getInstance();
 		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
-		
+
 		try {
 			$sql->startTransaction($useTransaction);
-			
+
 			$sql->queryEx(
 				'UPDATE #_wv16_user_values SET value = ? WHERE user_id = ? AND set_id = ? AND attribute_id = ?',
 				array($value, $user->getID(), $user->getSetID(), $attribute), '#_'
 			);
 
 			// nun noch den Cache aktualisieren
-			
+
 			$date = new _WV16_UserValue($value, $attribute, $user);
 			self::cacheData($date, $user->getID(), $user->getSetID());
-			
+
 			$sql->doCommit($useTransaction);
 			$sql->setErrorMode($mode);
-			
+
 			return true;
 		}
 		catch (Exception $e) {
@@ -140,31 +136,30 @@ abstract class _WV16_DataHandler
 			return false;
 		}
 	}
-	
+
 	/**
 	 * @todo  Das Ergebnis dieser Methode sollte gecached werden.
 	 */
-	public static function getFirstSetID($user)
-	{
-		$userID     = _WV16::getIDForUser($user, false);
+	public static function getFirstSetID($user) {
+		$userID     = _WV16_FrontendUser::getIDForUser($user, false);
 		$cache      = WV_DeveloperUtils::getCache();
 		$namespace  = 'frontenduser.users.firstsets';
 		$firstSetID = $cache->get($namespace, $userID, null);
-		
+
 		if ($firstSetID === null) {
 			$sql = WV_SQLEx::getInstance();
 			$id  = $sql->saveFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
-			
+
 			// Die kleinste erlaubte ID ist 1. Wenn noch keine Werte vorhanden sein
 			// sollten, müssen wir dies hier dennoch sicherstellen.
-			
+
 			$firstSetID = $id == 0 ? 1 : (int) $id;
 			$cache->set($namespace, $userID, $firstSetID);
 		}
-		
+
 		return $firstSetID;
 	}
-	
+
 	/**
 	 * Artikeltyp ermitteln
 	 *
@@ -175,21 +170,20 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $article  der Artikel
 	 * @return int             die ID des Artikeltyps oder -1, falls der Artikel noch keinem Typ zugeordnet wurde
 	 */
-	public static function getUserType($user)
-	{
-		$userID     = _WV16::getIDForUser($user, false);
+	public static function getUserType($user) {
+		$userID     = _WV16_FrontendUser::getIDForUser($user, false);
 		$cache      = WV_DeveloperUtils::getCache();
 		$namespace  = 'frontenduser.users.typeids';
 		$typeID     = $cache->get($namespace, $userID, null);
-		
+
 		if ($typeID === null) {
 			$sql  = WV_SQLEx::getInstance();
 			$type = $sql->saveFetch('type_id', 'wv16_users', 'id = ?', $userID);
-			
+
 			$typeID = $type ? (int) $type : -1;
 			$cache->set($namespace, $userID, $typeID);
 		}
-		
+
 		return $typeID;
 	}
 
@@ -201,8 +195,7 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $article    der Artikel
 	 * @return _WV2_ArticleType  der Artikeltyp oder null, falls der Artikel noch keinem Typ zugeordnet wurde
 	 */
-	public static function getUserTypeAsObject($user)
-	{
+	public static function getUserTypeAsObject($user) {
 		$type = self::getUserType($user);
 		return $type == -1 ? null : _WV16_UserType::getInstance($type);
 	}
@@ -214,9 +207,8 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $userType  die ID / der Name des Benutzertyps oder null, falls alle
 	 * @return bool             true oder false
 	 */
-	public static function isUserOfType($user, $userType)
-	{
-		return _WV16::getIDForUserType($userType, false) == self::getUserType($user);
+	public static function isUserOfType($user, $userType) {
+		return _WV16_FrontendUser::getIDForUserType($userType, false) == self::getUserType($user);
 	}
 
 	/**
@@ -228,41 +220,39 @@ abstract class _WV16_DataHandler
 	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
 	 * @return array              eine Liste von _WV2_ArticleType-Objekten, die passen
 	 */
-	public static function getAllUserTypes($where = '1', $sortby = 'title', $direction = 'ASC', $offset = 0, $max = 20)
-	{
+	public static function getAllUserTypes($where = '1', $sortby = 'title', $direction = 'ASC', $offset = 0, $max = 20) {
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('usertypes', $where, $sortby, $direction, $offset, $max);
 		$data      = $cache->get($namespace, $cacheKey, false);
-		
+
 		if (!is_array($data)) {
 			$sql   = WV_SQLEx::getInstance();
 			$mode  = WV_SQLEx::RETURN_FALSE;
 			$query = 'SELECT * FROM #_wv16_utypes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction;
-			
+
 			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
 			$query .= ' LIMIT '.$offset.','.$max;
-			
+
 			$data = $sql->getArray($query, array(), '#_', $mode);
 			$cache->set($namespace, $cacheKey, $data);
 		}
-		
+
 		$types = array();
-		
+
 		foreach ($data as $id => $row) {
 			$types[] = _WV16_UserType::getInstance($id, array_merge(array('id' => $id), $row));
 		}
 
 		return $types;
 	}
-	
-	public static function getTotalUserTypes($where = '1')
-	{
+
+	public static function getTotalUserTypes($where = '1') {
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('total_usertypes', $where);
 		$total     = $cache->get($namespace, $cacheKey, -1);
-		
+
 		if ($total < 0) {
 			$sql   = WV_SQLEx::getInstance();
 			$mode  = WV_SQLEx::RETURN_FALSE;
@@ -273,7 +263,7 @@ abstract class _WV16_DataHandler
 
 		return $total;
 	}
-	
+
 	/**
 	 * (Benötigte) Attribute ermitteln
 	 *
@@ -284,38 +274,37 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $userType   die ID / der Name des Artikeltyps
 	 * @return array             eine Liste von _WV16_Attribute-Objekten
 	 */
-	public static function getAttributesForUserType($userType, $returnAsIDs = false)
-	{
+	public static function getAttributesForUserType($userType, $returnAsIDs = false) {
 		if ($userType === -1) {
 			return self::getAllAttributes('', 'position', 'ASC', 0, -1);
 		}
-		
-		$userType   = _WV16::getIDForUserType($userType, false);
+
+		$userType   = _WV16_FrontendUser::getIDForUserType($userType, false);
 		$cache      = WV_DeveloperUtils::getCache();
 		$namespace  = 'frontenduser.lists';
 		$cacheKey   = WV_Cache::generateKey('attr_by_type', $userType);
 		$attributes = $cache->get($namespace, $cacheKey, false);
 		$return     = array();
-		
+
 		if (!is_array($attributes)) {
 			$sql  = WV_SQLEx::getInstance();
 			$mode = WV_SQLEx::RETURN_FALSE;
-			
+
 			// In utype_attrib stehen immer nur Live-Attribute (deleted=0), daher ist kein JOIN notwendig, um nur
 			// die Live-Attribute zu selektieren.
-			
+
 			$attributes = $sql->getArray('SELECT attribute_id FROM #_wv16_utype_attrib WHERE user_type = ?', $userType, '#_', $mode);
-			
+
 			$cache->set($namespace, $cacheKey, $attributes);
 		}
-		
+
 		foreach ($attributes as $id) {
 			$return[] = $returnAsIDs ? $id : _WV16_Attribute::getInstance($id);
 		}
-		
+
 		return $return;
 	}
-	
+
 	/**
 	 * Benutzertypen ermitteln
 	 *
@@ -325,42 +314,40 @@ abstract class _WV16_DataHandler
 	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
 	 * @return array              eine Liste von _WV2_ArticleType-Objekten, die passen
 	 */
-	public static function getAllAttributes($where = '', $sortby = 'position', $direction = 'ASC', $offset = 0, $max = 20)
-	{
+	public static function getAllAttributes($where = '', $sortby = 'position', $direction = 'ASC', $offset = 0, $max = 20) {
 		if (empty($where)) $where = 'deleted = 0';
 		else $where .= ' AND deleted = 0';
-		
+
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('attributes', $where, $sortby, $direction, $offset, $max);
 		$data      = $cache->get($namespace, $cacheKey, false);
-		
+
 		if (!is_array($data)) {
 			$sql   = WV_SQLEx::getInstance();
 			$mode  = WV_SQLEx::RETURN_FALSE;
 			$max   = $max < 0 ? '18446744073709551615' : (int) $max;
 			$query = 'SELECT * FROM #_wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction.' LIMIT '.$offset.','.$max;
-			
+
 			$data = $sql->getArray($query, array(), '#_', $mode);
 			$cache->set($namespace, $cacheKey, $data);
 		}
-		
+
 		$result = array();
-		
+
 		foreach ($data as $id => $row) {
 			$result[] = _WV16_Attribute::getInstance($id);
 		}
 
 		return $result;
 	}
-	
-	public static function getTotalAttributes($where = '1')
-	{
+
+	public static function getTotalAttributes($where = '1') {
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('total_attributes', $where);
 		$total     = $cache->get($namespace, $cacheKey, -1);
-		
+
 		if ($total < 0) {
 			$sql   = WV_SQLEx::getInstance();
 			$mode  = WV_SQLEx::RETURN_FALSE;
@@ -371,7 +358,7 @@ abstract class _WV16_DataHandler
 
 		return $total;
 	}
-	
+
 	/**
 	 * Attribut ermitteln
 	 *
@@ -380,8 +367,7 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $userType   die ID / der Name des Artikeltyps
 	 * @return array             eine Liste von _WV16_Attribute-Objekten
 	 */
-	public static function getAttribute($attribute)
-	{
+	public static function getAttribute($attribute) {
 		return _WV16_Attribute::getInstance($attribute);
 	}
 
@@ -393,24 +379,23 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $articleType  der Artikeltyp als ID oder Name
 	 * @return int                 die Anzahl der zugehörigen Artikel
 	 */
-	public static function getUserCountByType($userType)
-	{
-		$userType  = _WV16::getIDForUserType($userType, false);
+	public static function getUserCountByType($userType) {
+		$userType  = _WV16_FrontendUser::getIDForUserType($userType, false);
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.counts';
 		$cacheKey  = WV_Cache::generateKey('users_by_type', $userType);
 		$count     = $cache->get($namespace, $cacheKey, -1);
-		
+
 		if ($count < 0) {
 			$sql   = WV_SQLEx::getInstance();
 			$count = $sql->count('wv16_users', 'type_id = ?', $userType);
-			
+
 			$cache->set($namespace, $cacheKey, $count);
 		}
-		
+
 		return $count;
 	}
-	
+
 	/**
 	 * Benutzerliste ermitteln
 	 *
@@ -430,15 +415,14 @@ abstract class _WV16_DataHandler
 	 * @param  string $limitClause  eine optionale "LIMIT a,b"-Angabe
 	 * @return array                Liste von passenden OOArticle-Objekten
 	 */
-	public static function getUsersByType($userType, $sortby = 'login', $direction = 'ASC', $limitClause = '')
-	{
-		$userType  = _WV16::getIDForUserType($userType, false);
+	public static function getUsersByType($userType, $sortby = 'login', $direction = 'ASC', $limitClause = '') {
+		$userType  = _WV16_FrontendUser::getIDForUserType($userType, false);
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('users_by_type', $userType, $sortby, $direction, $limitClause);
 		$users     = $cache->get($namespace, $cacheKey, false);
 		$return    = array();
-		
+
 		if (!is_array($users)) {
 			$sql   = WV_SQLEx::getInstance();
 			$users = $sql->getArray(
@@ -446,7 +430,7 @@ abstract class _WV16_DataHandler
 				'ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
 				$userType, '#_'
 			);
-			
+
 			$cache->set($namespace, $cacheKey, $users);
 		}
 
@@ -456,7 +440,7 @@ abstract class _WV16_DataHandler
 
 		return $return;
 	}
-	
+
 	/**
 	 * Metadaten für ein einzelnes Objekt ermitteln
 	 *
@@ -480,60 +464,59 @@ abstract class _WV16_DataHandler
 	 * @param  mixed  $default    der Standardwert, falls kein Metadatum gefunden wurde
 	 * @return array              Liste der Metdaten wie oben beschrieben
 	 */
-	public static function getDataForUser($user, $attribute = null, $default = null, $setID = null)
-	{
-		$userID    = _WV16::getIDForUser($user, false);
-		$attribute = _WV16::getIDForAttribute($attribute, true);
+	public static function getDataForUser($user, $attribute = null, $default = null, $setID = null) {
+		$userID    = _WV16_FrontendUser::getIDForUser($user, false);
+		$attribute = _WV16_FrontendUser::getIDForAttribute($attribute, true);
 		$setID     = $setID === null ? self::getFirstSetID($user) : (int) $setID;
 		$key       = $userID.'_'.$setID;
-		
+
 		// Wurden alle Attribute angefragt? Haben wir bereits alle Daten für diesen Benutzer?
-		
+
 		if ($attribute === null && isset(self::$dataCache[$key])) {
 			$attributes = self::$dataCache[$key];
-			
+
 			// Hat dieser Benutzer keine Attribute?
-			
+
 			if (empty($attributes)) {
 				return is_null($default) ? null : new _WV16_UserValue($default, null, null, null);
 			}
-			
+
 			// Bei genau einem Attribut geben wir dieses direkt zurück.
-			
+
 			if (count($attributes) == 1) {
 				$id = reset($attributes);
 				return self::$dataCache[$key.'_'.$id]['object'];
 			}
-			
+
 			// Der Benutzer hat mehr als ein Attribut.
-			
+
 			$values = array();
-			
+
 			foreach ($attributes as $id) {
 				$values[self::$dataCache[$key.'_'.$id]['name']] = self::$dataCache[$key.'_'.$id]['object'];
 			}
-			
+
 			return $values;
 		}
-		
+
 		// Wurde ein bestimmtes Attribut angefragt?
-		
+
 		elseif ($attribute !== null) {
 			// Attribut bereits geholt. Cool!
-			
+
 			if (isset(self::$dataCache[$key.'_'.$attribute])){
 				return self::$dataCache[$key.'_'.$attribute]['object'];
 			}
-			
+
 			// Wert existiert nicht. Aber vielleicht haben wir schon alle Daten geholt und die Anfrage
 			// des Anwenders zielt auf eine eh nicht vorhandene? Dann können wir direkt den Standardwert
 			// zurückgeben, da wir wissen, dass der Wert nicht existieren kann.
-			
+
 			if (isset(self::$dataCache[$key])) {
 				return is_null($default) ? null : new _WV16_UserValue($default, null, null, null);
 			}
 		}
-		
+
 		// Cache-Miss. Mist. Dann eben in die Datenbank...
 
 		$sql    = WV_SQLEx::getClone();
@@ -543,54 +526,53 @@ abstract class _WV16_DataHandler
 		$query  =
 			'SELECT name, attribute_id, value FROM #_wv16_user_values, #_wv16_attributes '.
 			'WHERE user_id = ? AND set_id = ? AND attribute_id = id';
-		
+
 		if ($attribute !== null) {
 			$query   .= ' AND attribute_id = ?';
 			$params[] = $attribute;
 		}
-		
+
 		$sql->queryEx($query, $params, '#_', false, WV_SQLEx::RETURN_FALSE);
 
 		foreach ($sql as $row) {
 			// Daten holen
-			
+
 			$return[$row['name']] = new _WV16_UserValue($row['value'], $row['attribute_id'], $userID, $setID);
-			
+
 			// Daten cachen
-			
+
 			self::cacheData($return[$row['name']], $userID, $setID);
 			$ids[] = $row['attribute_id'];
 		}
-		
+
 		// Mach's gut, Dolly!
-		
+
 		$sql = null;
 		unset($sql);
-		
+
 		// Wenn wir alle Metadaten geholt haben, merken wir uns das.
-		
+
 		if ($attribute === null) {
 			self::$dataCache[$key] = $ids;
 		}
-		
+
 		// Nichts gefunden? Dann Standardwert oder null.
-		
+
 		if (empty($return)) {
 			return is_null($default) ? null : new _WV16_UserValue($default, null, null);
 		}
 
 		// dearrayfizieren
-		
+
 		return count($return) == 1 ? reset($return) : $return;
 	}
 
 	// Shortcut
-	public static function userData($user, $attribute = null, $default = null, $setID = null)
-	{
+	public static function userData($user, $attribute = null, $default = null, $setID = null) {
 		$setID = $setID === null ? $user->getSetID() : $setID;
 		return self::getDataForUser($user, $attribute, $default, $setID);
 	}
-	
+
 	/**
 	 * Passende Objekte anhand ihrer Metadaten ermitteln
 	 *
@@ -626,23 +608,22 @@ abstract class _WV16_DataHandler
 	 * @param  boolean $onlineOnly   wenn true, werden nur online Artikel berücksichtigt
 	 * @return array                 eine Liste von passenden Artikeln / Kategorien / Medien
 	 */
-	public static function getUsersWithAttribute($attribute, $userType = null, $value = null, $operator = null, $sort = null)
-	{
-		$attribute = _WV16::getIDForAttribute($attribute, false);
-		$userType  = _WV16::getIDForUserType($userType, true);
-		
+	public static function getUsersWithAttribute($attribute, $userType = null, $value = null, $operator = null, $sort = null) {
+		$attribute = _WV16_FrontendUser::getIDForAttribute($attribute, false);
+		$userType  = _WV16_FrontendUser::getIDForUserType($userType, true);
+
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('users_by_attribute', $attribute, $userType, $value, $operator, $sort);
 		$users     = $cache->get($namespace, $cacheKey, false);
 		$return    = array();
-		
+
 		if (!is_array($users)) {
 			//////////////////////////////////////////////////////////////////////////
 			// Objekte finden, die die gesuchte Metainformation besitzen
 			// Ob der gesuchte Wert enthalten ist, prüfen später die Datentypen
 			// selbstständig.
-			
+
 			$sortTable  = strpos($sort, '.') === false ? ''    : substr($sort, 0, strpos($sort,'.'));
 			$sortColumn = strpos($sort, '.') === false ? $sort : substr($sort, strpos($sort,'.') + 1);
 
@@ -652,7 +633,7 @@ abstract class _WV16_DataHandler
 				case 'users':       $sortTable = 'u';    break;
 				default:            $sortTable = '';
 			}
-			
+
 			$query =
 				'SELECT uv.* '.
 				'FROM #_wv16_user_values uv '.
@@ -663,12 +644,12 @@ abstract class _WV16_DataHandler
 			$sql    = WV_SQLEx::getClone();
 			$return = array();
 			$params = array($attribute);
-			
+
 			if ($userType !== null) {
 				$query   .= ' AND type_id = ?';
 				$params[] = $userType;
 			}
-			
+
 			if ($sortTable) {
 				$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
 			}
@@ -705,14 +686,14 @@ abstract class _WV16_DataHandler
 					}
 				}
 			}
-			
+
 			// Mach's gut, Dolly!
-			
+
 			$sql = null;
 			unset($sql);
-			
+
 			// Daten cachen
-			
+
 			$cache->set($namespace, $cacheKey, $cacheData);
 		}
 		else {
@@ -723,7 +704,7 @@ abstract class _WV16_DataHandler
 
 		return $return;
 	}
-	
+
 	/**
 	 * Werte eines Attributs erfahren
 	 *
@@ -737,11 +718,10 @@ abstract class _WV16_DataHandler
 	 * @param  int    $type             der Typ (WV2::TYPE-Konstanten)
 	 * @return array                    eine Liste von Alternativen
 	 */
-	public static function getAttributeValueSet($attribute, $getOnlyExisting = false)
-	{
-		$attribute = _WV16::getIDForAttribute($attribute, false);
+	public static function getAttributeValueSet($attribute, $getOnlyExisting = false) {
+		$attribute = _WV16_FrontendUser::getIDForAttribute($attribute, false);
 		$data      = _WV16_Attribute::getDatatypeWithParams($attribute);
-		
+
 		if (!$data) {
 			return array();
 		}
@@ -769,7 +749,7 @@ abstract class _WV16_DataHandler
 
 		return $datalist;
 	}
-	
+
 	/**
 	 * Prüfen, ob Wert vorhanden ist
 	 *
@@ -781,10 +761,9 @@ abstract class _WV16_DataHandler
 	 * @param  mixed $value      der gesuchte Wert
 	 * @return boolean           true, wenn der Benutzer den gesuchte Wert bestitzt, sonst false
 	 */
-	public static function hasUserValue($user, $attribute, $value)
-	{
+	public static function hasUserValue($user, $attribute, $value) {
 		$data = self::getDataForUser($user, $attribute, null, $user->getSetID());
-		
+
 		if (!$data) {
 			return false;
 		}
@@ -794,7 +773,7 @@ abstract class _WV16_DataHandler
 		if (!is_array($v)) {
 			return $value == $v;
 		}
-		
+
 		return in_array($value, array_keys($v)) || in_array($value, array_values($v));
 	}
 
@@ -812,17 +791,16 @@ abstract class _WV16_DataHandler
 	 * @param  int        $type           der Typ des Objekts
 	 * @return array                      Liste von _WV2_MetaData-Objekten
 	 */
-	public static function getUserDataForAttribute($attribute = null, $userType = null)
-	{
-		$attribute = _WV16::getIDForAttribute($attribute, true);
-		$userType  = _WV16::getIDForUserType($userType, true);
-		
+	public static function getUserDataForAttribute($attribute = null, $userType = null) {
+		$attribute = _WV16_FrontendUser::getIDForAttribute($attribute, true);
+		$userType  = _WV16_FrontendUser::getIDForUserType($userType, true);
+
 		if ($attribute) $params['id']     = $attribute;
 		if ($userType)  $params['typeID'] = $userType;
-		
+
 		return self::getUserData($params);
 	}
-	
+
 	/**
 	 * Attribute ermitteln
 	 *
@@ -857,20 +835,19 @@ abstract class _WV16_DataHandler
 	 * @param  array $params  die Suchparameter
 	 * @return array          die Liste der passenden Metadaten
 	 */
-	public static function getUserData($params = null)
-	{
+	public static function getUserData($params = null) {
 		// Die Parameter können auch als JSON-kodierter String angegeben werden.
-		
+
 		if (!is_array($params)) {
 			if (!function_exists('json_decode')) {
 				throw new WV16_Exception('Die Eingabedaten konnten nicht als JSON verarbeitet werden, da das entsprechende PHP-Modul nicht geladen ist.');
 			}
-			
+
 			$params = json_decode($params, true);
 		}
-		
+
 		// Query vorbereiten
-		
+
 		$query =
 			'SELECT uv.* '.
 			'FROM #_wv16_user_values uv '.
@@ -885,9 +862,9 @@ abstract class _WV16_DataHandler
 		$typeIDs = wv_makeArray(isset($params['typeID']) ? $params['typeID'] : null);
 		$names   = wv_makeArray(isset($params['name'])   ? $params['name']   : null);
 		$ids     = wv_makeArray(isset($params['id'])     ? $params['id']     : null);
-		
+
 		// Attributnamen zu -IDs umformen, um einfachere und eindeutigere Queries zu erzeugen.
-		
+
 		foreach ($names as $name) {
 			$ids[] = _WV16_Attribute::getIDForName($name);
 		}
@@ -899,19 +876,19 @@ abstract class _WV16_DataHandler
 		$ids     = array_unique($ids);
 
 		// In Query einsetzen
-		
+
 		$params = array();
-		
+
 		if (!empty($userIDs)) {
 			$markers = implode(',', array_map('intval', $userIDs));
 			$query   = str_replace('%where%', 'user_id IN ('.$markers.') AND %where%', $query);
 		}
-		
+
 		if (!empty($typeIDs)) {
 			$markers = implode(',', array_map('intval', $typeIDs));
 			$query   = str_replace('%where%', 'type_id IN ('.$markers.') AND %where%', $query);
 		}
-		
+
 		if (!empty($ids)) {
 			$markers = implode(',', array_map('intval', $ids));
 			$query   = str_replace('%where%', 'attr.id IN ('.$markers.') AND %where%', $query);
@@ -924,29 +901,29 @@ abstract class _WV16_DataHandler
 		$orderby   = isset($params['orderby'])   ? $params['orderby']   : 'u.id';
 		$direction = isset($params['direction']) ? $params['direction'] : 'ASC';
 		$query    .= ' ORDER BY '.$orderby.' '.$direction;
-		
+
 		// Daten sammeln
-		
+
 		$cache     = WV_DeveloperUtils::getCache();
 		$namespace = 'frontenduser.lists';
 		$cacheKey  = WV_Cache::generateKey('userdata', md5($query));
 		$data      = $cache->get($namespace, $cacheKey, false);
 		$result    = array();
-		
+
 		if (!is_array($data)) {
 			$sql->queryEx($query, $params, '#_', WV_SQLEx::RETURN_FALSE);
 			$data = array();
-			
+
 			foreach ($sql as $row) {
 				$row['attribute_id'] = (int) $row['attribute_id'];
 				$row['user_id']      = (int) $row['user_id'];
-				
+
 				$data[] = $row;
 			}
-			
+
 			$cache->set($namespace, $cacheKey, $data);
 		}
-		
+
 		foreach ($data as $row) {
 			$result[] = new _WV16_UserValue($row['value'], $row['attribute_id'], $row['user_id']);
 		}

@@ -23,7 +23,7 @@ foreach ($types as $type) {
 	$typesSelect[$type->getID()] = $type->getTitle();
 }
 
-$type = new WV_Form_Select('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE, $typesSelect);
+$type = new WV_Form_Select('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE, $typesSelect);
 $type->setAttribute('onchange', 'wv16.changeUserType(this)');
 $type->setMultiple(false);
 
@@ -34,10 +34,10 @@ $form->addElements(array($login, $password1, $password2, $type));
 
 $form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
 
-$userType      = $user ? $user->getTypeID() : _WV16::DEFAULT_USER_TYPE;
+$userType      = $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE;
 $requiredInfos = WV16_Users::getAttributesForUserType($userType);
 $assignedData  = $user ? $user->getValues() : array();
-$dataToDisplay = _WV16::getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);
+$dataToDisplay = _WV16_FrontendUser::getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);
 $attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : $requiredInfos;
 $attributeIDs  = array();
 
@@ -50,7 +50,7 @@ foreach ($dataToDisplay as $data) {
 	$datatypeID = $data['attribute']->getDatatypeID();
 	$hidden     = !in_array($data['attribute']->getID(), $attributeIDs);
 	$parameters = array($form, $value, $hidden, $data['attribute']);
-	
+
 	WV_Datatype::call($datatypeID, 'renderAsFormElement', $parameters);
 }
 
@@ -95,11 +95,11 @@ $hidden = array();
 
 foreach ($dataToDisplay as $data) {
 	$attribute = $data['attribute'];
-	
+
 	if ($attribute->isVisible()) {
 		continue;
 	}
-	
+
 	$attributeID = $attribute->getID();
 	$hidden[] = $attributeID;
 	$form = preg_replace('#<div(.+?)(id="property_container_'.$attributeID.'")(.*?)class="(.*?)"(.*?)>#i', '<div$1$2$3class="$4 hidden"$5>', $form);
@@ -113,23 +113,23 @@ print $form;
 /* <![CDATA[ */
 wv16.attributesPerType = [];
 <?php
-	
+
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
 // vorhanden sind.
 
 foreach (WV16_Users::getAllUserTypes() as $type) {
 	print "\n";
 	print 'wv16.attributesPerType['.$type->getID().'] = [];';
-	
+
 	foreach ($type->getAttributeIDs() as $attr) {
 		if (in_array($attr, $hidden)) {
 			continue;
 		}
-		
+
 		print "\n";
 		print 'wv16.attributesPerType['.$type->getID().'].push('.$attr.');';
 	}
-	
+
 	print "\n";
 }
 

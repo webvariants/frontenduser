@@ -9,24 +9,32 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-$classes = array(
-	'_WV16'             => 'internal/class.frontenduser.php',
-	'_WV16_Attribute'   => 'internal/class.attribute.php',
-	'_WV16_UserType'    => 'internal/class.usertype.php',
-	'_WV16_UserValue'   => 'internal/class.uservalue.php',
-	'_WV16_Group'       => 'internal/class.group.php',
-	'_WV16_DataHandler' => 'internal/class.datahandler.php',
-	'_WV16_User'        => 'internal/class.user.php',
+function _wv16_autoload($params) {
+	$className = $params['subject'];
+	$classes   = array(
+		'_WV16_FrontendUser' => '_WV16/FrontendUser.php',
+		'_WV16_Attribute'    => '_WV16/Attribute.php',
+		'_WV16_UserType'     => '_WV16/UserType.php',
+		'_WV16_UserValue'    => '_WV16/UserValue.php',
+		'_WV16_Group'        => '_WV16/Group.php',
+		'_WV16_DataHandler'  => '_WV16/DataHandler.php',
+		'_WV16_User'         => '_WV16/User.php',
 
-	'WV16_User'      => 'interface.user.php',
-	'WV16_Users'     => 'class.users.php',
-	'WV16_Mailer'    => 'class.mailer.php',
-	'WV16_Exception' => 'class.exception.php',
+		'WV16_User'      => 'WV16/User.php',
+		'WV16_Users'     => 'WV16/Users.php',
+		'WV16_Mailer'    => 'WV16/Mailer.php',
+		'WV16_Exception' => 'WV16/Exception.php',
 
-	'PHPMailerLite' => 'class.phpmailer-lite.php'
-);
+		'PHPMailerLite' => 'PHPMailerLite.php'
+	);
 
-if (isset($classes[$className])) {
-	require_once _WV16_PATH.'classes/'.$classes[$className];
-	$className = '';
+	if (isset($classes[$className])) {
+		require_once _WV16_PATH.'classes/'.$classes[$className];
+		return '';
+	}
+
+	return $className;
 }
+
+rex_register_extension('__AUTOLOAD', '_wv16_autoload');
+require_once _WV16_PATH.'classes/_WV16/Extensions.php';

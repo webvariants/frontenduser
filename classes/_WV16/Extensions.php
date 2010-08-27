@@ -9,8 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-class _WV16_Extensions
-{
+class _WV16_Extensions {
 	/**
 	 * AddOn in Extension Points einklinken
 	 *
@@ -18,8 +17,7 @@ class _WV16_Extensions
 	 * Extension Points. Bis auf OOREDAXO_GET_META_VALUE werden die
 	 * Registrierungen nur im Backend vorgenommen.
 	 */
-	public static function plugin()
-	{
+	public static function plugin() {
 		global $REX, $ctype;
 
 		if (WV_Redaxo::isFrontend()) {
@@ -28,7 +26,7 @@ class _WV16_Extensions
 
 		$self = __CLASS__;
 		$page = wv_request('page', 'string'); // WV_Redaxo::getCurrentPage(); steht noch nicht bereit!
-		
+
 		// HTML-Kopf
 
 		if (in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content'))) {
@@ -61,45 +59,44 @@ class _WV16_Extensions
 //			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
 			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
 		}
-		
+
 		// Wenn die Global Settings verfügbar werden, nutzen wir sie.
-		
+
 		rex_register_extension('POST_ADDON_INSTALL', array($self, 'addonInstalled'));
 	}
-	
-	public static function addonInstalled($params)
-	{
+
+	public static function addonInstalled($params) {
 		$addonName = $params['subject'];
-		
+
 		if ($addonName != 'global_settings') {
 			return;
 		}
-		
+
 		$sql  = WV_SQLEx::getInstance();
 		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
-		
+
 		try {
 			$sql->startTransaction(true);
-			
+
 			// ==== EINSTELLUNGEN LÖSCHEN ====================================
-			
+
 			$pagename  = 'translate:frontenduser_title';
 			$namespace = 'frontenduser';
 			$settings  = array(
 				'validation_article',
 				'mail_from_name', 'mail_from_email',
-				'mail_report_subject', 'mail_report_body', 
-				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body', 
-				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body', 
-				'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body', 
+				'mail_report_subject', 'mail_report_body',
+				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body',
+				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body',
+				'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body',
 			);
-			
+
 			foreach ($settings as $setting) {
 				WV8_Settings::deleteIfExists($namespace, $setting);
 			}
-			
+
 			// ==== EINSTELLUNGEN NEU ANLEGEN ================================
-			
+
 			WV8_Settings::create(
 				/*     Namespace */ $namespace,
 				/*          Name */ 'validation_article',
@@ -112,35 +109,35 @@ class _WV16_Extensions
 				/*        Gruppe */ 'Validierungsartikel',
 				/* mehrsprachig? */ true
 			);
-			
+
 			$helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
-			
+
 			$group = 'Ausgehende eMails';
 			self::createSingleLineSetting($namespace, 'mail_from_name',  'eMail-Name',    '', $group, $pagename);
 			self::createSingleLineSetting($namespace, 'mail_from_email', 'eMail-Adresse', '', $group, $pagename);
-			
+
 			$group = 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
 			self::createSingleLineSetting($namespace, 'mail_report_subject', 'Betreff',            $helptext, $group, $pagename);
 			self::createMultiLineSetting($namespace,  'mail_report_body',    'Inhalt (Template)',  $helptext, $group, $pagename);
-			
+
 			$group = 'Bestätigungsaufforderung an den neuen Benutzer';
 			self::createSingleLineSetting($namespace, 'mail_confirmation_subject', 'Betreff',              $helptext, $group, $pagename);
 			self::createMultiLineSetting($namespace,  'mail_confirmation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
 			self::createSingleLineSetting($namespace, 'mail_confirmation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-			
+
 			$group = 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
 			self::createSingleLineSetting($namespace, 'mail_activation_subject', 'Betreff',              $helptext, $group, $pagename);
 			self::createMultiLineSetting($namespace,  'mail_activation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
 			self::createSingleLineSetting($namespace, 'mail_activation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-			
+
 			$group = 'Passwort-vergessen-eMails';
 			self::createSingleLineSetting($namespace, 'mail_recovery_subject', 'Betreff',              $helptext, $group, $pagename);
 			self::createMultiLineSetting($namespace,  'mail_recovery_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
 			self::createSingleLineSetting($namespace, 'mail_recovery_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-			
+
 			$sql->doCommit(true);
 			$sql->setErrorMode($mode);
-			
+
 			return true;
 		}
 		catch (Exception $e) {
@@ -149,9 +146,8 @@ class _WV16_Extensions
 			return false;
 		}
 	}
-	
-	protected static function createSingleLineSetting($namespace, $name, $title, $helptext, $group, $pagename)
-	{
+
+	protected static function createSingleLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
 		$setting = WV8_Settings::create(
 			/*     Namespace */ $namespace,
 			/*          Name */ $name,
@@ -164,12 +160,11 @@ class _WV16_Extensions
 			/*        Gruppe */ $group,
 			/* mehrsprachig? */ true
 		);
-		
+
 		return $setting;
 	}
-	
-	protected static function createMultiLineSetting($namespace, $name, $title, $helptext, $group, $pagename)
-	{
+
+	protected static function createMultiLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
 		$setting = WV8_Settings::create(
 			/*     Namespace */ $namespace,
 			/*          Name */ $name,
@@ -182,7 +177,7 @@ class _WV16_Extensions
 			/*        Gruppe */ $group,
 			/* mehrsprachig? */ true
 		);
-		
+
 		return $setting;
 	}
 
@@ -194,14 +189,14 @@ class _WV16_Extensions
 
 	/**
 	 * Handler für ART_DELETED
-	 * 
+	 *
 	 * Löscht alle Metadaten für den gelöschten Artikel.
-	 * 
+	 *
 	 * @param array $params  die von Redaxo übergebenen Parameter
 	 */
 	public static function artDeleted($params) {
 		list($articleID) = array_values($params);
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16::TYPE_ARTICLE, '#_');
+		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16_FrontendUser::TYPE_ARTICLE, '#_');
 	}
 
 	/*
@@ -212,47 +207,47 @@ class _WV16_Extensions
 
 	/**
 	 * Rechte speichern
-	 * 
+	 *
 	 * Speichert die Rechte aus dem abgeschickten Formular. Wird in Ermangelung
 	 * eines passenden Extension-Points beim Erzeugen des Formulars aufgerufen
 	 * und reagiert nur, wenn ein passendes Formular abgeschickt wurde.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         die Fehlermeldung oder das Subject
 	 */
 	public static function artUpdated($params) {
 		if (!isset($_POST['saverights'])) return;
-		
+
 		$enableAccess    = (bool) rex_post('frontenduser', 'int', 0);
 		list($articleID) = array_values($params);
 		$sql             = WV_SQL::getInstance();
-		
+
 		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-		
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16::TYPE_ARTICLE, '#_');
-		
+
+		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16_FrontendUser::TYPE_ARTICLE, '#_');
+
 		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-		
+
 		if (!$enableAccess) return;
-		
+
 		// Rechte holen und abspeichern
-		
+
 		foreach (WV16_Users::getAllGroups() as $group) {
 			$formName  = md5($group->getName());
 			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-			
+
 			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($articleID).','._WV16::TYPE_ARTICLE.','.$privilege.')', '#_');
+				'VALUES ('.$group->getID().','.intval($articleID).','._WV16_FrontendUser::TYPE_ARTICLE.','.$privilege.')', '#_');
 		}
-		
+
 		return $params['subject'];
 	}
 
 	/**
 	 * Handler für ART_META_FORM
-	 * 
+	 *
 	 * Erzeugt das Frontend-Fomular und hängt es an das Subject an.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         das Subject inkl. des Formulars
 	 */
@@ -263,9 +258,9 @@ class _WV16_Extensions
 		// in diesem EP auf ein evtl. abgeschickte Formular (artUpdated macht
 		// nichts, wenn kein abgeschicktes Formular erkannt wurde).
 		self::artUpdated($params);
-		
+
 		list($articleID) = array_values($params);
-		
+
 		ob_start();
 		include _WV16_PATH.'templates/articleext.phtml';
 		$content = ob_get_contents();
@@ -282,15 +277,15 @@ class _WV16_Extensions
 
 	/**
 	 * Handler für CAT_FORM_EDIT
-	 * 
+	 *
 	 * Erzeugt das Frontend-Formular für Kategorien.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         das Subject inkl. des Formulars
 	 */
 	public static function catFormEdit($params) {
 		list($categoryID) = array_values($params);
-		
+
 		ob_start();
 		include _WV16_PATH.'templates/categoryext.phtml';
 		$content = ob_get_contents();
@@ -301,51 +296,51 @@ class _WV16_Extensions
 
 	/**
 	 * Handler für CAT_UPDATED
-	 * 
+	 *
 	 * Serialisiert das Frontend-Formular und gibt ihm Fehlerfalle die
 	 * Fehlermeldung, sonst das Subject zurück.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         das Subject oder die Fehlermeldung
 	 */
 	public static function catUpdated($params) {
 		if (!isset($_POST['saverights'])) return;
-		
+
 		$enableAccess = (bool) rex_post('frontenduser', 'int', 0);
 		$categoryID   = rex_post('edit_id', 'int'); // $params['category'] ist ein rex_sql-Objekt
 		$sql          = WV_SQL::getInstance();
-		
+
 		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-		
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16::TYPE_CATEGORY, '#_');
-		
+
+		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16_FrontendUser::TYPE_CATEGORY, '#_');
+
 		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-		
+
 		if (!$enableAccess) return;
-		
+
 		// Rechte holen und abspeichern
-		
+
 		foreach (WV16_Users::getAllGroups() as $group) {
 			$formName  = md5($group->getName());
 			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-			
+
 			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($categoryID).','._WV16::TYPE_CATEGORY.','.$privilege.')', '#_');
+				'VALUES ('.$group->getID().','.intval($categoryID).','._WV16_FrontendUser::TYPE_CATEGORY.','.$privilege.')', '#_');
 		}
-		
+
 		return $params['subject'];
 	}
 
 	/**
 	 * Handler für CAT_DELETED
-	 * 
+	 *
 	 * Entfernt alle Metadaten für die gelöschte Kategorie.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 */
 	public static function catDeleted($params) {
 		list($categoryID) = array_values($params);
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16::TYPE_CATEGORY, '#_');
+		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16_FrontendUser::TYPE_CATEGORY, '#_');
 	}
 
 	/*
@@ -353,19 +348,19 @@ class _WV16_Extensions
 	     Extension Points - Metadaten für Kategorien
 	   ************************************************************
 	*/
-	
+
 	/**
 	 * Handler für MEDIA_FORM_EDIT
-	 * 
+	 *
 	 * Erzeugt das Frontend-Formular für Medien.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         das Subject inkl. des Formulars
 	 */
 	public static function mediaFormEdit($params) {
 		list($mediumID) = array_values($params);
 		$mediumID = intval($mediumID);
-		
+
 		ob_start();
 		include _WV16_PATH.'templates/mediumext.phtml';
 		$content = ob_get_contents();
@@ -376,10 +371,10 @@ class _WV16_Extensions
 
 	/**
 	 * Handler für MEDIA_UPDATED
-	 * 
+	 *
 	 * Serialisiert das Frontend-Formular und gibt ihm Fehlerfalle die
 	 * Fehlermeldung, sonst das Subject zurück.
-	 * 
+	 *
 	 * @param  array $params  die von Redaxo übergebenen Parameter
 	 * @return string         das Subject oder die Fehlermeldung
 	 */
@@ -387,33 +382,33 @@ class _WV16_Extensions
 		$enableAccess = (bool) rex_post('frontenduser', 'int', 0);
 		$mediumID     = rex_post('file_id', 'int');
 		$sql          = WV_SQL::getInstance();
-		
+
 		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-		
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16::TYPE_MEDIUM, '#_');
-		
+
+		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16_FrontendUser::TYPE_MEDIUM, '#_');
+
 		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-		
+
 		if (!$enableAccess) return;
-		
+
 		// Rechte holen und abspeichern
-		
+
 		foreach (WV16_Users::getAllGroups() as $group) {
 			$formName  = md5($group->getName());
 			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-			
+
 			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($mediumID).','._WV16::TYPE_MEDIUM.','.$privilege.')', '#_');
+				'VALUES ('.$group->getID().','.intval($mediumID).','._WV16_FrontendUser::TYPE_MEDIUM.','.$privilege.')', '#_');
 		}
 	}
 
 	/**
 	 * Handler für MEDIA_DELETED
-	 * 
+	 *
 	 * Entfernt alle Metadaten für die gelöschte Datei.
 	 */
 	public static function mediaDeleted() {
 		$mediumID = rex_post('file_id', 'int');
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16::TYPE_MEDIUM, '#_');
+		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16_FrontendUser::TYPE_MEDIUM, '#_');
 	}
 }

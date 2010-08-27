@@ -40,7 +40,7 @@ $form->add($attributes);
 ////////////////////////////////////////////////////////////////////////////////
 // Buttons festlegen
 
-if ($type && $type->getID() != _WV16::DEFAULT_USER_TYPE) {
+if ($type && $type->getID() != _WV16_FrontendUser::DEFAULT_USER_TYPE) {
 	$delete = new WV_Form_Button('submit', 'delete', 'Löschen');
 	$delete->setAttribute('onclick', 'return confirm("Sicher, dass dieser Benutzertyp gelöscht werden soll?")');
 	$form->setDeleteButton($delete);

@@ -31,17 +31,20 @@ if (!defined('IS_SALLY')) {
 
 // Autoloading
 
-function _wv16_autoload($params) {
-	$className = $params['subject'];
-	require _WV16_PATH.'autoload.inc.php';
-	return $className;
-}
+if (defined('IS_SALLY')) {
+	// Wir müssen zuerst den Pfad zu den internen Klassen anlegen, da für
+	// _WV16_User sonst [WV16, User] erzeugt und dann immer die public Klasse
+	// geladen werden würde.
 
-rex_register_extension('__AUTOLOAD', '_wv16_autoload');
+	sly_Loader::addLoadPath(_WV16_PATH.'classes/_WV16', '_WV16');
+	sly_Loader::addLoadPath(_WV16_PATH.'classes');
+}
+else {
+	require_once _WV16_PATH.'autoload.inc.php';
+}
 
 // Initialisierungen
 
-require_once _WV16_PATH.'classes/internal/class.extensions.php';
 rex_register_extension('DEVUTILS_INIT', array('_WV16_Extensions', 'plugin'));
 rex_register_extension('ALL_GENERATED', array('WV16_Users', 'clearCache'));
 
