@@ -358,6 +358,13 @@ abstract class WV16_Users extends _WV16_DataHandler
 		return substr(md5($login.mt_rand()), 0, 20);
 	}
 
+	public static function findByConfirmationCode($code)
+	{
+		$where = 'confirmation_code = "'.preg_replace('#[^a-z0-9]#i', '', $login).'"';
+		$users = self::getAllUsers($where, 'id', 'asc', 0, 1);
+		return empty($users) ? null : reset($users);
+	}
+
 	public static function isReadOnlySet($setID)
 	{
 		return _WV16_User::isReadOnlySet($setID);
