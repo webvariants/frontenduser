@@ -23,9 +23,7 @@ function _wv16_autoload($params) {
 		'WV16_User'      => 'WV16/User.php',
 		'WV16_Users'     => 'WV16/Users.php',
 		'WV16_Mailer'    => 'WV16/Mailer.php',
-		'WV16_Exception' => 'WV16/Exception.php',
-
-		'PHPMailerLite' => 'PHPMailerLite.php'
+		'WV16_Exception' => 'WV16/Exception.php'
 	);
 
 	if (isset($classes[$className])) {

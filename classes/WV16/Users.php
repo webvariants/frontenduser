@@ -357,18 +357,23 @@ abstract class WV16_Users extends _WV16_DataHandler {
 			$attributeName = strtolower($match[1]);
 			$replacement   = '';
 
-			try {
-				$value = $user->getValue($attributeName);
-				if ($value === null) continue;
-
-				$replacement = $value->getValue();
-
-				if (is_array($replacement)) {
-					$replacement = implode(', ', $replacement);
-				}
+			if ($attributeName == 'login') {
+				$replacement = $user->getLogin();
 			}
-			catch (Exception $e) {
-				// Eingabefehler, Tippfehler, Random Noise -> pass...
+			else {
+				try {
+					$value = $user->getValue($attributeName);
+					if ($value === null) continue;
+
+					$replacement = $value->getValue();
+
+					if (is_array($replacement)) {
+						$replacement = implode(', ', $replacement);
+					}
+				}
+				catch (Exception $e) {
+					// Eingabefehler, Tippfehler, Random Noise -> pass...
+				}
 			}
 
 			$text = str_replace($match[0], $replacement, $text);
