@@ -30,7 +30,7 @@ elseif (!$gsPresent || version_compare($gsVersion, '3.0', '<')) {
 	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Global Settings-AddOn (>= v3.0).';
 }
 else {
-	require_once $REX['INCLUDE_PATH'].'/addons/frontenduser/classes/internal/class.extensions.php';
+	require_once $REX['INCLUDE_PATH'].'/addons/frontenduser/classes/_WV16/Extensions.php';
 	$success = _WV16_Extensions::addonInstalled(array('subject' => 'global_settings'));
 
 	if (!$success) {
