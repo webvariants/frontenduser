@@ -33,6 +33,7 @@ case 'do_add':
 	$password1 = wv_post('password', 'string');
 	$password2 = wv_post('password2', 'string');
 	$userType  = wv_post('type', 'int');
+	$confirmed = wv_post('confirmed', 'boolean', false);
 	$groups    = wv_postArray('groups', 'int');
 
 	///////////////////////////////////////////////////////////////
@@ -95,6 +96,8 @@ case 'do_add':
 		foreach ($groups as $group) {
 			$user->addGroup($group, false);
 		}
+
+		$user->setConfirmed($confirmed, null, false);
 
 		$sql->commit();
 		$sql->setErrorMode($mode);
@@ -160,6 +163,7 @@ case 'do_edit':
 	$password1 = wv_post('password', 'string');
 	$password2 = wv_post('password2', 'string');
 	$userType  = wv_post('type', 'int');
+	$confirmed = wv_post('confirmed', 'boolean', false);
 	$groups    = wv_postArray('groups', 'int');
 
 	///////////////////////////////////////////////////////////////
@@ -234,6 +238,8 @@ case 'do_edit':
 		foreach ($groups as $group) {
 			$user->addGroup($group, false);
 		}
+
+		$user->setConfirmed($confirmed, null, false);
 
 		$sql->commit();
 		$sql->setErrorMode($mode);

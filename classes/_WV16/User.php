@@ -512,7 +512,7 @@ class _WV16_User implements WV16_User {
 				$this->confirmationCode = '';
 			}
 			else {
-				$this->removeAllGroups(false);
+				$this->removeGroup(_WV16_Group::GROUP_CONFIRMED, false);
 				$this->addGroup(_WV16_Group::GROUP_UNCONFIRMED, false);
 				$this->confirmationCode = WV16_Users::generateConfirmationCode($this->login);
 			}

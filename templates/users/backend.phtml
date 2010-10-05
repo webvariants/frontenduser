@@ -15,6 +15,10 @@ $form->addHiddenValue('id',    $user ? $user->getID() : '');
 $login     = new WV_Form_Input_Text('login', 'Login', $user ? $user->getLogin() : '');
 $password1 = new WV_Form_Input_Password('password', 'Passwort', '');
 $password2 = new WV_Form_Input_Password('password2', 'Passwort wiederholen', '');
+$confirmed = new WV_Form_Checkbox('confirmed', 'Bestätigt', 1, 'Dieses Benutzerkonto ist bestätigt.');
+
+$confirmed->setChecked(!$user || $user->isConfirmed());
+$confirmed->setHelpText('Bestätigung bedeutet, dass der Benutzer sein Konto selbst validiert (z.B. über einen Link in einer E-Mail) hat.');
 
 $types = WV16_Users::getAllUserTypes();
 $typesSelect = array();
@@ -27,7 +31,7 @@ $type = new WV_Form_Select('type', 'Benutzertyp', $user ? $user->getTypeID() : _
 $type->setAttribute('onchange', 'wv16.changeUserType(this)');
 $type->setMultiple(false);
 
-$form->addElements(array($login, $password1, $password2, $type));
+$form->addElements(array($login, $password1, $password2, $confirmed, $type));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
@@ -62,8 +66,10 @@ $form->beginFieldset('Dieser Benutzer gehört den folgenden Gruppen an:');
 $assignedGroups  = $user ? $user->getGroupIDs() : array();
 $availableGroups = WV16_Users::getAllGroups();
 $groups          = array();
+$exclude         = array(_WV16_Group::GROUP_UNCONFIRMED, _WV16_Group::GROUP_CONFIRMED);
 
 foreach ($availableGroups as $index => $group) {
+	if (in_array($group->getID(), $exclude)) continue;
 	$groups[$group->getID()] = $group->getTitle();
 }
 
