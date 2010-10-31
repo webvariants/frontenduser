@@ -89,6 +89,7 @@ class _WV16_Extensions {
 				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body',
 				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body',
 				'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body',
+				'mail_recoveryrequest_to', 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body'
 			);
 
 			foreach ($settings as $setting) {
@@ -134,6 +135,11 @@ class _WV16_Extensions {
 			self::createSingleLineSetting($namespace, 'mail_recovery_subject', 'Betreff',              $helptext, $group, $pagename);
 			self::createMultiLineSetting($namespace,  'mail_recovery_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
 			self::createSingleLineSetting($namespace, 'mail_recovery_to',      'Empfänger (Template)', $helptext, $group, $pagename);
+
+			$group = 'Passwort-vergessen-Anforderungs-eMails';
+			self::createSingleLineSetting($namespace, 'mail_recoveryrequest_subject', 'Betreff',              $helptext, $group, $pagename);
+			self::createMultiLineSetting($namespace,  'mail_recoveryrequest_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+			self::createSingleLineSetting($namespace, 'mail_recoveryrequest_to',      'Empfänger (Template)', $helptext, $group, $pagename);
 
 			$sql->doCommit(true);
 			$sql->setErrorMode($mode);

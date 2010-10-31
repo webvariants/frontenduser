@@ -51,6 +51,15 @@ abstract class WV16_Mailer {
 		return self::sendToUser($user, 'mail_recovery_subject', 'mail_recovery_body', 'mail_recovery_to', $extra);
 	}
 
+	/**
+	 * @param _WV16_User $user  der Benutzer, für den die E-Mail bestimmt ist
+	 * @param mixed      $code  der Bestätigungscode (false = keine Änderung, null = neu generieren, string = Code)
+	 */
+	public static function sendPasswordRecoveryRequest(_WV16_User $user, $code = false) {
+		if ($code !== false) $user->setConfirmationCode($code);
+		return self::sendToUser($user, 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body', 'mail_recoveryrequest_to');
+	}
+
 	protected static function sendToUser(_WV16_User $user, $subject, $body, $to, $extra = array()) {
 		$name    = self::replaceValues('mail_from_name', 'Administrator', $user, $extra);
 		$email   = self::replaceValues('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);

@@ -183,9 +183,18 @@ class _WV16_User implements WV16_User {
 				throw new WV_InputException('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
 			}
 
+			if ($this->confirmationCode === null) {
+				if ($this->isInGroup(_WV16_Group::GROUP_CONFIRMED)) {
+					$this->confirmationCode = '';
+				}
+				else {
+					$this->confirmationCode = WV16_Users::generateConfirmationCode($this->login);
+				}
+			}
+
 			$sql->queryEx(
-				'UPDATE #_wv16_users SET login = ?, password = ?, type_id = ? WHERE id = ?',
-				array($this->login, $this->password, $this->typeID, $this->id), '#_'
+				'UPDATE #_wv16_users SET login = ?, password = ?, type_id = ?, confirmation_code = ? WHERE id = ?',
+				array($this->login, $this->password, $this->typeID, $this->confirmationCode, $this->id), '#_'
 			);
 
 			if ($this->typeID != $this->origTypeID) {
@@ -491,6 +500,12 @@ class _WV16_User implements WV16_User {
 		}
 	}
 
+	public function setConfirmationCode($code = null) {
+		$code = $code === null ? WV16_Users::generateConfirmationCode($this->login) : substr($code, 0, 20);
+		$this->confirmationCode = $code;
+		return $code;
+	}
+
 	public function setConfirmed($isConfirmed = true, $confirmationCode = null, $useTransaction = true) {
 		$sql     = WV_SQLEx::getInstance();
 		$mode    = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
@@ -509,14 +524,13 @@ class _WV16_User implements WV16_User {
 			if ($isConfirmed) {
 				$this->removeGroup(_WV16_Group::GROUP_UNCONFIRMED, false);
 				$this->addGroup(_WV16_Group::GROUP_CONFIRMED, false);
-				$this->confirmationCode = '';
 			}
 			else {
 				$this->removeGroup(_WV16_Group::GROUP_CONFIRMED, false);
 				$this->addGroup(_WV16_Group::GROUP_UNCONFIRMED, false);
-				$this->confirmationCode = WV16_Users::generateConfirmationCode($this->login);
 			}
 
+			$this->confirmationCode = null;
 			$this->update(false); // Bestätigungscode neu abspeichern
 
 			$sql->doCommit($useTransaction);
@@ -557,7 +571,7 @@ class _WV16_User implements WV16_User {
 		$this->login = $login;
 	}
 
-	public function setPassword($password) {
+	public function setPassword($password, $passwordRepeat = null) {
 		// Benutzer, die mit Daten befüllt sind, die aus read-only Sets kommen, können sich nicht ändern.
 
 		if ($this->isReadOnly()) {
@@ -566,7 +580,13 @@ class _WV16_User implements WV16_User {
 
 		$password = trim($password);
 		self::testPassword($password);
+
+		if ($passwordRepeat !== null && $password != trim($passwordRepeat)) {
+			return false;
+		}
+
 		$this->password = sha1($this->id.$password.$this->registered);
+		return true;
 	}
 
 	public static function testPassword($password) {

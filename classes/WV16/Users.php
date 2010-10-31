@@ -211,8 +211,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		rex_set_session('frontenduser', $user->getID());
 	}
 
-	public static function logout()
-	{
+	public static function logout() {
 		session_destroy();
 	}
 
@@ -335,6 +334,15 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		}
 	}
 
+	public static function generatePassword($salt = null) {
+		if ($salt === null) {
+			$current = self::getCurrentUser();
+			$salt    = $current ? $current->getLogin() : rand();
+		}
+
+		return substr(md5($salt.mt_rand()), 0, 8);
+	}
+
 	public static function generateConfirmationCode($login) {
 		return substr(md5($login.mt_rand()), 0, 20);
 	}
@@ -357,23 +365,34 @@ abstract class WV16_Users extends _WV16_DataHandler {
 			$attributeName = strtolower($match[1]);
 			$replacement   = '';
 
-			if ($attributeName == 'login') {
-				$replacement = $user->getLogin();
-			}
-			else {
-				try {
-					$value = $user->getValue($attributeName);
-					if ($value === null) continue;
+			switch ($attributeName) {
+				case 'login':
+					$replacement = $user->getLogin();
+					break;
 
-					$replacement = $value->getValue();
+				case 'confirmation_code':
+				case 'code':
+				case 'conf_code':
+				case 'ccode':
+					$replacement = $user->getConfirmationCode();
+					break;
 
-					if (is_array($replacement)) {
-						$replacement = implode(', ', $replacement);
+				case 'registered':
+					$replacement = strftime('%d.%m.%Y %H:%M', strtotime($user->getRegistered()));
+					break;
+
+				default:
+					try {
+						$value       = $user->getValue($attributeName);
+						$replacement = $value->getValue();
+
+						if (is_array($replacement)) {
+							$replacement = implode(', ', $replacement);
+						}
 					}
-				}
-				catch (Exception $e) {
-					// Eingabefehler, Tippfehler, Random Noise -> pass...
-				}
+					catch (Exception $e) {
+						// Eingabefehler, Tippfehler, Random Noise -> pass...
+					}
 			}
 
 			$text = str_replace($match[0], $replacement, $text);
