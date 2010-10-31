@@ -707,7 +707,7 @@ class _WV16_User implements WV16_User {
 		$cache->flush('frontenduser.lists', true);
 		$cache->flush('frontenduser.counts', true);
 
-		return $sql->affectedRows() == 1;
+		return $sql->affectedRows() > 0; // ein Set kann mehr als einen Wert enthalten
 	}
 
 	protected function copySet($sourceSet, $targetSet) {
