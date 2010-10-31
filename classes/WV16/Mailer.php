@@ -48,7 +48,7 @@ abstract class WV16_Mailer {
 
 	public static function sendPasswordRecovery(_WV16_User $user, $newPassword) {
 		$extra = array('#PASSWORD#' => $newPassword, '#PASSWORT#' => $newPassword);
-		return self::sendToUser($user, 'mail_recovery_subject', 'mail_recovery_body', 'mail_recovery_to');
+		return self::sendToUser($user, 'mail_recovery_subject', 'mail_recovery_body', 'mail_recovery_to', $extra);
 	}
 
 	protected static function sendToUser(_WV16_User $user, $subject, $body, $to, $extra = array()) {
