@@ -17,181 +17,40 @@ class _WV16_Extensions {
 	 * Extension Points. Bis auf OOREDAXO_GET_META_VALUE werden die
 	 * Registrierungen nur im Backend vorgenommen.
 	 */
-	public static function plugin() {
-		global $REX, $ctype;
-
-		if (WV_Redaxo::isFrontend()) {
-			return;
-		}
-
-		$self = __CLASS__;
-		$page = wv_request('page', 'string'); // WV_Redaxo::getCurrentPage(); steht noch nicht bereit!
+	public static function plugin($params) {
+		$self       = __CLASS__;
+		$page       = $params['subject'];
+		$dispatcher = sly_Core::dispatcher();
 
 		// HTML-Kopf
 
-		if (in_array($page, array('frontenduser', 'structure', 'medienpool', 'mediapool', 'content'))) {
-			WV_Redaxo::addCSSFile('frontenduser/css/wv16.css');
-			WV_Redaxo::addJavaScriptFile('frontenduser/js/frontenduser.min.js');
+		if (in_array($page, array('frontenduser', 'structure', 'mediapool', 'content'))) {
+			$layout = sly_Core::getLayout();
+			$layout->addCSSFile('../data/dyn/public/frontenduser/css/wv16.css');
+			$layout->addJavaScriptFile('../data/dyn/public/frontenduser/js/frontenduser.min.js');
 		}
 
 		// Reagieren, falls Artikel gelöscht werden, um unsere Daten aktuell zu halten
 
-		rex_register_extension('ART_DELETED', array($self, 'artDeleted'));
+		$dispatcher->register('ART_DELETED', array($self, 'artDeleted'));
 
-		// Artikel verarbeiten
+		switch ($page) {
+			case 'content':
+//				$dispatcher->register('ART_META_FORM_SECTION', array($self, 'artMetaSectionForm'));
+				break;
 
-		if ($page == 'content') {
-//			rex_register_extension('ART_META_FORM_SECTION', array($self, 'artMetaSectionForm'));
-		}
+			case 'structure':
+				$dispatcher->register('CAT_UPDATED',   array($self, 'catUpdated'));
+//				$dispatcher->register('CAT_FORM_EDIT', array($self, 'catFormEdit'));
+				$dispatcher->register('CAT_DELETED',   array($self, 'catDeleted'));
+				break;
 
-		// Kategorie verarbeiten
-
-		if ($page == 'structure') {
-			rex_register_extension('CAT_UPDATED',   array($self, 'catUpdated'));
-//			rex_register_extension('CAT_FORM_EDIT', array($self, 'catFormEdit'));
-			rex_register_extension('CAT_DELETED',   array($self, 'catDeleted'));
-		}
-
-		// Medien verarbeiten
-
-		if ($page == 'medienpool' /* 4.1 */ || $page == 'mediapool' /* 4.2 */) {
-			rex_register_extension('MEDIA_UPDATED',   array($self, 'mediaUpdated'));
-//			rex_register_extension('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
-			if (rex_post('btn_delete', 'string')) self::mediaDeleted();
-		}
-
-		// Wenn die Global Settings verfügbar werden, nutzen wir sie.
-
-		rex_register_extension('POST_ADDON_INSTALL', array($self, 'addonInstalled'));
-	}
-
-	public static function addonInstalled($params) {
-		$addonName = $params['subject'];
-
-		if ($addonName != 'global_settings') {
-			return;
-		}
-
-		$sql  = WV_SQLEx::getInstance();
-		$mode = $sql->setErrorMode(WV_SQLEx::THROW_EXCEPTION);
-
-		try {
-			$sql->startTransaction(true);
-
-			// ==== EINSTELLUNGEN LÖSCHEN ====================================
-
-			$pagename  = 'translate:frontenduser_title';
-			$namespace = 'frontenduser';
-			$settings  = array(
-				'validation_article',
-				'mail_from_name', 'mail_from_email',
-				'mail_report_subject', 'mail_report_body',
-				'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body',
-				'mail_activation_to', 'mail_activation_subject', 'mail_activation_body',
-				'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body',
-				'mail_recoveryrequest_to', 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body'
-			);
-
-			foreach ($settings as $setting) {
-				WV8_Settings::deleteIfExists($namespace, $setting);
-			}
-
-			// ==== EINSTELLUNGEN NEU ANLEGEN ================================
-
-			WV8_Settings::create(
-				/*     Namespace */ $namespace,
-				/*          Name */ 'validation_article',
-				/*         Titel */ 'Validierungsartikel',
-				/*     Hilfetext */ 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.',
-				/*      Datentyp */ 4,
-				/*     Parameter */ '1',
-				/*        lokal? */ false,
-				/*    Seitenname */ $pagename,
-				/*        Gruppe */ 'Validierungsartikel',
-				/* mehrsprachig? */ true
-			);
-
-			$helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
-
-			$group = 'Ausgehende eMails';
-			self::createSingleLineSetting($namespace, 'mail_from_name',  'eMail-Name',    '', $group, $pagename);
-			self::createSingleLineSetting($namespace, 'mail_from_email', 'eMail-Adresse', '', $group, $pagename);
-
-			$group = 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
-			self::createSingleLineSetting($namespace, 'mail_report_subject', 'Betreff',            $helptext, $group, $pagename);
-			self::createMultiLineSetting($namespace,  'mail_report_body',    'Inhalt (Template)',  $helptext, $group, $pagename);
-
-			$group = 'Bestätigungsaufforderung an den neuen Benutzer';
-			self::createSingleLineSetting($namespace, 'mail_confirmation_subject', 'Betreff',              $helptext, $group, $pagename);
-			self::createMultiLineSetting($namespace,  'mail_confirmation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
-			self::createSingleLineSetting($namespace, 'mail_confirmation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-
-			$group = 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
-			self::createSingleLineSetting($namespace, 'mail_activation_subject', 'Betreff',              $helptext, $group, $pagename);
-			self::createMultiLineSetting($namespace,  'mail_activation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
-			self::createSingleLineSetting($namespace, 'mail_activation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-
-			$group = 'Passwort-vergessen-eMails';
-			self::createSingleLineSetting($namespace, 'mail_recovery_subject', 'Betreff',              $helptext, $group, $pagename);
-			self::createMultiLineSetting($namespace,  'mail_recovery_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
-			self::createSingleLineSetting($namespace, 'mail_recovery_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-
-			$group = 'Passwort-vergessen-Anforderungs-eMails';
-			self::createSingleLineSetting($namespace, 'mail_recoveryrequest_subject', 'Betreff',              $helptext, $group, $pagename);
-			self::createMultiLineSetting($namespace,  'mail_recoveryrequest_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
-			self::createSingleLineSetting($namespace, 'mail_recoveryrequest_to',      'Empfänger (Template)', $helptext, $group, $pagename);
-
-			$sql->doCommit(true);
-			$sql->setErrorMode($mode);
-
-			return true;
-		}
-		catch (Exception $e) {
-			print $e;
-			$sql->cleanEndTransaction(true, $mode, $e, '');
-			return false;
+			case 'mediapool':
+				$dispatcher->register('MEDIA_UPDATED',   array($self, 'mediaUpdated'));
+//				$dispatcher->register('MEDIA_FORM_EDIT', array($self, 'mediaFormEdit'));
+				if (sly_post('btn_delete', 'string')) self::mediaDeleted();
 		}
 	}
-
-	protected static function createSingleLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
-		$setting = WV8_Settings::create(
-			/*     Namespace */ $namespace,
-			/*          Name */ $name,
-			/*         Titel */ $title,
-			/*     Hilfetext */ $helptext,
-			/*      Datentyp */ 1,
-			/*     Parameter */ '0|65535',
-			/*        lokal? */ false,
-			/*    Seitenname */ $pagename,
-			/*        Gruppe */ $group,
-			/* mehrsprachig? */ true
-		);
-
-		return $setting;
-	}
-
-	protected static function createMultiLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
-		$setting = WV8_Settings::create(
-			/*     Namespace */ $namespace,
-			/*          Name */ $name,
-			/*         Titel */ $title,
-			/*     Hilfetext */ $helptext,
-			/*      Datentyp */ 2,
-			/*     Parameter */ '0|65535',
-			/*        lokal? */ false,
-			/*    Seitenname */ $pagename,
-			/*        Gruppe */ $group,
-			/* mehrsprachig? */ true
-		);
-
-		return $setting;
-	}
-
-	/*
-	   ************************************************************
-	     Extension Points - Metadaten für Artikel
-	   ************************************************************
-	*/
 
 	/**
 	 * Handler für ART_DELETED
@@ -202,14 +61,8 @@ class _WV16_Extensions {
 	 */
 	public static function artDeleted($params) {
 		list($articleID) = array_values($params);
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16_FrontendUser::TYPE_ARTICLE, '#_');
+		self::removeRights($articleID, _WV16_FrontendUser::TYPE_ARTICLE);
 	}
-
-	/*
-	   ************************************************************
-	     Extension Points - Metadaten für Artikel (Meta-Seite)
-	   ************************************************************
-	*/
 
 	/**
 	 * Rechte speichern
@@ -224,27 +77,8 @@ class _WV16_Extensions {
 	public static function artUpdated($params) {
 		if (!isset($_POST['saverights'])) return;
 
-		$enableAccess    = (bool) rex_post('frontenduser', 'int', 0);
 		list($articleID) = array_values($params);
-		$sql             = WV_SQL::getInstance();
-
-		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($articleID).' AND object_type = '._WV16_FrontendUser::TYPE_ARTICLE, '#_');
-
-		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-
-		if (!$enableAccess) return;
-
-		// Rechte holen und abspeichern
-
-		foreach (WV16_Users::getAllGroups() as $group) {
-			$formName  = md5($group->getName());
-			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-
-			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($articleID).','._WV16_FrontendUser::TYPE_ARTICLE.','.$privilege.')', '#_');
-		}
+		self::objectUpdated($articleID, _WV16_FrontendUser::TYPE_ARTICLE);
 
 		return $params['subject'];
 	}
@@ -312,27 +146,8 @@ class _WV16_Extensions {
 	public static function catUpdated($params) {
 		if (!isset($_POST['saverights'])) return;
 
-		$enableAccess = (bool) rex_post('frontenduser', 'int', 0);
-		$categoryID   = rex_post('edit_id', 'int'); // $params['category'] ist ein rex_sql-Objekt
-		$sql          = WV_SQL::getInstance();
-
-		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16_FrontendUser::TYPE_CATEGORY, '#_');
-
-		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-
-		if (!$enableAccess) return;
-
-		// Rechte holen und abspeichern
-
-		foreach (WV16_Users::getAllGroups() as $group) {
-			$formName  = md5($group->getName());
-			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-
-			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($categoryID).','._WV16_FrontendUser::TYPE_CATEGORY.','.$privilege.')', '#_');
-		}
+		$categoryID = sly_post('edit_id', 'int');
+		self::objectUpdated($categoryID, _WV16_FrontendUser::TYPE_CATEGORY);
 
 		return $params['subject'];
 	}
@@ -346,7 +161,7 @@ class _WV16_Extensions {
 	 */
 	public static function catDeleted($params) {
 		list($categoryID) = array_values($params);
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($categoryID).' AND object_type = '._WV16_FrontendUser::TYPE_CATEGORY, '#_');
+		self::removeRights($categoryID, _WV16_FrontendUser::TYPE_CATEGORY);
 	}
 
 	/*
@@ -385,27 +200,8 @@ class _WV16_Extensions {
 	 * @return string         das Subject oder die Fehlermeldung
 	 */
 	public static function mediaUpdated($params) {
-		$enableAccess = (bool) rex_post('frontenduser', 'int', 0);
-		$mediumID     = rex_post('file_id', 'int');
-		$sql          = WV_SQL::getInstance();
-
-		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
-
-		$sql->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16_FrontendUser::TYPE_MEDIUM, '#_');
-
-		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
-
-		if (!$enableAccess) return;
-
-		// Rechte holen und abspeichern
-
-		foreach (WV16_Users::getAllGroups() as $group) {
-			$formName  = md5($group->getName());
-			$privilege = rex_post($formName, 'int', 0) ? 1 : 0;
-
-			$sql->query('INSERT INTO #_wv16_rights (group_id,object_id,object_type,privilege) '.
-				'VALUES ('.$group->getID().','.intval($mediumID).','._WV16_FrontendUser::TYPE_MEDIUM.','.$privilege.')', '#_');
-		}
+		$mediumID = sly_post('file_id', 'int');
+		self::objectUpdated($mediumID, _WV16_FrontendUser::TYPE_MEDIUM);
 	}
 
 	/**
@@ -414,7 +210,38 @@ class _WV16_Extensions {
 	 * Entfernt alle Metadaten für die gelöschte Datei.
 	 */
 	public static function mediaDeleted() {
-		$mediumID = rex_post('file_id', 'int');
-		WV_SQL::getInstance()->query('DELETE FROM #_wv16_rights WHERE object_id = '.intval($mediumID).' AND object_type = '._WV16_FrontendUser::TYPE_MEDIUM, '#_');
+		$mediumID = sly_post('file_id', 'int');
+		self::removeRights($mediumID, _WV16_FrontendUser::TYPE_MEDIUM);
+	}
+
+	private static function objectUpdated($objectID, $type) {
+		$enableAccess = sly_post('frontenduser', 'boolean', false);
+
+		// Rechte entfernen, um später stupide INSERTs ausführen zu können.
+		self::removeRights($objectID, $type);
+
+		// Explizite Rechte wurden deaktiviert? Dann fügen wir keinen neuen hinzu.
+		if (!$enableAccess) return;
+
+		// Rechte holen und abspeichern
+		self::storeRights($objectID, $type);
+	}
+
+	private static function removeRights($objectID, $type) {
+		WV_SQLEx::getInstance()->queryEx('DELETE FROM ~wv16_rights WHERE object_id = ? AND object_type = ?', array($objectID, $type), '#_');
+	}
+
+	private static function storeRights($objectID, $type) {
+		$sql = WV_SQLEx::getInstance();
+
+		foreach (WV16_Users::getAllGroups() as $group) {
+			$formName  = md5($group->getName());
+			$privilege = sly_post($formName, 'int', 0) ? 1 : 0;
+
+			$sql->queryEx(
+				'INSERT INTO ~wv16_rights (group_id,object_id,object_type,privilege) VALUES (?,?,?,?)',
+				array($group->getID(), $objectID, $type, $privilege), '#_'
+			);
+		}
 	}
 }

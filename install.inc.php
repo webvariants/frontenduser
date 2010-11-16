@@ -9,33 +9,73 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-if (defined('IS_SALLY')) {
-	$service         = sly_Service_Factory::getService('Addon');
-	$devUtilsPresent = $service->isAvailable('developer_utils');
-	$devUtilsVersion = $service->getVersion('developer_utils');
-	$gsPresent       = $service->isAvailable('global_settings');
-	$gsVersion       = $service->getVersion('global_settings');
-}
-else {
-	$devUtilsPresent = rex_addon::isAvailable('developer_utils');
-	$devUtilsVersion = $devUtilsPresent ? $REX['ADDON']['version']['developer_utils'] : '0.0';
-	$gsPresent       = rex_addon::isAvailable('global_settings');
-	$gsVersion       = $gsPresent ? $REX['ADDON']['version']['global_settings'] : '0.0';
+function _wv16_createSingleLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
+	return _wv16_createSetting($namespace, $name, $title, $helptext, $group, $pagename, 1);
 }
 
-if (!$devUtilsPresent || version_compare($devUtilsVersion, '1.2.4', '<')) {
-	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Developer Utils-AddOn (>= 1.2.4).';
+function _wv16_createMultiLineSetting($namespace, $name, $title, $helptext, $group, $pagename) {
+	return _wv16_createSetting($namespace, $name, $title, $helptext, $group, $pagename, 2);
 }
-elseif (!$gsPresent || version_compare($gsVersion, '3.0', '<')) {
-	$REX['ADDON']['installmsg']['frontenduser'] = 'Bitte installieren &amp; aktivieren Sie vor der Installation das Global Settings-AddOn (>= v3.0).';
-}
-else {
-	require_once $REX['INCLUDE_PATH'].'/addons/frontenduser/classes/_WV16/Extensions.php';
-	$success = _WV16_Extensions::addonInstalled(array('subject' => 'global_settings'));
 
-	if (!$success) {
-		$REX['ADDON']['installmsg']['frontenduser'] = 'Es trat ein Fehler beim Anlegen der Global Settings auf.';
-	}
+function _wv16_createSetting($namespace, $name, $title, $helptext, $group, $pagename, $datatype) {
+	$setting = WV8_Settings::create(
+		/*     Namespace */ $namespace,
+		/*          Name */ $name,
+		/*         Titel */ $title,
+		/*     Hilfetext */ $helptext,
+		/*      Datentyp */ $datatype,
+		/*     Parameter */ '0|65535',
+		/*        lokal? */ false,
+		/*    Seitenname */ $pagename,
+		/*        Gruppe */ $group,
+		/* mehrsprachig? */ true
+	);
 
-	$REX['ADDON']['install']['frontenduser'] = (int) $success;
+	return $setting;
 }
+
+// remove old settings
+include dirname(__FILE__).'/uninstall.inc.php';
+
+WV8_Settings::create(
+	/*     Namespace */ $namespace,
+	/*          Name */ 'validation_article',
+	/*         Titel */ 'Validierungsartikel',
+	/*     Hilfetext */ 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.',
+	/*      Datentyp */ 4,
+	/*     Parameter */ '1',
+	/*        lokal? */ false,
+	/*    Seitenname */ $pagename,
+	/*        Gruppe */ 'Validierungsartikel',
+	/* mehrsprachig? */ true
+);
+
+$helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
+
+$group = 'Ausgehende eMails';
+_wv16_createSingleLineSetting($namespace, 'mail_from_name',  'eMail-Name',    '', $group, $pagename);
+_wv16_createSingleLineSetting($namespace, 'mail_from_email', 'eMail-Adresse', '', $group, $pagename);
+
+$group = 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)';
+_wv16_createSingleLineSetting($namespace, 'mail_report_subject', 'Betreff',            $helptext, $group, $pagename);
+_wv16_createMultiLineSetting($namespace,  'mail_report_body',    'Inhalt (Template)',  $helptext, $group, $pagename);
+
+$group = 'Bestätigungsaufforderung an den neuen Benutzer';
+_wv16_createSingleLineSetting($namespace, 'mail_confirmation_subject', 'Betreff',              $helptext, $group, $pagename);
+_wv16_createMultiLineSetting($namespace,  'mail_confirmation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+_wv16_createSingleLineSetting($namespace, 'mail_confirmation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
+
+$group = 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird';
+_wv16_createSingleLineSetting($namespace, 'mail_activation_subject', 'Betreff',              $helptext, $group, $pagename);
+_wv16_createMultiLineSetting($namespace,  'mail_activation_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+_wv16_createSingleLineSetting($namespace, 'mail_activation_to',      'Empfänger (Template)', $helptext, $group, $pagename);
+
+$group = 'Passwort-vergessen-eMails';
+_wv16_createSingleLineSetting($namespace, 'mail_recovery_subject', 'Betreff',              $helptext, $group, $pagename);
+_wv16_createMultiLineSetting($namespace,  'mail_recovery_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+_wv16_createSingleLineSetting($namespace, 'mail_recovery_to',      'Empfänger (Template)', $helptext, $group, $pagename);
+
+$group = 'Passwort-vergessen-Anforderungs-eMails';
+_wv16_createSingleLineSetting($namespace, 'mail_recoveryrequest_subject', 'Betreff',              $helptext, $group, $pagename);
+_wv16_createMultiLineSetting($namespace,  'mail_recoveryrequest_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
+_wv16_createSingleLineSetting($namespace, 'mail_recoveryrequest_to',      'Empfänger (Template)', $helptext, $group, $pagename);
