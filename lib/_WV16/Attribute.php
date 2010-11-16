@@ -9,7 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-class _WV16_Attribute implements _WV_IProperty {
+class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	protected $id;           ///< int      die interne ID
 	protected $name;         ///< string   der interne Name
 	protected $title;        ///< string   der angezeigte Name (Titel)
@@ -26,7 +26,7 @@ class _WV16_Attribute implements _WV_IProperty {
 
 	private static $instances = array();
 
-	public static function getInstance($idOrName, $prefetchedData = array()) {
+	public static function getInstance($idOrName) {
 		$id = self::getIDForName($idOrName);
 
 		if (isset(self::$instances[$id])) {
@@ -40,7 +40,7 @@ class _WV16_Attribute implements _WV_IProperty {
 		if (!$instance) {
 			if ($cache->lock($namespace, $id)) {
 				try {
-					$instance = new self($id, $prefetchedData);
+					$instance = new self($id);
 					$cache->set($namespace, $id, $instance);
 					$cache->unlock($namespace, $id);
 				}
@@ -53,7 +53,7 @@ class _WV16_Attribute implements _WV_IProperty {
 				$instance = $cache->waitForObject($namespace, $id);
 
 				if (!$instance) {
-					$instance = new self($id, $prefetchedData);
+					$instance = new self($id);
 				}
 			}
 		}
@@ -62,29 +62,25 @@ class _WV16_Attribute implements _WV_IProperty {
 		return self::$instances[$id];
 	}
 
-	private function __construct($id, $prefetchedData = array()) {
+	private function __construct($id) {
 		$sql  = WV_SQLEx::getInstance();
-		$mode = WV_SQLEx::RETURN_FALSE;
+		$data = $sql->safeFetch('*', 'wv16_attributes', 'id = ?', $id);
 
-		if (!$prefetchedData) {
-			$prefetchedData = $sql->saveFetch('*', 'wv16_attributes', 'id = ?', $id);
-
-			if (!$prefetchedData) {
-				throw new WV16_Exception('Das Attribut #'.$id.' konnte nicht gefunden werden!');
-			}
+		if (!$data) {
+			throw new WV16_Exception('Das Attribut #'.$id.' konnte nicht gefunden werden!');
 		}
 
-		$this->id            = (int) $prefetchedData['id'];
-		$this->name          = $prefetchedData['name'];
-		$this->title         = $prefetchedData['title'];
-		$this->helptext      = $prefetchedData['helptext'];
-		$this->position      = (int) $prefetchedData['position'];
-		$this->datatype      = (int) $prefetchedData['datatype'];
-		$this->params        = $prefetchedData['params'];
-		$this->defaultValue  = $prefetchedData['default_value'];
-		$this->hidden        = (boolean) $prefetchedData['hidden'];
-		$this->deleted       = (boolean) $prefetchedData['deleted'];
-		$this->userTypes     = $sql->getArray('SELECT user_type FROM #_wv16_utype_attrib WHERE attribute_id = ?', $this->id, '#_', $mode);
+		$this->id            = (int) $data['id'];
+		$this->name          = $data['name'];
+		$this->title         = $data['title'];
+		$this->helptext      = $data['helptext'];
+		$this->position      = (int) $data['position'];
+		$this->datatype      = (int) $data['datatype'];
+		$this->params        = $data['params'];
+		$this->defaultValue  = $data['default_value'];
+		$this->hidden        = (boolean) $data['hidden'];
+		$this->deleted       = (boolean) $data['deleted'];
+		$this->userTypes     = $sql->getArray('SELECT user_type FROM ~wv16_utype_attrib WHERE attribute_id = ?', $this->id, '#_');
 		$this->origUserTypes = $this->userTypes;
 	}
 
@@ -711,17 +707,18 @@ class _WV16_Attribute implements _WV_IProperty {
 	 * @return mixed  die entsprechende Eigenschaft
 	 */
 
-	public function getID()         { return $this->id;           }
-	public function getName()       { return $this->name;         }
-	public function getTitle()      { return $this->title;        }
-	public function getPosition()   { return $this->position;     }
-	public function getDatatypeID() { return $this->datatype;     }
-	public function getParams()     { return $this->params;       }
-	public function getDefault()    { return $this->defaultValue; }
-	public function getUserTypes()  { return $this->userTypes;    }
-	public function getHelpText()   { return $this->helptext;     }
-	public function isVisible()     { return !$this->hidden;      }
-	public function isHidden()      { return $this->hidden;       }
+	public function getID()          { return $this->id;           }
+	public function getName()        { return $this->name;         }
+	public function getTitle()       { return $this->title;        }
+	public function getPosition()    { return $this->position;     }
+	public function getDatatypeID()  { return $this->datatype;     }
+	public function getParams()      { return $this->params;       }
+	public function getDefault()     { return $this->defaultValue; }
+	public function getUserTypes()   { return $this->userTypes;    }
+	public function getHelpText()    { return $this->helptext;     }
+	public function isVisible()      { return !$this->hidden;      }
+	public function isHidden()       { return $this->hidden;       }
+	public function isMultilingual() { return false;               }
 
 	/*@}*/
 

@@ -1,6 +1,6 @@
-<?
+<?php
 
-WV_Redaxo::p(
+WV_Sally::p(
 	'Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier '.
 	'legen Sie fest, welche Attribute es gibt und wie diese gestaltet werden sollen. '.
 	'Bitte beachten Sie, dass die Felder &quot;Login&quot; und &quot;Passwort&quot; '.
@@ -8,18 +8,18 @@ WV_Redaxo::p(
 );
 
 $base  = 'index.php?page=frontenduser&amp;subpage=attributes&amp;func=';
-$id    = '<a href="'.$base.'add"><img src="include/addons/frontenduser/images/attribute_add.png" alt="" title="Hinzufügen" /></a>';
-$table = new WV_Table('attributes');
-$table->addColumn(new WV_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
-$table->addColumn(new WV_Table_Column('Attributename'));
-$table->addColumn(new WV_Table_Column('Feldtyp'));
-$table->addColumn(new WV_Table_Column('Feldbezeichnung'));
+$id    = '<a href="'.$base.'add"><img src="../data/dyn/public/frontenduser/images/attribute_add.png" alt="" title="Hinzufügen" /></a>';
+$table = new sly_Table('attributes');
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column('Attributename'));
+$table->addColumn(new sly_Table_Column('Feldtyp'));
+$table->addColumn(new sly_Table_Column('Feldbezeichnung'));
 
 $table->setIsEmpty(empty($attributes));
 $table->setEmptyNotice('Sie haben noch keine Attribute angelegt.');
 $table->enableDragAndDrop(count($attributes) > 1);
 $table->setDragAndDropHandler('wv16.handleTableDrop');
-$table->enableSearching(true);
+$table->enableSearching(false);
 
 $table->renderHeader($total);
 
@@ -27,15 +27,15 @@ foreach ($attributes as $attr) {
 	$icon = WV_Datatype::call($attr->getDatatypeID(), 'getIconURL', array());
 
 	if (empty($icon)) {
-		$icon = 'include/addons/frontenduser/images/attribute.png';
+		$icon = '../data/dyn/public/frontenduser/images/attribute.png';
 	}
 
 	?>
 	<tr id="attr<?= $attr->getID() ?>">
 		<td class="rex-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="<?= $icon ?>" alt="" title="Attribut bearbeiten" /></a></td>
-		<td><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><?= wv_html($attr->getName()) ?></a></td>
+		<td><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><?= sly_html($attr->getName()) ?></a></td>
 		<td><?= rex_translate(WV_Datatype::getTitle($attr->getDatatypeID())) ?></td>
-		<td><?= wv_html($attr->getTitle()) ?></td>
+		<td><?= sly_html($attr->getTitle()) ?></td>
 	</tr>
 	<?
 }
