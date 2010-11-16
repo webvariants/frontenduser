@@ -18,8 +18,8 @@ if (sly_Core::isBackend()) {
 	sly_Core::getI18N()->appendFile(_WV16_PATH.'lang');
 }
 
-sly_Loader::addLoadPath(_WV16_PATH.'classes/_WV16', '_WV16');
-sly_Loader::addLoadPath(_WV16_PATH.'classes');
+sly_Loader::addLoadPath(_WV16_PATH.'lib/_WV16', '_WV16');
+sly_Loader::addLoadPath(_WV16_PATH.'lib');
 
 // Initialisierungen
 
