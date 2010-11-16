@@ -15,7 +15,7 @@ $media    = OOMedia::getMediaByFilename($filename);
 if (OOMedia::isValid($media)) {
 	if (!WV16_Users::isProtected($media) || (WV16_Users::isLoggedIn() && WV16_Users::getCurrentUser()->canAccess($media))) {
 		header('Content-Type: '.$media->getType());
-		readfile('files/'.$media->getFileName());
+		readfile('data/mediapool/'.$media->getFileName());
 	}
 	else {
 		header('HTTP/1.1 403 Forbidden');
