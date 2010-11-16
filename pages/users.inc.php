@@ -277,9 +277,9 @@ case 'do_edit':
 #===============================================================================
 default:
 
-	$search  = WV_Table::getSearchParameters('users');
-	$paging  = WV_Table::getPagingParameters('users', true, false);
-	$sorting = WV_Table::getSortingParameters('login', array('login', 'registered'));
+	$search  = sly_Table::getSearchParameters('users');
+	$paging  = sly_Table::getPagingParameters('users', true, false);
+	$sorting = sly_Table::getSortingParameters('login', array('login', 'registered'));
 	$where   = '1';
 
 	if (!empty($search)) {

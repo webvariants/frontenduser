@@ -1,13 +1,13 @@
-<?
+<?php
 
-WV_Redaxo::p('Die folgenden Benutzer sind auf Ihrer Website registriert.');
+WV_Sally::p('Die folgenden Benutzer sind auf Ihrer Website registriert.');
 
-$id    = '<a href="index.php?page=frontenduser&amp;func=add"><img src="include/addons/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
-$table = new WV_Table('users');
-$table->addColumn(new WV_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
-$table->addColumn(new WV_Table_Column('Loginname', '', 'login'));
-$table->addColumn(new WV_Table_Column('Gruppe(n)'));
-$table->addColumn(new WV_Table_Column('registriert am', '', 'registered'));
+$id    = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../data/dyn/public/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
+$table = new sly_Table('users');
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column('Loginname', '', 'login'));
+$table->addColumn(new sly_Table_Column('Gruppe(n)'));
+$table->addColumn(new sly_Table_Column('registriert am', '', 'registered'));
 
 $table->setIsEmpty(empty($users));
 $table->setEmptyNotice('Es haben sich noch keine Benutzer angemeldet.');
@@ -19,14 +19,14 @@ $table->renderHeader($total);
 foreach ($users as $user) {
 	?>
 	<tr>
-		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="include/addons/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
-		<td><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><?= wv_html($user->getLogin()) ?></a></td>
+		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="../data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
+		<td><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><?= sly_html($user->getLogin()) ?></a></td>
 		<td><?
 			$groups = array();
 			foreach ($user->getGroups() as $g) $groups[] = $g->getTitle();
-			print wv_html(implode(', ', $groups));
+			print sly_html(implode(', ', $groups));
 		?></td>
-		<td><?= wv_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered()))) ?></td>
+		<td><?= sly_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered()))) ?></td>
 	</tr>
 	<?
 }
