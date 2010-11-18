@@ -1,19 +1,21 @@
 var wv16 = (function($) {
-	var wv16 = {
+	return {
 		changeDatatype: function(selectbox) {
 			$('div[id^=datatype_form_]').hide();
 			$('#datatype_form_'+$(selectbox).val()).show();
 		},
 
-		changeUserType: function(selectbox) {
-			var required = wv16.attributesPerType[$(selectbox).val()];
+		changeUserType: function() {
+			var required = wv16.attributesPerType[$(this).val()], i = 0, len = required.length;
 			if (!required) { required = []; }
 
-			// Formulare erstmal verstecken
-			$('#wv2_meta_form div[id^=property_container]').hide();
+			$('div.wv16_attribute_row').hide();
 
-			// Die benötigten anzeigen
-			$.each(required, function(idx, id) { $('div#property_container_'+id).show(); });
+			// Die benötigten Felder wieder anzeigen
+
+			for (; i < len; ++i) {
+				$('#wv16_attribute'+required[i]+'_row').show();
+			}
 		},
 
 		handleTableDrop: function(table, row, newPosition) {
@@ -26,6 +28,8 @@ var wv16 = (function($) {
 			);
 		}
 	};
-
-	return wv16;
 })(jQuery);
+
+jQuery(function($) {
+   $('#type').change(wv16.changeUserType);
+});

@@ -23,3 +23,7 @@ input.checkbox {
 	font-weight: normal;
 	font-size: 11px;
 }
+
+.wv16_hidden_attribute {
+	display: none !important;
+}

@@ -1,37 +1,39 @@
 <?
 if (!empty($errormsg)) {
-	WV_redaxo::error($errormsg);
+	print rex_warning($errormsg);
 }
 
-$form = new WV_Backend_Form('index.php', 'POST', 'Benutzer '.($func == 'add' ? 'erstellen' : 'bearbeiten'));
+$form = new sly_Form('index.php', 'POST', 'Benutzer '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
 
 $form->addHiddenValue('page', 'frontenduser');
-$form->addHiddenValue('func',  'do_'.$func);
-$form->addHiddenValue('id',    $user ? $user->getID() : '');
+$form->addHiddenValue('func', 'do_'.$func);
+$form->addHiddenValue('id',   $user ? $user->getID() : '');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normale Felder
 
-$login     = new WV_Form_Input_Text('login', 'Login', $user ? $user->getLogin() : '');
-$password1 = new WV_Form_Input_Password('password', 'Passwort', '');
-$password2 = new WV_Form_Input_Password('password2', 'Passwort wiederholen', '');
-$confirmed = new WV_Form_Checkbox('confirmed', 'Bestätigt', 1, 'Dieses Benutzerkonto ist bestätigt.');
+$login     = new sly_Form_Input_Text('login', 'Login', $user ? $user->getLogin() : '');
+$password1 = new sly_Form_Input_Password('password', 'Passwort', '');
+$password2 = new sly_Form_Input_Password('password2', 'Passwort wiederholen', '');
+$confirmed = new sly_Form_Input_Checkbox('confirmed', 'Bestätigt', 1, 'Dieses Benutzerkonto ist bestätigt.');
+$activated = new sly_Form_Input_Checkbox('activated', 'Freigeschaltet', 1, 'Dieses Benutzerkonto ist freigeschaltet.');
 
 $confirmed->setChecked(!$user || $user->isConfirmed());
 $confirmed->setHelpText('Bestätigung bedeutet, dass der Benutzer sein Konto selbst validiert (z.B. über einen Link in einer E-Mail) hat.');
 
-$types = WV16_Users::getAllUserTypes();
+$activated->setChecked(!$user || $user->isActivated());
+$activated->setHelpText('Nur hier freigeschaltete Benutzer können sich einloggen.');
+
+$types       = WV16_Users::getAllUserTypes();
 $typesSelect = array();
 
 foreach ($types as $type) {
 	$typesSelect[$type->getID()] = $type->getTitle();
 }
 
-$type = new WV_Form_Select('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE, $typesSelect);
-$type->setAttribute('onchange', 'wv16.changeUserType(this)');
-$type->setMultiple(false);
+$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE, $typesSelect);
 
-$form->addElements(array($login, $password1, $password2, $confirmed, $type));
+$form->addElements(array($login, $password1, $password2, $activated, $confirmed, $type));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
@@ -50,38 +52,48 @@ foreach ($attributes as $a) {
 }
 
 foreach ($dataToDisplay as $data) {
-	$value      = !empty($data['data']) ? $data['data']->getValue() : null;
+	$value      = !empty($data['data']) ? $data['data']->getSerializedValue() : null;
 	$datatypeID = $data['attribute']->getDatatypeID();
 	$hidden     = !in_array($data['attribute']->getID(), $attributeIDs);
-	$parameters = array($form, $value, $hidden, $data['attribute']);
+	$parameters = array($form, $data['attribute'], array($value));
+	$visible    = $data['attribute']->isVisible() ? '' : ' wv16_hidden_attribute';
 
-	WV_Datatype::call($datatypeID, 'renderAsFormElement', $parameters);
+	$style    = $hidden ? ' style="display:none"' : '';
+	$fragment = new sly_Form_Fragment('<div id="wv16_attribute'.$data['attribute']->getID().'_row" class="wv16_attribute_row'.$visible.'"'.$style.'>');
+
+	$form->add($fragment);
+	WV_Datatype::call($datatypeID, 'renderForm', $parameters);
+	$form->add(new sly_Form_Fragment('</div>'));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Zuordnung zu den Gruppen
 
-$form->beginFieldset('Dieser Benutzer gehört den folgenden Gruppen an:');
 
 $assignedGroups  = $user ? $user->getGroupIDs() : array();
 $availableGroups = WV16_Users::getAllGroups();
 $groups          = array();
-$exclude         = array(_WV16_Group::GROUP_UNCONFIRMED, _WV16_Group::GROUP_CONFIRMED);
+$exclude         = array(_WV16_Group::GROUP_UNCONFIRMED, _WV16_Group::GROUP_CONFIRMED, _WV16_Group::GROUP_ACTIVATED);
 
 foreach ($availableGroups as $index => $group) {
 	if (in_array($group->getID(), $exclude)) continue;
 	$groups[$group->getID()] = $group->getTitle();
 }
 
-$groups = new WV_Form_CheckboxGroup('groups', 'Benutzergruppen', $assignedGroups, $groups);
-
-$form->add($groups);
+if (!empty($groups)) {
+	$form->beginFieldset('Dieser Benutzer gehört den folgenden Gruppen an:');
+	$groups = new sly_Form_Select_Checkbox('groups', 'Benutzergruppen', $assignedGroups, $groups);
+	$form->add($groups);
+}
+else {
+	$form->beginFieldset('Optionen');
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Buttons festlegen
 
 if ($user) {
-	$delete = new WV_Form_Button('submit', 'delete', 'Löschen');
+	$delete = new sly_Form_input_Button('submit', 'delete', 'Löschen');
 	$delete->setAttribute('onclick', 'return confirm("Sicher, dass dieser Benutzer gelöscht werden soll?")');
 	$form->setDeleteButton($delete);
 }
@@ -89,34 +101,12 @@ if ($user) {
 ////////////////////////////////////////////////////////////////////////////////
 // Fertig!
 
-ob_start();
 $form->setFocus('login');
-$form->render();
-$form = ob_get_clean();
-
-////////////////////////////////////////////////////////////////////////////////
-// Versteckte Attribute ausblenden
-
-$hidden = array();
-
-foreach ($dataToDisplay as $data) {
-	$attribute = $data['attribute'];
-
-	if ($attribute->isVisible()) {
-		continue;
-	}
-
-	$attributeID = $attribute->getID();
-	$hidden[] = $attributeID;
-	$form = preg_replace('#<div(.+?)(id="property_container_'.$attributeID.'")(.*?)class="(.*?)"(.*?)>#i', '<div$1$2$3class="$4 hidden"$5>', $form);
-}
-
-print $form;
+print $form->render();
 
 ?>
 
 <script type="text/javascript">
-/* <![CDATA[ */
 wv16.attributesPerType = [];
 <?php
 
@@ -124,26 +114,18 @@ wv16.attributesPerType = [];
 // vorhanden sind.
 
 foreach (WV16_Users::getAllUserTypes() as $type) {
-	print "\n";
-	print 'wv16.attributesPerType['.$type->getID().'] = [];';
+	print 'wv16.attributesPerType['.$type->getID().'] = [';
 
-	foreach ($type->getAttributeIDs() as $attr) {
-		if (in_array($attr, $hidden)) {
-			continue;
-		}
+	$list = array();
 
-		print "\n";
-		print 'wv16.attributesPerType['.$type->getID().'].push('.$attr.');';
+	foreach ($type->getAttributes() as $attr) {
+		if (!$attr->isVisible()) continue;
+		$list[] = $attr->getID();
 	}
 
-	print "\n";
+	print implode(',', $list);
+	print "];\n";
 }
 
 ?>
-
-<? if (!empty($hidden)): ?>
-$('#wv16attributes > legend').append('<a href="javascript:;" id="wv16togglehidden">Klicken Sie hier, um die versteckten Attribute anzuzeigen.</a>');
-$('#wv16togglehidden').click(function() { $('div[id^=property_container_]').show(); });
-<? endif ?>
-/* ]]> */
 </script>
