@@ -21,7 +21,7 @@ abstract class _WV16_FrontendUser {
 	public static function getIDForUserType($userType, $allowNull = true) {
 		if ($userType === null && $allowNull) return null;
 		if ($userType instanceof _WV6_UserType) return $userType->getID();
-		if (WV_String::isInteger($userType)) return (int) $userType;
+		if (sly_Util_String::isInteger($userType)) return (int) $userType;
 		else return _WV16_UserType::getIDForName($userType);
 	}
 
@@ -39,7 +39,7 @@ abstract class _WV16_FrontendUser {
 
 	public static function getIDForAttribute($attribute, $allowNull = true) {
 		if ($attribute === null && $allowNull) return null; /* <- bedeutet im DataProvider: "gib mir alle Attribute!" */
-		if (WV_String::isInteger($attribute)) return (int) $attribute;
+		if (sly_Util_String::isInteger($attribute)) return (int) $attribute;
 		if (is_string($attribute)) return _WV16_Attribute::getIDForName($attribute);
 		if ($attribute instanceof _WV16_Attribute) return (int) $attribute->getID();
 		if ($attribute instanceof _WV16_UserValue) return (int) $attribute->getAttributeID();

@@ -9,7 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-class _WV16_Group {
+class _WV16_Group extends WV_Object {
 	const GROUP_UNCONFIRMED = 1;
 	const GROUP_CONFIRMED   = 2;
 	const GROUP_ACTIVATED   = 3;
@@ -26,42 +26,23 @@ class _WV16_Group {
 	public static function getInstance($groupID) {
 		$groupID = (int) $groupID;
 
-		if (isset(self::$instances[$groupID])) {
-			return self::$instances[$groupID];
+		if (empty(self::$instances[$groupID])) {
+			$callback = array(__CLASS__, '_getInstance');
+			$instance = self::getFromCache('frontenduser.internal.groups', $groupID, $callback, $groupID);
+
+			self::$instances[$groupID] = $instance;
 		}
 
-		$cache     = WV_DeveloperUtils::getCache();
-		$namespace = 'frontenduser.internal.groups';
-		$instance  = $cache->get($namespace, $groupID);
-
-		if (!$instance) {
-			if ($cache->lock($namespace, $groupID)) {
-				try {
-					$instance = new self($groupID);
-					$cache->set($namespace, $groupID, $instance);
-					$cache->unlock($namespace, $groupID);
-				}
-				catch (Exception $e) {
-					$cache->unlock($namespace, $groupID);
-					throw $e;
-				}
-			}
-			else {
-				$instance = $cache->waitForObject($namespace, $groupID);
-
-				if (!$instance) {
-					$instance = new self($groupID);
-				}
-			}
-		}
-
-		self::$instances[$groupID] = $instance;
 		return self::$instances[$groupID];
 	}
 
+	protected static function _getInstance($id) {
+		return new self($id);
+	}
+
 	private function __construct($id) {
-		$sql = WV_SQLEx::getInstance();
-		$data = $sql->saveFetch('*', 'wv16_groups', 'id = ?', $id);
+		$sql  = WV_SQLEx::getInstance();
+		$data = $sql->safeFetch('*', 'wv16_groups', 'id = ?', $id);
 
 		if (empty($data)) {
 			throw new WV16_Exception('Die Gruppe #'.$id.' konnte nicht gefunden werden!');
@@ -75,19 +56,19 @@ class _WV16_Group {
 	}
 
 	public static function getIDForName($group) {
-		if (WV_String::isInteger($group)) {
+		if (sly_Util_String::isInteger($group)) {
 			return (int) $group;
 		}
 
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.internal.groups';
-		$cacheKey  = WV_Cache::generateKey('id_for_name', $group);
+		$cacheKey  = sly_Cache::generateKey('id_for_name', $group);
 
 		$id = $cache->get($namespace, $cacheKey, -1);
 
 		if ($id < 0) {
 			$sql = WV_SQLEx::getInstance();
-			$id  = $sql->saveFetch('id', 'wv16_groups', 'name = ?', $group);
+			$id  = $sql->safeFetch('id', 'wv16_groups', 'name = ?', $group);
 			$id  = $id === false ? -1 : (int) $id;
 			$cache->set($namespace, $cacheKey, $id);
 		}
@@ -107,9 +88,9 @@ class _WV16_Group {
 	public function canAccess($object, $objectType = null) { /* Typ ist nur nötig, wenn die Objekt-ID nicht eindeutig ist */
 		list($objectID, $objectType) = _WV16_FrontendUser::identifyObject($object, $objectType);
 
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.rights';
-		$cacheKey  = WV_Cache::generateKey('can_access', $this->id, $objectID, $objectType);
+		$cacheKey  = sly_Cache::generateKey('can_access', $this->id, $objectID, $objectType);
 		$canAccess = $cache->get($namespace, $cacheKey, null);
 
 		if (is_bool($canAccess)) {
@@ -120,7 +101,7 @@ class _WV16_Group {
 
 		// Die Berechtigung für dieses Objekt allein abrufen (explizite Erlaubnis?)
 
-		$privilege = $sql->saveFetch('privilege', 'wv16_rights', 'object_id = ? AND object_type = ? AND group_id = ?', array($objectID, $objectType, $this->id));
+		$privilege = $sql->safeFetch('privilege', 'wv16_rights', 'object_id = ? AND object_type = ? AND group_id = ?', array($objectID, $objectType, $this->id));
 
 		if ($privilege) {
 			$cache->set($namespace, $cacheKey, true);
@@ -147,7 +128,7 @@ class _WV16_Group {
 		// Prüfen, ob es sich, wenn wir einen Artikel haben, es sich
 		// gleichzeitig auch um eine Kategorie handelt.
 
-		$isStartpage = $sql->saveFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16_FrontendUser::TYPE_ARTICLE;
+		$isStartpage = $sql->safeFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16_FrontendUser::TYPE_ARTICLE;
 
 		// Artikel und Kategorien hingegen schon. Also brauchen wir jetzt das
 		// Elternelement. Bei einem Artikel ist das die ihn beinhaltende Kategorie,
@@ -155,7 +136,7 @@ class _WV16_Group {
 		// Wenn es sich um eine Startseite einer Kategorie handelt, ist die
 		// Elternkategorie logischerweise direkt "der Artikel selbst".
 
-		$parentCategory = $isStartpage ? $objectID : $sql->saveFetch('re_id', 'article', 'id = ?', $objectID);
+		$parentCategory = $isStartpage ? $objectID : $sql->safeFetch('re_id', 'article', 'id = ?', $objectID);
 
 		if ($parentCategory == 0) {
 			$cache->set($namespace, $cacheKey, true);

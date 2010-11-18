@@ -29,7 +29,7 @@ abstract class WV16_Mailer {
 
 		if ($confirmArticle) {
 			$params = array($parameterName => $code);
-			$link   = WV_Redaxo::getAbsoluteUrl($confirmArticle, WV_Redaxo::CLANG_CURRENT, $params, '&');
+			$link   = WV_Sally::getAbsoluteUrl($confirmArticle, WV_Sally::CLANG_CURRENT, $params, '&');
 			$extra  = array('#CONFIRMATION_URL#' => $link, '#CONFIRM_URL#' => $link);
 
 			return self::sendToUser($user, 'mail_confirmation_subject', 'mail_confirmation_body', 'mail_confirmation_to', $extra);

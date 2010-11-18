@@ -16,7 +16,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	const ERR_USER_NOT_ACTIVATED = 3;
 
 	public static function clearCache() {
-		$cache = WV_DeveloperUtils::getCache();
+		$cache = sly_Core::cache();
 		$cache->flush('frontenduser', true);
 	}
 
@@ -25,44 +25,27 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	}
 
 	public static function getConfig($name, $default = null) {
-		global $REX;
-
-		if (rex_addon::isAvailable('global_settings')) {
-			$value = WV8_Settings::getValue('frontenduser', $name);
-			return empty($value) ? $default : $value; //Wenn leere Felder abgespeichert werden, sind sie ja nicht NULL
-		}
-
-		// Keine Global Settings :-( Also ab die Registry
-
-		return WV_Registry::get('frontenduser_'.$name, $default);
+		$value = WV8_Settings::getValue('frontenduser', $name);
+		return empty($value) ? $default : $value; // Wenn leere Felder abgespeichert werden, sind sie ja nicht NULL
 	}
 
 	public static function setConfig($name, $value) {
-		global $REX;
+		try {
+			$setting = _WV8_Setting::getInstance('frontenduser', $name);
+			$setting->setValue($value, WV_Sally::clang());
+			$setting->update();
 
-		if (rex_addon::isAvailable('global_settings')) {
-			try {
-				$setting = _WV8_Setting::getInstance('frontenduser', $name);
-				$setting->setValue($value, WV_Redaxo::clang());
-				$setting->update();
-
-				return true;
-			}
-			catch (Exception $e) {
-				return false;
-			}
+			return true;
 		}
-
-		// Keine Global Settings :-( Also ab die Registry
-
-		WV_Registry::set('frontenduser_'.$name, $value);
-		return true;
+		catch (Exception $e) {
+			return false;
+		}
 	}
 
 	public static function getTotalUsers($where = '1') {
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = WV_Cache::generateKey('total_users', $where);
+		$cacheKey  = sly_Cache::generateKey('total_users', $where);
 		$total     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($total < 0) {
@@ -79,19 +62,19 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function getAllUsers($where, $orderBy = 'id', $direction = 'asc', $offset = 0, $max = -1) {
 		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = WV_Cache::generateKey('users_by', $where, $orderBy, $direction, $offset, $max);
+		$cacheKey  = sly_Cache::generateKey('users_by', $where, $orderBy, $direction, $offset, $max);
 
 		$users = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($users)) {
 			$sql    = WV_SQLEx::getInstance();
-			$query  = 'SELECT id FROM #_wv16_users WHERE '.$where.' ORDER BY '.$orderBy.' '.$direction;
+			$query  = 'SELECT id FROM ~wv16_users WHERE '.$where.' ORDER BY '.$orderBy.' '.$direction;
 			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
 			$query .= ' LIMIT '.$offset.','.$max;
 
-			$users = $sql->getArray($query, array(), '#_');
+			$users = $sql->getArray($query, array(), '~');
 			$cache->set($namespace, $cacheKey, $users);
 		}
 
@@ -107,18 +90,18 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function getAllUsersInGroup($group, $orderBy = 'id', $direction = 'asc', $offset = 0, $max = -1) {
 		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.lists';
 		$groupID   = _WV16_FrontendUser::getIDForGroup($group, false);
-		$cacheKey  = WV_Cache::generateKey('users_by', $group, $orderBy, $direction, $offset, $max);
+		$cacheKey  = sly_Cache::generateKey('users_by', $group, $orderBy, $direction, $offset, $max);
 
 		$users = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($users)) {
 			$sql    = WV_SQLEx::getInstance();
 			$query  = 'SELECT id '.
-				'FROM #_wv16_users u '.
-				'LEFT JOIN #_wv16_user_groups ug ON u.id = ug.user_id '.
+				'FROM ~wv16_users u '.
+				'LEFT JOIN ~wv16_user_groups ug ON u.id = ug.user_id '.
 				'WHERE group_id = ? ORDER BY '.$orderBy.' '.$direction;
 
 			if ($offset > 0 || $max < 0) {
@@ -126,7 +109,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 				$query .= ' LIMIT '.$offset.','.$max;
 			}
 
-			$users = $sql->getArray($query, $groupID, '#_');
+			$users = $sql->getArray($query, $groupID, '~');
 			$cache->set($namespace, $cacheKey, $users);
 		}
 
@@ -142,22 +125,22 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function getAllGroups($orderBy = 'title', $direction = 'asc', $offset = 0, $max = -1) {
 		$direction = strtolower($direction) == 'desc' ? 'DESC' : 'ASC';
 		$offset    = abs((int) $offset);
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = WV_Cache::generateKey('groups_by', $orderBy, $direction, $offset, $max);
+		$cacheKey  = sly_Cache::generateKey('groups_by', $orderBy, $direction, $offset, $max);
 
 		$groups = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($groups)) {
 			$sql    = WV_SQLEx::getInstance();
-			$query  = 'SELECT id FROM #_wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
+			$query  = 'SELECT id FROM ~wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
 
 			if ($offset > 0 || $max < 0) {
 				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
 				$query .= ' LIMIT '.$offset.','.$max;
 			}
 
-			$groups = $sql->getArray($query, array(), '#_');
+			$groups = $sql->getArray($query, array(), '~');
 			$cache->set($namespace, $cacheKey, $groups);
 		}
 
@@ -218,14 +201,14 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function getUser($login) {
 		$sql       = WV_SQLEx::getInstance();
 		$login     = strtolower(trim($login));
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.users.mappings';
-		$cacheKey  = WV_Cache::generateKey('id_for', $login);
+		$cacheKey  = sly_Cache::generateKey('id_for', $login);
 
 		$userID = $cache->get($namespace, $cacheKey, -1);
 
 		if ($userID < 0) {
-			$userID = $sql->saveFetch('id', 'wv16_users', 'deleted = 0 AND LOWER(login) = ?', $login);
+			$userID = $sql->safeFetch('id', 'wv16_users', 'deleted = 0 AND LOWER(login) = ?', $login);
 
 			if ($userID === false) {
 				throw new WV16_Exception('User unknown', self::ERR_USER_UNKNOWN);
@@ -245,9 +228,9 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function isProtected($object, $objectType = null, $inherit = true) {
 		list($objectID, $objectType) = _WV16_FrontendUser::identifyObject($object, $objectType);
 
-		$cache     = WV_DeveloperUtils::getCache();
+		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.rights';
-		$cacheKey  = WV_Cache::generateKey('is_protected', $objectID, $objectType, $inherit);
+		$cacheKey  = sly_Cache::generateKey('is_protected', $objectID, $objectType, $inherit);
 		$canAccess = $cache->get($namespace, $cacheKey, null);
 
 		if (is_bool($canAccess)) {
@@ -259,7 +242,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		// Prüfen, ob es sich, wenn wir einen Artikel haben, es sich
 		// gleichzeitig auch um eine Kategorie handelt.
 
-		$isStartpage = $sql->saveFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16_FrontendUser::TYPE_ARTICLE;
+		$isStartpage = $sql->safeFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16_FrontendUser::TYPE_ARTICLE;
 
 		// Wollen wir wirklich nur die Rechte für dieses eine Objekt,
 		// egal, ob es vererbte Rechte gibt?
@@ -272,7 +255,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 
 		// Die Berechtigung für dieses Objekt allein abrufen (explizite Rechte?)
 
-		$privileges = $sql->saveFetch('*', 'wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
+		$privileges = $sql->safeFetch('*', 'wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
 
 		if (!empty($privileges)) {
 			$cache->set($namespace, $cacheKey, true);
@@ -293,7 +276,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		// Wenn es sich um eine Startseite einer Kategorie handelt, ist die
 		// Elternkategorie logischerweise direkt "der Artikel selbst".
 
-		$parentCategory = $isStartpage ? $objectID : $sql->saveFetch('re_id', 'article', 'id = ?', $objectID);
+		$parentCategory = $isStartpage ? $objectID : $sql->safeFetch('re_id', 'article', 'id = ?', $objectID);
 
 		if ($parentCategory == 0) {
 			$cache->set($namespace, $cacheKey, false);
@@ -308,7 +291,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 
 		if (self::isProtected($object, $objectType)) {
 			$user = WV16_Users::getCurrentUser();
-			$url  = WV_Redaxo::getBaseUrl(true);
+			$url  = WV_Sally::getBaseUrl(true);
 
 			if (!$user) {
 				rex_set_session('frontenduser_target_url', $url);
@@ -317,7 +300,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 					$loginArticle = self::getConfig('articles_login', $REX['NOTFOUND_ARTICLE_ID']);
 				}
 
-				WV_Redaxo::redirect($loginArticle);
+				WV_Sally::redirect($loginArticle);
 			}
 
 			$access = $user && $user->canAccess($object, $objectType);
@@ -329,7 +312,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 					$accessDeniedArticle = self::getConfig('articles_accessdenied', $REX['NOTFOUND_ARTICLE_ID']);
 				}
 
-				WV_Redaxo::redirect($accessDeniedArticle);
+				WV_Sally::redirect($accessDeniedArticle);
 			}
 		}
 	}

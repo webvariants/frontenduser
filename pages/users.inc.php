@@ -271,26 +271,4 @@ case 'do_edit':
 	}
 
 	// kein break;
-
-#===============================================================================
-# Registrierte Benutzer auflisten
-#===============================================================================
-default:
-
-	$search  = sly_Table::getSearchParameters('users');
-	$paging  = sly_Table::getPagingParameters('users', true, false);
-	$sorting = sly_Table::getSortingParameters('login', array('login', 'registered'));
-	$where   = '1';
-
-	if (!empty($search)) {
-		$searchSQL = ' AND (`login` = ? OR `registered` = ? OR `type_id` = ?)';
-		$searchSQL = str_replace('=', 'LIKE', $searchSQL);
-		$searchSQL = str_replace('?', '"%'.WV_SQL::escape($search).'%"', $searchSQL);
-
-		$where .= $searchSQL;
-	}
-
-	$users = WV16_Users::getAllUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
-	$total = WV16_Users::getTotalUsers($where);
-	require _WV16_PATH.'templates/users/table.phtml';
 }}
