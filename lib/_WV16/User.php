@@ -301,8 +301,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	/**
 	 * @return boolean  true im Erfolgsfall, sonst false
 	 */
-	public function setValue($attribute, $value, $useTransaction = true) {
-		$retval = WV16_Users::setDataForUser($this, $attribute, $value, $useTransaction);
+	public function setValue($attribute, $value) {
+		$retval = WV16_Users::setDataForUser($this, $attribute, $value);
 
 		if ($retval) {
 			$cache = sly_Core::cache();

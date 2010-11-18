@@ -50,7 +50,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 
 		if ($total < 0) {
 			$sql   = WV_SQLEx::getInstance();
-			$total = $sql->count('wv16_users', $where, array(), '#_');
+			$total = $sql->count('wv16_users', $where);
 			$total = $total === false ? -1 : (int) $total;
 			$cache->set($namespace, $cacheKey, $total);
 		}

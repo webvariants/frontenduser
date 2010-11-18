@@ -578,6 +578,8 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			return (int) $name;
 		}
 
+		debug_print_backtrace();
+
 		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.internal.mappings';
 		$cacheKey  = sly_Cache::generateKey('attribute', strtolower($name));

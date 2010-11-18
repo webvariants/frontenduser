@@ -13,5 +13,5 @@ interface WV16_User {
 	public function getLogin();
 	public function getID();
 	public function getValue($attribute, $default = null);
-	public function setValue($attribute, $value, $useTransaction = true);
+	public function setValue($attribute, $value);
 }

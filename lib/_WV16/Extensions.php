@@ -228,7 +228,7 @@ class _WV16_Extensions {
 	}
 
 	private static function removeRights($objectID, $type) {
-		WV_SQLEx::getInstance()->queryEx('DELETE FROM ~wv16_rights WHERE object_id = ? AND object_type = ?', array($objectID, $type), '#_');
+		WV_SQLEx::getInstance()->queryEx('DELETE FROM ~wv16_rights WHERE object_id = ? AND object_type = ?', array($objectID, $type), '~');
 	}
 
 	private static function storeRights($objectID, $type) {
@@ -240,7 +240,7 @@ class _WV16_Extensions {
 
 			$sql->queryEx(
 				'INSERT INTO ~wv16_rights (group_id,object_id,object_type,privilege) VALUES (?,?,?,?)',
-				array($group->getID(), $objectID, $type, $privilege), '#_'
+				array($group->getID(), $objectID, $type, $privilege), '~'
 			);
 		}
 	}
