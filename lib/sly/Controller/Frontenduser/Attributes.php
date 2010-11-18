@@ -13,20 +13,8 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		$layout = sly_Core::getLayout();
 		$layout->addJavaScriptFile('../data/dyn/public/developer_utils/js/jquery.tablednd.min.js');
 
-		$search = sly_Table::getSearchParameters('attributes');
-		$paging = sly_Table::getPagingParameters('attributes', true, false);
-		$where  = 'deleted = 0';
-
-		if (!empty($search)) {
-			$searchSQL = ' AND (`name` = ? OR `title` = ? OR `params` = ? OR `default_value` = ?)';
-			$searchSQL = str_replace('=', 'LIKE', $searchSQL);
-			$searchSQL = str_replace('?', '"%'.mysql_real_escape_string($search).'%"', $searchSQL);
-
-			$where .= $searchSQL;
-		}
-
-		$attributes = WV16_Users::getAllAttributes($where, 'position', 'asc', $paging['start'], $paging['elements']);
-		$total      = WV16_Users::getTotalAttributes($where);
+		$attributes = WV16_Users::getAllAttributes('deleted = 0', 'position', 'ASC');
+		$total      = WV16_Users::getTotalAttributes('deleted = 0');
 
 		$this->render('addons/frontenduser/templates/attributes/table.phtml', compact('attributes', 'total'));
 	}
