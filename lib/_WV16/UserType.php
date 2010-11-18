@@ -225,6 +225,7 @@ class _WV16_UserType extends WV_Object {
 
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser.internal', true); // external kann bestehen bleiben, sind nur unberührte Nutzerwerte
+		$cache->flush('frontenduser.lists', true);
 
 		return self::getInstance($id);
 	}

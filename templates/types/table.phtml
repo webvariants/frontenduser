@@ -1,43 +1,43 @@
-<?
+<?php
 
-WV_Redaxo::p(
+WV_Sally::p(
 	'Jeder Benutzer auf Ihrer Webseite gehört zu einem bestimmten Typ, der regelt, welche Attribute für ihn '.
 	'zutreffen. Der Typ eines Benutzers wirkt sich hingegen nicht auf die Benutzerrechte aus und ein Benutzer '.
 	'kann auch immer nur zu einem einzigen Typ gehören.'
 );
 
-$id    = '<a href="index.php?page=frontenduser&amp;subpage=types&amp;func=add"><img src="include/addons/frontenduser/images/usertype_add.png" alt="" title="Hinzufügen" /></a>';
-$table = new WV_Table('usertypes');
-$table->addColumn(new WV_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
-$table->addColumn(new WV_Table_Column('Interner Name'));
-$table->addColumn(new WV_Table_Column('Bezeichnung'));
-$table->addColumn(new WV_Table_Column('Zugehörige Attribute'));
+$id    = '<a href="index.php?page=frontenduser&amp;subpage=types&amp;func=add"><img src="../data/dyn/public/frontenduser/images/usertype_add.png" alt="" title="Hinzufügen" /></a>';
+$table = new sly_Table('usertypes');
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column('Interner Name'));
+$table->addColumn(new sly_Table_Column('Bezeichnung'));
+$table->addColumn(new sly_Table_Column('Zugehörige Attribute'));
 
-$table->enableSearching(true);
+$table->enableSearching(false);
 $table->renderHeader($total);
 
 foreach ($types as $type) {
 	?>
 	<tr id="type<?= $type->getID() ?>">
-		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><img src="include/addons/frontenduser/images/usertype.png" alt="" title="Typ bearbeiten" /></a></td>
+		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><img src="../data/dyn/public/frontenduser/images/usertype.png" alt="" title="Typ bearbeiten" /></a></td>
 		<td><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><?= wv_html($type->getName()) ?></a></td>
-		<td><?= wv_html($type->getTitle()) ?></td>
+		<td><?= sly_html($type->getTitle()) ?></td>
 		<td><?php
-		
+
 		$attributes = $type->getAttributes();
 		$titles     = array();
-		
+
 		foreach ($attributes as $attr) {
 			if (count($titles) > 6) {
 				$titles[] = '...';
 				break;
 			}
-			
-			$titles[] = wv_html($attr->getTitle());
+
+			$titles[] = sly_html($attr->getTitle());
 		}
-		
+
 		print empty($titles) ? '&lt;keine&gt;' : implode(', ', $titles);
-		
+
 		?></td>
 	</tr>
 	<?
