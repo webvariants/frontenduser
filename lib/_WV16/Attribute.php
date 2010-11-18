@@ -149,7 +149,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		///////////////////////////////////////////////////////////////////////
 		// Updates verarbeiten
 
-		if ($convertDataIfRequired) {
+		if ($convert) {
 			$this->handleUpdate($oldDatatype, $oldParams);
 		}
 
@@ -184,7 +184,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			// übernehmen wollen (if) oder nur die Menge der Benutzer, die den ggf. neuen
 			// Benutzertypen angehören (else).
 
-			if ($applyDefaults) {
+			if ($apply) {
 				$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE type_id IN ('.implode(',', $this->userTypes).')', array(), '~');
 			}
 			else {
@@ -520,7 +520,9 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			return true;
 		}
 
-		$converter = new _WV_Convert_Manager($attribute->getDatatypeID(), (int) $newDatatype, $oldParams, $newParams);
+		list($newParams,) = WV_Datatype::call($newDatatype, 'serializeConfigForm');
+
+		$converter = new _WV_Convert_Manager($attribute->getDatatypeID(), (int) $newDatatype, $attribute->getParams(), $newParams);
 		$status    = $converter->checkCompatibility();
 
 		if ($status === true) {
@@ -550,6 +552,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			$messages = array('Der Datentyp hat sich geändert. Eine Konvertierung ist '.($convertible ? 'jedoch <u>automatisiert</u>' : '<u>nicht</u>').' möglich.');
 		}
 
+		$datatypeChanged = $attribute->getDatatypeID() !== (int) $newDatatype;
 		include _WV16_PATH.'templates/attributes/confirmation.phtml';
 		return false;
 	}

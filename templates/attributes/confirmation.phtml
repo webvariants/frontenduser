@@ -1,28 +1,30 @@
-<? WV_Redaxo::error('Achtung: Inkompatible Benutzerdaten!') ?>
+<? print rex_warning('Achtung: Inkompatible Benutzerdaten!'); ?>
 
 <p>Die gewünschten Änderungen an dem Attribut führen dazu, dass einige Benutzerdaten
 nicht mehr aktuell sind und <?
 
 // Problembeschreibung
 
-if ( $datatypeChanged ) {
+if ($datatypeChanged) {
 	print 'die betreffenden Daten <strong>'.($convertible ? 'konvertiert' : 'gelöscht');
 	print '</strong> werden müssen.';
 
-	if ( !$convertible ) {
+	if (!$convertible) {
 		print '<br />&nbsp;</p>';
-		WV_Redaxo::error(implode("<br>\n", $errorInfo[0]));
-	} else {
+		print rex_warning(implode("<br>\n", $messages));
+	}
+	else {
 		print ' Diese Konvertierung ist automatisch möglich und wird vom System vorgenommen.';
 		print '<br />&nbsp;</p>';
 	}
-} else {
+}
+else {
 	print 'von den betreffenden Benutzern <strong>gelöscht</strong> werden müssen.';
-	print ' Der verwendete Datentyp <strong>'.WV_Datatype::getTitle($newDatatype);
+	print ' Der verwendete Datentyp <strong>'.rex_translate(WV_Datatype::getTitle($newDatatype));
 	print '</strong> hat folgendes Problem gemeldet, das er nicht ohne Ihre ';
 	print 'Bestätigung korrigieren kann:<br />&nbsp;</p>';
 
-	WV_Redaxo::error(implode("<br>\n", $errorInfo[0]));
+	print rex_warning(implode("<br>\n", $messages));
 }
 
 // Betroffene Objekte auflisten
@@ -30,13 +32,12 @@ if ( $datatypeChanged ) {
 print '<p>Von dieser Änderung sind die folgenden Benutzer betroffen:</p>';
 print '<ul style="margin:10px 0 10px 10px">';
 
-$users = $errorInfo[1];
-
-if (empty($users)) {
+if (empty($affected)) {
 	print '<li style="list-style-type:disc;margin-left:10px;color:green">(keine)</li>';
-} else {
-	foreach ($users as $u) {
-		print '<li style="list-style-type:disc;margin-left:10px">'.wv_html($u->getLogin()).'</li>';
+}
+else {
+	foreach ($affected as $u) {
+		print '<li style="list-style-type:disc;margin-left:10px">'.sly_html($u->getLogin()).'</li>';
 	}
 }
 
@@ -46,15 +47,16 @@ print '</ul>';
 
 print '<p>Wenn Sie sicher sind, dass die betreffenden Daten ';
 
-if ( $convertible ) {
+if ($convertible) {
 	print 'konvertiert';
-} else {
+}
+else {
 	print 'von den zugewiesenen Benutzern gelöscht';
 }
 
 print ' werden sollen, klicken Sie bitte auf &quot;Ja&quot;.';
 
-if ( !$datatypeChanged ) {
+if (!$datatypeChanged) {
 	print 'Der verwendete Datentyp wird versuchen, die Daten bestmöglich ';
 	print 'zu konvertieren und nur die nötigsten Änderungen vorzunehmen.';
 }
@@ -65,27 +67,13 @@ Andernfalls gehen Sie bitte zurück und korrigieren Ihre Eingaben.<br />&nbsp;&n
 
 <form method="post" action="index.php">
 	<p style="text-align: center;margin-bottom:10px;margin-top:1em">
-		<input type="submit" value="Ja, betreffende Daten <?php print $convertible ? 'konvertieren' : 'löschen'; ?>" style="color:red;background:white;border:2px outset #F99;padding:3px" />
+		<input type="submit" value="Ja, betreffende Daten <?= $convertible ? 'konvertieren' : 'löschen' ?>" style="color:red;background:white;border:2px outset #F99;padding:3px" />
 		oder
 		<input type="button" style="color:green;background:white;border:2px outset #9F9;padding:3px" value="zurückgehen und korrigieren" onclick="javascript:history.go(-1)" />
 	</p>
 
 	<div>
 		<input type="hidden" name="confirmed" value="1" />
-		<? _WV16_FrontendUser::printPOSTData(); ?>
-	</div>
-</form>
-
-<form method="post" action="index.php" id="noconversion">
-	<p style="color:#999;margin-bottom:1em;margin-top:5em;font-style:italic">
-		(Für <u>Experten</u> und auf <u>eigene Gefahr</u>:
-		<a style="color:#F66" href="javascript:;" onclick="if (confirm('Wirklich sicher?')) jQuery('#noconversion').submit()">Fortsetzen, ohne Daten zu <?php print $convertible ? 'konvertieren' : 'löschen'; ?></a> &ndash;
-		Kann irreparable Inkonsistenzen erzeugen! &ndash; Vorher Backup anlegen!)
-	</p>
-
-	<div>
-		<input type="hidden" name="confirmed" value="1" />
-		<input type="hidden" name="noconversion" value="1" />
 		<? _WV16_FrontendUser::printPOSTData(); ?>
 	</div>
 </form>

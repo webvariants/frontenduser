@@ -81,6 +81,7 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		}
 
 		$attribute     = null;
+		$id            = sly_request('id', 'int');
 		$name          = sly_post('name',  'string');
 		$title         = sly_post('title', 'string');
 		$helptext      = sly_post('helptext', 'string');
@@ -104,7 +105,7 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 			// ja, den Benutzer erst fragen, bevor wir die Daten übernehmen.
 
 			if (!_WV16_Attribute::checkCompatibility($confirmed, $attribute, $datatype)) {
-				break;
+				return;
 			}
 
 			$attribute->setName($name);
