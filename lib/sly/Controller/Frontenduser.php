@@ -137,6 +137,138 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$this->index();
 	}
 
+	protected function edit() {
+		$id   = sly_request('id', 'int');
+		$user = _WV16_User::getInstance($id);
+		$func = 'edit';
+		$this->render('addons/frontenduser/templates/users/backend.phtml', compact('user', 'func'));
+	}
+
+	protected function do_edit() {
+		if (isset($_POST['delete'])) {
+			return $this->delete();
+		}
+
+		$id        = sly_request('id', 'int');
+		$user      = null;
+		$login     = sly_post('login', 'string');
+		$password1 = sly_post('password', 'string');
+		$password2 = sly_post('password2', 'string');
+		$userType  = sly_post('type', 'int');
+		$activated = sly_post('activated', 'boolean', false);
+		$confirmed = sly_post('confirmed', 'boolean', false);
+		$groups    = sly_postArray('groups', 'int');
+
+		///////////////////////////////////////////////////////////////
+		// Passwort und Benutzertyp checken
+
+		try {
+			// Wir initialisieren das Objekt jetzt schon, damit wir im catch-Block
+			// direkt ein edit-Formular anbieten können.
+
+			$user = _WV16_User::getInstance($id);
+
+			if ($password1 && $password1 != $password2) {
+				throw new WV_InputException('Die beiden Passwörter sind nicht identisch.');
+			}
+
+			$userTypeObj = _WV16_UserType::getInstance($userType);
+		}
+		catch (Exception $e) {
+			print rex_warning($e->getMessage());
+			return $this->edit();
+		}
+
+		///////////////////////////////////////////////////////////////
+		// Attribute auslesen und vom Datentyp jeweils verarbeiten lassen
+
+		$valuesToStore = $this->serializeForm($userType);
+
+		if ($valuesToStore === null) {
+			$errors = $this->errors();
+
+			foreach ($errors as $idx => $e) {
+				$errors[$idx] = $e['error'];
+			}
+
+			print rex_warning(implode('<br />', $errors));
+			return $this->edit();
+		}
+
+		$wasActivated = $user->wasEverActivated();
+
+		///////////////////////////////////////////////////////////////
+		// Attribute sind OK. Ab in die Datenbank damit.
+
+		try {
+			$user->setUserType($userType); // löscht automatisch alle überhängenden Attribute
+			$user->setLogin($login);
+
+			if (!empty($password1)) {
+				$user->setPassword($password1);
+			}
+
+			foreach ($valuesToStore as $value) {
+				$user->setValue($value['attribute'], $value['value']);
+			}
+
+			// Zu prüfen, in welcher Gruppe wir schon sind und in welcher nicht wäre
+			// aufwendiger als die Gruppen alle neu einzufügen.
+
+			$user->removeAllGroups();
+
+			foreach ($groups as $group) {
+				$user->addGroup($group);
+			}
+
+			$user->setConfirmed($confirmed, null);
+			$user->setActivated($activated);
+			$user->update();
+		}
+		catch (Exception $e) {
+			print rex_warning($e->getMessage());
+			return $this->edit();
+		}
+
+		$params = !empty($password1) ? array('password' => $password1) : array();
+		sly_Core::dispatcher()->notify('WV16_USER_UPDATED', $user, $params);
+		print rex_info('Der Benutzer wurde erfolgreich bearbeitet.');
+
+		// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.
+
+		$firstTimeActivation = !$wasActivated && $user->wasEverActivated();
+
+		if ($firstTimeActivation) {
+			try {
+				WV16_Mailer::notifyUserOnActivation($user);
+				print rex_info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
+			}
+			catch (Exception $e) {
+				print rex_warning('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.sly_html($e->getMessage()).'.');
+			}
+		}
+
+		$this->index();
+	}
+
+	protected function delete() {
+		try {
+			$id     = sly_request('id', 'int');
+			$user   = _WV16_User::getInstance($id);
+			$values = $user->getValues(); // für den EP vor der Vernichtung retten
+			$user->delete();
+		}
+		catch (Exception $e) {
+			print rex_warning($e->getMessage());
+			return $this->edit();
+		}
+
+		sly_Core::dispatcher()->notify('WV16_USER_DELETED', $user, array('values' => $values));
+		print rex_info('Der Benutzer wurde erfolgreich gelöscht.');
+
+		$this->index();
+	}
+
 	protected function checkPermission() {
 		return WV_Sally::isAdminOrHasPerm('frontenduser[]');
 	}
