@@ -16,6 +16,10 @@ $columns = WV8_Settings::getValue('frontenduser', 'be_columns', array());
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
 
+if (empty($columns)) {
+	$columns = array('___login___' => 'Login');
+}
+
 foreach ($columns as $title) {
 	$table->addColumn(new sly_Table_Column($title));
 }
