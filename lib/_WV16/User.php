@@ -141,7 +141,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$cache->flush('frontenduser.counts', true);
 		$cache->flush('frontenduser.lists', true);
 
-		return $user;
+		return self::getInstance($userID);
 	}
 
 	/**
