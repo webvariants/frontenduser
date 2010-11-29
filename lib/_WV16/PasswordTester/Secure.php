@@ -23,7 +23,7 @@ class _WV16_PasswordTester_Secure implements _WV16_PasswordTester {
 		$password = strtolower($password);
 
 		if (strlen($password) < 6) {
-			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)');
 		}
 
 		// Falls der Benutzername enthalten ist...
@@ -61,7 +61,7 @@ class _WV16_PasswordTester_Secure implements _WV16_PasswordTester {
 
 		// Wörterbuch-Angriff
 
-		$dictionary = _WV_16_PATH.'pwddata/passwords.txt';
+		$dictionary = _WV16_PATH.'pwddata/passwords.txt';
 		$soundexPwd = soundex($password);
 
 		if (file_exists($dictionary)) {

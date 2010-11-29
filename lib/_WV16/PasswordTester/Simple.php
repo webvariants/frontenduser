@@ -8,20 +8,13 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-/*
-securepwd v1.0.2b
-Class for checking the integrity of a given password.
-It basis its checks in a dictionary, or in a given word (normally a user name)
-By Llorenç Herrera [lha@hexoplastia.com]
-*/
-
 class _WV16_PasswordTester_Simple implements _WV16_PasswordTester {
 	public function config() {
 	}
 
 	public function test($login, $password) {
 		if (strlen($password) < 6) {
-			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV_InputException('Das Passwort ist zu kurz (mindestens 6 Zeichen!)');
 		}
 
 		if ($password == $login || $password == strrev($login)) {
