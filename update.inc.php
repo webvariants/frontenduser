@@ -16,6 +16,25 @@ $newVersion = $service->getVersion('frontenduser');
 // 1.2: helptext + hidden
 // 2.0: activated + confirmed, internal entfernt, wv16_rights entfernt
 
+function _wv16_addColumnSetting() {
+	if (WV8_Settings::exists(, 'be_columns')) return;
+
+	$prefix = sly_Core::config()->get('DATABASE/TABLE_PREFIX');
+
+	WV8_Settings::create(
+		/*     Namespace */ 'frontenduser',
+		/*          Name */ 'be_columns',
+		/*         Titel */ 'Spalten in Benutzerliste',
+		/*     Hilfetext */ 'Wählen Sie, welche Informationen im Backend zusätzlich zum Login angezeigt werden sollen.',
+		/*      Datentyp */ 3,
+		/*     Parameter */ '1|1_1_0_5|SELECT name, title FROM '.$prefix.'wv16_attributes WHERE 1 ORDER BY title',
+		/*        lokal? */ false,
+		/*    Seitenname */ 'translate:frontenduser_title',
+		/*        Gruppe */ 'Backend',
+		/* mehrsprachig? */ false
+	);
+}
+
 try {
 	$sql = WV_SQLEx::getInstance();
 
@@ -56,6 +75,9 @@ try {
 
 		// wv16_rights entfernen
 		$sql->queryEx('DROP TABLE IF EXISTS ~wv16_rights', null, '~');
+
+		// Global Setting nachtragen (wenn alle AddOns geladen sind)
+		sly_Core::dispatcher()->register('ADDONS_INCLUDED', '_wv16_addColumnSetting');
 	}
 
 	sly_Core::cache()->flush('frontenduser', true);
