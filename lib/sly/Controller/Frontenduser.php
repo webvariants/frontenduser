@@ -9,6 +9,8 @@
  */
 
 class sly_Controller_Frontenduser extends sly_Controller_Sally {
+	private $errors = array();
+
 	protected function init() {
 		$pages = array(
 			''           => 'Benutzer',
@@ -85,10 +87,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		///////////////////////////////////////////////////////////////
 		// Attribute auslesen und vom Datentyp jeweils verarbeiten lassen
 
-		$valuesToStore = _WV16_FrontendUser::serializeUserForm($userType);
+		$valuesToStore = $this->serializeForm($userType);
 
 		if ($valuesToStore === null) {
-			$errors = _WV16_FrontendUser::getErrors();
+			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
 				$errors[$idx] = $e['error'];
@@ -137,5 +139,84 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 
 	protected function checkPermission() {
 		return WV_Sally::isAdminOrHasPerm('frontenduser[]');
+	}
+
+	private function serializeForm($userType) {
+		$requiredAttrs  = WV16_Users::getAttributesForUserType($userType);
+		$availableAttrs = WV16_Users::getAttributesForUserType(-1);
+		$valuesToStore  = array();
+
+		foreach ($availableAttrs as $attr) {
+			$isRequired = false;
+
+			foreach ($requiredAttrs as $rattr) {
+				if ($rattr->getID() == $attr->getID()) {
+					$isRequired = true;
+					break;
+				}
+			}
+
+			// Wir lassen keine Daten zu, die nicht zu diesem Benutzertyp gehören.
+
+			if (!$isRequired) {
+				continue;
+			}
+
+			try {
+				$inputForUser = WV_Datatype::call($attr->getDatatypeID(), 'serializeForm', $attr);
+
+				// Keine gültige Eingabe aber benötigtes Feld? -> Abbruch!
+
+				if ($inputForUser === false && $isRequired) {
+					$this->errors[] = array(
+						'attribute' => $attr->getID(),
+						'error'     => 'Diese Angabe ist ein Pflichtfeld!'
+					);
+					continue;
+				}
+
+				// Woohoo! Eine Eingabe! Die merken wir uns.
+
+				$valuesToStore[] = array(
+					'value'     => $inputForUser,
+					'attribute' => $attr->getID()
+				);
+			}
+			catch (WV_DatatypeException $e) {
+				$this->errors[] = array(
+					'attribute' => $attr->getID(),
+					'error'     => $e->getMessage()
+				);
+			}
+		}
+
+		return empty($this->errors) ? $valuesToStore : null;
+	}
+
+	protected function getAttributesToDisplay($available, $assigned, $required) {
+		$return = array();
+
+		foreach ($available as $attribute) {
+			$metadata = null;
+			$req      = false;
+
+			foreach ($assigned as $data) {
+				if ($data->getAttributeID() == $attribute->getID()) {
+					$metadata = $data;
+					break;
+				}
+			}
+
+			foreach ($required as $rinfo) {
+				if ($rinfo->getID() == $attribute->getID()) {
+					$req = true;
+					break;
+				}
+			}
+
+			$return[] = array('attribute' => $attribute, 'data' => $metadata, 'required' => $req);
+		}
+
+		return $return;
 	}
 }

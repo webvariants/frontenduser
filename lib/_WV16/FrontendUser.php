@@ -12,12 +12,6 @@
 abstract class _WV16_FrontendUser {
 	const DEFAULT_USER_TYPE = 1;
 
-	const TYPE_ARTICLE  = 1;
-	const TYPE_CATEGORY = 2;
-	const TYPE_MEDIUM   = 3;
-
-	private static $errors = null;
-
 	public static function getIDForUserType($userType, $allowNull = true) {
 		if ($userType === null && $allowNull) return null;
 		if ($userType instanceof _WV6_UserType) return $userType->getID();
@@ -45,93 +39,6 @@ abstract class _WV16_FrontendUser {
 		if ($attribute instanceof _WV16_UserValue) return (int) $attribute->getAttributeID();
 		trigger_error('Konnte Attribute-ID für "'.$attribute.'" ('.gettype($attribute).') nicht ermitteln!', E_USER_WARNING);
 		return -1;
-	}
-
-	public static function serializeUserForm($userType) {
-		$requiredAttrs  = WV16_Users::getAttributesForUserType($userType);
-		$availableAttrs = WV16_Users::getAttributesForUserType(-1);
-		$valuesToStore  = array();
-		$errors         = array();
-
-		foreach ($availableAttrs as $attr) {
-			$isRequired = false;
-
-			foreach ($requiredAttrs as $rattr) {
-				if ($rattr->getID() == $attr->getID()) {
-					$isRequired = true;
-					break;
-				}
-			}
-
-			// Wir lassen keine Daten zu, die nicht zu diesem Benutzertyp gehören.
-
-			if (!$isRequired) {
-				continue;
-			}
-
-			try {
-				$inputForUser = WV_Datatype::call($attr->getDatatypeID(), 'serializeFrontendForm', array($attr->getParams(), $attr));
-
-				// Keine gültige Eingabe aber benötigtes Feld? -> Abbruch!
-
-				if ($inputForUser === false && $isRequired) {
-					$errors[] = array(
-						'attribute' => $attr->getID(),
-						'error'     => 'Diese Angabe ist ein Pflichtfeld!'
-					);
-					continue;
-				}
-
-				// Woohoo! Eine Eingabe! Die merken wir uns.
-
-				$valuesToStore[] = array(
-					'value'     => $inputForUser,
-					'attribute' => $attr->getID()
-				);
-			}
-			catch (WV_DatatypeException $e) {
-				$errors[] = array(
-					'attribute' => $attr->getID(),
-					'error'     => $e->getMessage()
-				);
-			}
-		}
-
-		if (empty($errors)) return $valuesToStore;
-
-		self::$errors = $errors;
-		return null;
-	}
-
-	public static function getErrors() {
-		return self::$errors;
-	}
-
-	public static function getAttributesToDisplay($available, $assigned, $required) {
-		$return = array();
-
-		foreach ($available as $attribute) {
-			$metadata = null;
-			$req      = false;
-
-			foreach ($assigned as $data) {
-				if ($data->getAttributeID() == $attribute->getID()) {
-					$metadata = $data;
-					break;
-				}
-			}
-
-			foreach ($required as $rinfo) {
-				if ($rinfo->getID() == $attribute->getID()) {
-					$req = true;
-					break;
-				}
-			}
-
-			$return[] = array('attribute' => $attribute, 'data' => $metadata, 'required' => $req);
-		}
-
-		return $return;
 	}
 
 	/**

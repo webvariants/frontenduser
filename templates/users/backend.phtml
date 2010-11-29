@@ -43,7 +43,7 @@ $form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes
 $userType      = $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE;
 $requiredInfos = WV16_Users::getAttributesForUserType($userType);
 $assignedData  = $user ? $user->getValues() : array();
-$dataToDisplay = _WV16_FrontendUser::getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);
+$dataToDisplay = $this->getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);
 $attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : $requiredInfos;
 $attributeIDs  = array();
 
