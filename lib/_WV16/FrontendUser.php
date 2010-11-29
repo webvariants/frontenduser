@@ -47,20 +47,6 @@ abstract class _WV16_FrontendUser {
 		return -1;
 	}
 
-	public static function identifyObject($object, $objectType = null) {
-		if ($object instanceof OOArticle)   return array((int) $object->getId(), self::TYPE_ARTICLE);
-		if ($object instanceof rex_article) return array((int) $object->getValue('article_id'), self::TYPE_ARTICLE);
-		if ($object instanceof OOCategory)  return array((int) $object->getId(), self::TYPE_CATEGORY);
-		if ($object instanceof OOMedia)     return array((int) $object->getId(), self::TYPE_MEDIUM);
-
-		if ($objectType == self::TYPE_ARTICLE)  return array((int) $object, $objectType);
-		if ($objectType == self::TYPE_CATEGORY) return array((int) $object, $objectType);
-		if ($objectType == self::TYPE_MEDIUM)   return array((int) $object, $objectType);
-
-		trigger_error('Konnte ID für "'.$object.'" ('.gettype($object).') nicht ermitteln!', E_USER_WARNING);
-		return array(-1, self::TYPE_ARTICLE);
-	}
-
 	public static function serializeUserForm($userType) {
 		$requiredAttrs  = WV16_Users::getAttributesForUserType($userType);
 		$availableAttrs = WV16_Users::getAttributesForUserType(-1);
@@ -121,11 +107,6 @@ abstract class _WV16_FrontendUser {
 		return self::$errors;
 	}
 
-	public static function hasObjectRights($object, $objectType = null) {
-		list($id, $type) = self::identifyObject($object, $objectType);
-		return WV_SQLEx::getInstance()->count('wv16_rights', 'object_id = ? AND object_type = ?', array($id, $type)) > 0;
-	}
-
 	public static function getAttributesToDisplay($available, $assigned, $required) {
 		$return = array();
 
@@ -158,18 +139,16 @@ abstract class _WV16_FrontendUser {
 	 *
 	 * Diese Methode erzeugt versteckte Formular-Elemente fÃ¼r alle Daten im
 	 * superglobalen Array $_POST. Damit wird das erneute Versenden eines
-	 * Formulars mÃ¶glich. Es wird davon ausgegangen, dass die auszugebenden
-	 * Daten bereits mit einem Escaping versehen wurden. Sie werden daher
-	 * durch stripslashes() gejagt.
+	 * Formulars möglich.
 	 */
 	public static function printPOSTData() {
 		foreach ($_POST as $key => $value) {
 			if (!is_array($value)) {
-				print '<input type="hidden" name="'.wv_html($key).'" value="'.wv_html(stripslashes($value)).'" />';
+				print '<input type="hidden" name="'.sly_html($key).'" value="'.sly_html($value).'" />';
 			}
 			else {
 				foreach ($value as $v) {
-					print '<input type="hidden" name="'.wv_html($key).'[]" value="'.wv_html(stripslashes($v)).'" />';
+					print '<input type="hidden" name="'.sly_html($key).'[]" value="'.sly_html($v).'" />';
 				}
 			}
 		}

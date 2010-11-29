@@ -23,12 +23,4 @@ sly_Loader::addLoadPath(_WV16_PATH.'lib');
 
 // Initialisierungen
 
-$dispatcher = sly_Core::dispatcher();
-$dispatcher->register('PAGE_CHECKED', array('_WV16_Extensions', 'plugin'));
-$dispatcher->register('ALL_GENERATED', array('WV16_Users', 'clearCache'));
-
-// Dateien rausschicken, die über FrontendUser geschützt sind.
-
-if (!sly_Core::isBackend() && !empty($_REQUEST['wv16_file'])) {
-	require_once _WV16_PATH.'proxy.inc.php';
-}
+sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_Users', 'clearCache'));

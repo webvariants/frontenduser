@@ -180,7 +180,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function login($login, $password) {
 		$userObj = self::getUser($login);
 
-		if ($userObj->isInGroup(_WV16_Group::GROUP_ACTIVATED) && self::checkPassword($userObj, $password)) {
+		if ($userObj->isActivated() && self::checkPassword($userObj, $password)) {
 			self::loginUser($userObj);
 			return $userObj;
 		}
@@ -223,98 +223,6 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function checkPassword(_WV16_User $user, $password) {
 		$password = trim($password);
 		return sha1($user->getId().$password.$user->getRegistered()) === $user->getPasswordHash();
-	}
-
-	public static function isProtected($object, $objectType = null, $inherit = true) {
-		list($objectID, $objectType) = _WV16_FrontendUser::identifyObject($object, $objectType);
-
-		$cache     = sly_Core::cache();
-		$namespace = 'frontenduser.rights';
-		$cacheKey  = sly_Cache::generateKey('is_protected', $objectID, $objectType, $inherit);
-		$canAccess = $cache->get($namespace, $cacheKey, null);
-
-		if (is_bool($canAccess)) {
-			return $canAccess;
-		}
-
-		$sql = WV_SQLEx::getInstance();
-
-		// Prüfen, ob es sich, wenn wir einen Artikel haben, es sich
-		// gleichzeitig auch um eine Kategorie handelt.
-
-		$isStartpage = $sql->safeFetch('startpage', 'article', 'id = ?', $objectID) && $objectType == _WV16_FrontendUser::TYPE_ARTICLE;
-
-		// Wollen wir wirklich nur die Rechte für dieses eine Objekt,
-		// egal, ob es vererbte Rechte gibt?
-
-		if (!$inherit) {
-			$privileges = $sql->count('wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
-			$cache->set($namespace, $cacheKey, $privileges > 0);
-			return $privileges > 0;
-		}
-
-		// Die Berechtigung für dieses Objekt allein abrufen (explizite Rechte?)
-
-		$privileges = $sql->safeFetch('*', 'wv16_rights', 'object_id = ? AND object_type = ?', array($objectID, $objectType));
-
-		if (!empty($privileges)) {
-			$cache->set($namespace, $cacheKey, true);
-			return true;
-		}
-
-		// Wenn es sich um eine Datei handelt, gibt es keine Vererbung. Und wenn
-		// es dann keine Rechte für die Datei gibt, ist das Objekt auch nicht
-		// geschützt.
-
-		if ($objectType == _WV16_FrontendUser::TYPE_MEDIUM) {
-			$cache->set($namespace, $cacheKey, false);
-			return false;
-		}
-
-		// Wir brauchen jetzt das Elternelement. Bei einem Artikel ist das die
-		// ihn beinhaltende Kategorie, bei einer Kategorie die Elternkategorie.
-		// Wenn es sich um eine Startseite einer Kategorie handelt, ist die
-		// Elternkategorie logischerweise direkt "der Artikel selbst".
-
-		$parentCategory = $isStartpage ? $objectID : $sql->safeFetch('re_id', 'article', 'id = ?', $objectID);
-
-		if ($parentCategory == 0) {
-			$cache->set($namespace, $cacheKey, false);
-			return false; // Artikel/Kategorie der obersten Ebene, da generell alle Objekte erlaubt sind, hören wir hier auf.
-		}
-
-		return self::isProtected((int) $parentCategory, _WV16_FrontendUser::TYPE_CATEGORY);
-	}
-
-	public static function protect($object, $objectType = null, $loginArticle = null, $accessDeniedArticle = null) {
-		global $REX;
-
-		if (self::isProtected($object, $objectType)) {
-			$user = WV16_Users::getCurrentUser();
-			$url  = WV_Sally::getBaseUrl(true);
-
-			if (!$user) {
-				rex_set_session('frontenduser_target_url', $url);
-
-				if ($loginArticle === null) {
-					$loginArticle = self::getConfig('articles_login', $REX['NOTFOUND_ARTICLE_ID']);
-				}
-
-				WV_Sally::redirect($loginArticle);
-			}
-
-			$access = $user && $user->canAccess($object, $objectType);
-
-			if (!$access) {
-				rex_set_session('frontenduser_target_url', $url);
-
-				if ($accessDeniedArticle == null) {
-					$accessDeniedArticle = self::getConfig('articles_accessdenied', $REX['NOTFOUND_ARTICLE_ID']);
-				}
-
-				WV_Sally::redirect($accessDeniedArticle);
-			}
-		}
 	}
 
 	public static function generatePassword($salt = null) {

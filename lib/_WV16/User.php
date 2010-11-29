@@ -24,6 +24,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	protected $values;
 	protected $groups;
 	protected $deleted;
+	protected $activated;
+	protected $confirmed;
 	protected $wasActivated;
 	protected $currentSetID;
 	protected $confirmationCode;
@@ -69,6 +71,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$this->origTypeID       = $this->typeID;
 		$this->values           = null;
 		$this->deleted          = (boolean) $data['deleted'];
+		$this->activated        = (boolean) $data['activated'];
+		$this->confirmed        = (boolean) $data['confirmed'];
 		$this->wasActivated     = (boolean) $data['was_activated'];
 		$this->currentSetID     = WV16_Users::getFirstSetID($this->id);
 		$this->groups           = $sql->getArray('SELECT group_id FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
@@ -96,7 +100,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 			throw new WV16_Exception('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
 		}
 
-		if ($sql->count('wv16_users','LOWER(login) = ?', strtolower($login)) != 0) {
+		if ($sql->count('wv16_users', 'LOWER(login) = ?', strtolower($login)) != 0) {
 			throw new WV16_Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
 		}
 
@@ -113,8 +117,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$sql = WV_SQLEx::getInstance();
 
 		$sql->queryEx(
-			'INSERT INTO ~wv16_users (login,password,registered,type_id,confirmation_code) VALUES (?,"",?,?,?)',
-			array($login, $registered, $userType, $confirmationCode), '~'
+			'INSERT INTO ~wv16_users (login,password,registered,type_id,activated,confirmed,confirmation_code) VALUES (?,"",?,?,?,?,?)',
+			array($login, $registered, $userType, 0, 0, $confirmationCode), '~'
 		);
 
 		$userID = $sql->lastID();
@@ -122,11 +126,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 		$sql->queryEx('UPDATE ~wv16_users SET password = ? WHERE id = ?', array($pwhash, $userID), '~');
 
-		$user = self::getInstance($userID);
-		$user->addGroup(_WV16_Group::GROUP_UNCONFIRMED);
-
 		// Attribute und ihre Standardwerte übernehmen
-		// TODO: Das kriegen wir auch mit einer Query hin.
 
 		$attributes = WV16_Users::getAttributesForUserType($userType);
 
@@ -159,7 +159,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		}
 
 		if ($this->confirmationCode === null) {
-			if ($this->isInGroup(_WV16_Group::GROUP_CONFIRMED)) {
+			if ($this->confirmed) {
 				$this->confirmationCode = '';
 			}
 			else {
@@ -168,9 +168,14 @@ class _WV16_User extends WV_Object implements WV16_User {
 		}
 
 		$sql->queryEx(
-			'UPDATE ~wv16_users SET login = ?, password = ?, type_id = ?, confirmation_code = ? WHERE id = ?',
-			array($this->login, $this->password, $this->typeID, $this->confirmationCode, $this->id), '~'
+			'UPDATE ~wv16_users SET login = ?, password = ?, type_id = ?, activated = ?, confirmed = ?, confirmation_code = ? WHERE id = ?',
+			array($this->login, $this->password, $this->typeID, (int) $this->activated, (int) $this->confirmed, $this->confirmationCode, $this->id), '~'
 		);
+
+		if ($this->activated === true && $this->wasActivated === false) {
+			$sql->queryEx('UPDATE ~wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '~');
+			$this->wasActivated = true;
+		}
 
 		if ($this->typeID != $this->origTypeID) {
 			$oldTypesAttributes = WV16_Users::getAttributesForUserType($this->origTypeID);
@@ -269,6 +274,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	public function getPasswordHash()     { return $this->password;         }
 	public function getTypeID()           { return $this->typeID;           }
 	public function getGroupIDs()         { return $this->groups;           }
+	public function isActivated()         { return $this->activated;        }
+	public function isConfirmed()         { return $this->confirmed;        }
 	public function getConfirmationCode() { return $this->confirmationCode; }
 
 	/**
@@ -370,15 +377,6 @@ class _WV16_User extends WV_Object implements WV16_User {
 			}
 		}
 
-		// Wenn der Benutzer zum ersten Mal aktiviert wurde, merken wir uns
-		// das in der Datenbank. Dies ist eine kleine Hilfe für umliegende
-		// Funktionen, die auf die erste Aktivierung reagieren möchten.
-
-		if ($this->wasActivated == false && $this->isInGroup(_WV16_Group::GROUP_ACTIVATED)) {
-			$sql->queryEx('UPDATE ~wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '~');
-			$this->wasActivated = true;
-		}
-
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser.users', true);
 		$cache->flush('frontenduser.lists', true);
@@ -448,33 +446,12 @@ class _WV16_User extends WV_Object implements WV16_User {
 			$isConfirmed = $this->confirmationCode == $confirmationCode;
 		}
 
-		return self::transactionGuard(array($this, '_setConfirmed'), $isConfirmed, 'WV16_Exception');
-	}
-
-	protected function _setConfirmed($isConfirmed) {
-		$sql = WV_SQLEx::getInstance();
-
-		if ($isConfirmed) {
-			$this->_removeGroup(_WV16_Group::GROUP_UNCONFIRMED);
-			$this->_addGroup(_WV16_Group::GROUP_CONFIRMED);
-		}
-		else {
-			$this->_removeGroup(_WV16_Group::GROUP_CONFIRMED);
-			$this->_addGroup(_WV16_Group::GROUP_UNCONFIRMED);
-		}
-
+		$this->confirmed        = $isConfirmed;
 		$this->confirmationCode = null;
-		$this->_update(); // Bestätigungscode neu abspeichern
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.users', true);
-		$cache->flush('frontenduser.lists', true);
-
-		return true;
 	}
 
-	public function isConfirmed() {
-		return !$this->isInGroup(_WV16_Group::GROUP_UNCONFIRMED);
+	public function setActivated($isActivated = true) {
+		$this->activated = (boolean) $isActivated;
 	}
 
 	public function setLogin($login) {
@@ -540,18 +517,6 @@ class _WV16_User extends WV_Object implements WV16_User {
 		if (_WV16_UserType::exists($userType)) {
 			$this->typeID = $userType;
 		}
-	}
-
-	public function canAccess($object, $objectType = null) {
-		foreach ($this->groups as $group) {
-			$group = _WV16_Group::getInstance($group);
-
-			if ($group->canAccess($object, $objectType)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	public function setSetID($setID) {

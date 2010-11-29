@@ -1,6 +1,5 @@
 DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_attributes`;
 DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_groups`;
-DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_rights`;
 DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_user_groups`;
 DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_user_values`;
 DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_users`;
@@ -11,7 +10,7 @@ CREATE TABLE `%TABLE_PREFIX%wv16_attributes` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(200) NOT NULL,
   `title` varchar(200) NOT NULL,
-  `helptext` varchar(1024) NOT NULL,
+  `helptext` varchar(1024) NOT NULL DEFAULT '',
   `position` int(10) unsigned NOT NULL,
   `datatype` int(2) unsigned NOT NULL,
   `params` text NOT NULL,
@@ -29,21 +28,8 @@ CREATE TABLE `%TABLE_PREFIX%wv16_groups` (
   `parent_id` smallint(5) unsigned NOT NULL DEFAULT '0',
   `name` varchar(200) DEFAULT NULL,
   `title` varchar(200) DEFAULT NULL,
-  `internal` tinyint(1) unsigned not null default '0',
   PRIMARY KEY (`id`),
   KEY `parent_id` (`parent_id`)
-) ENGINE = InnoDB;
-
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (1,0,'unconfirmed','Unbestätigt',1);
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (2,0,'confirmed','Bestätigt',1);
-INSERT INTO `%TABLE_PREFIX%wv16_groups` (`id`, `parent_id`, `name`, `title`, `internal`) VALUES (3,0,'activated','Freigeschaltet',1);
-
-CREATE TABLE `%TABLE_PREFIX%wv16_rights` (
-  `group_id` smallint(5) unsigned NOT NULL,
-  `object_id` smallint(6) unsigned NOT NULL,
-  `object_type` tinyint(4) unsigned NOT NULL,
-  `privilege` tinyint(3) unsigned NOT NULL,
-  PRIMARY KEY (`group_id`, `object_id`, `object_type`, `privilege`)
 ) ENGINE = InnoDB;
 
 CREATE TABLE `%TABLE_PREFIX%wv16_user_groups` (
@@ -69,6 +55,8 @@ CREATE TABLE `%TABLE_PREFIX%wv16_users` (
   `registered` datetime NOT NULL,
   `type_id` smallint(5) unsigned NOT NULL DEFAULT '1',
   `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `activated` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `confirmed` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `was_activated` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `confirmation_code` varchar(20) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`),

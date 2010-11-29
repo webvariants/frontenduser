@@ -9,20 +9,7 @@
  * http://de.wikipedia.org/wiki/MIT-Lizenz
  */
 
-$id   = wv_request('id', 'int');
-$func = wv_request('func', 'string');
-$loop = 1;
-
-while ($loop) { --$loop; switch ($func) {
-#===============================================================================
-# Benutzer hinzufügen
-#===============================================================================
-case 'add':
-
-	$user = null;
-	include _WV16_PATH.'templates/users/backend.phtml';
-	break;
-
+switch ($func) {
 #===============================================================================
 # Benutzer speichern
 #===============================================================================
@@ -271,4 +258,4 @@ case 'do_edit':
 	}
 
 	// kein break;
-}}
+}

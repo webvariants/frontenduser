@@ -18,7 +18,7 @@ $password2 = new sly_Form_Input_Password('password2', 'Passwort wiederholen', ''
 $confirmed = new sly_Form_Input_Checkbox('confirmed', 'Bestätigt', 1, 'Dieses Benutzerkonto ist bestätigt.');
 $activated = new sly_Form_Input_Checkbox('activated', 'Freigeschaltet', 1, 'Dieses Benutzerkonto ist freigeschaltet.');
 
-$confirmed->setChecked(!$user || $user->isConfirmed());
+$confirmed->setChecked($user && $user->isConfirmed());
 $confirmed->setHelpText('Bestätigung bedeutet, dass der Benutzer sein Konto selbst validiert (z.B. über einen Link in einer E-Mail) hat.');
 
 $activated->setChecked(!$user || $user->isActivated());
@@ -73,10 +73,8 @@ foreach ($dataToDisplay as $data) {
 $assignedGroups  = $user ? $user->getGroupIDs() : array();
 $availableGroups = WV16_Users::getAllGroups();
 $groups          = array();
-$exclude         = array(_WV16_Group::GROUP_UNCONFIRMED, _WV16_Group::GROUP_CONFIRMED, _WV16_Group::GROUP_ACTIVATED);
 
 foreach ($availableGroups as $index => $group) {
-	if (in_array($group->getID(), $exclude)) continue;
 	$groups[$group->getID()] = $group->getTitle();
 }
 
