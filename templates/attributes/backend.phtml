@@ -23,7 +23,7 @@ $name = new sly_Form_Input_Text('name', 'Interner Name', $attribute ? $attribute
 $name->setHelpText('Über diesen Namen wird das Attribut programmseitig angsprochen.');
 
 $title = new sly_Form_Input_Text('title', 'Titel', $attribute ? $attribute->getTitle() : '');
-$title->setHelpText('Der Titel wird innerhalb von REDAXO in allen Formularen angezeigt.');
+$title->setHelpText('Der Titel wird in allen Formularen angezeigt.');
 
 $helptext = new sly_Form_Textarea('helptext', 'Hilfetext', $attribute ? $attribute->getHelpText() : '');
 $helptext->setHelpText('Hier können Sie eine kurze Erklärung zum Attribut eingeben, die im Frontend angezeigt wird.');

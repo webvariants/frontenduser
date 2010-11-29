@@ -26,7 +26,7 @@ $name  = new sly_Form_Input_Text('name', 'Interner Name', $type ? $type->getName
 $title = new sly_Form_Input_Text('title', 'Titel', $type ? $type->getTitle() : '');
 
 $name->setHelpText('Über diesen Namen wird das Attribut programmseitig angsprochen.');
-$title->setHelpText('Der Titel wird innerhalb von Redaxo in allen Formularen angezeigt.');
+$title->setHelpText('Der Titel wird in allen Formularen angezeigt.');
 
 $form->addElements(array($name, $title));
 
