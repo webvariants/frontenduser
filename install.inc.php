@@ -79,3 +79,16 @@ $group = 'Passwort-vergessen-Anforderungs-eMails';
 _wv16_createSingleLineSetting($namespace, 'mail_recoveryrequest_subject', 'Betreff',              $helptext, $group, $pagename);
 _wv16_createMultiLineSetting($namespace,  'mail_recoveryrequest_body',    'Inhalt (Template)',    $helptext, $group, $pagename);
 _wv16_createSingleLineSetting($namespace, 'mail_recoveryrequest_to',      'Empfänger (Template)', $helptext, $group, $pagename);
+
+$setting = WV8_Settings::create(
+	/*     Namespace */ $namespace,
+	/*          Name */ 'be_columns',
+	/*         Titel */ 'Spalten in Benutzerliste',
+	/*     Hilfetext */ 'Wählen Sie, welche Informationen im Backend zusätzlich zum Login angezeigt werden sollen.',
+	/*      Datentyp */ 3,
+	/*     Parameter */ '1|1_1_0_5|SELECT name, title FROM '.WV_SQLEx::getPrefix().'wv16_attributes WHERE 1 ORDER BY title',
+	/*        lokal? */ false,
+	/*    Seitenname */ $pagename,
+	/*        Gruppe */ 'Backend',
+	/* mehrsprachig? */ false
+);
