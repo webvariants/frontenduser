@@ -15,13 +15,10 @@ $table   = new sly_Table('users');
 $columns = WV8_Settings::getValue('frontenduser', 'be_columns', array());
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
-$table->addColumn(new sly_Table_Column('Loginname', '', 'login'));
 
 foreach ($columns as $title) {
 	$table->addColumn(new sly_Table_Column($title));
 }
-
-$table->addColumn(new sly_Table_Column('registriert am', '', 'registered'));
 
 $table->setIsEmpty(empty($users));
 $table->setEmptyNotice('Es haben sich noch keine Benutzer angemeldet.');
@@ -34,13 +31,40 @@ foreach ($users as $user) {
 	?>
 	<tr>
 		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="../data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
-		<td><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><?= sly_html($user->getLogin()) ?></a></td>
+		<?
+		foreach ($columns as $name => $title) {
+			print '<td>';
 
-		<? foreach ($columns as $name => $title): ?>
-		<td><?= sly_html($user->getValue($name)->getValue()) ?></td>
-		<? endforeach ?>
+			switch ($name) {
+				case '___login___':
+					print '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'">';
+					print sly_html($user->getLogin());
+					print '</a>';
+					break;
 
-		<td><?= sly_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered()))) ?></td>
+				case '___type___':
+					print sly_html($user->getType()->getTitle());
+					break;
+
+				case '___registered___':
+					print sly_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered())));
+					break;
+
+				default:
+					$value = $user->getValue($name);
+
+					if ($value === null) {
+						print '<td>&hellip;</td>';
+						continue;
+					}
+
+					print sly_html($value->getValue());
+					break;
+			}
+
+			print '</td>';
+		}
+		?>
 	</tr>
 	<?
 }

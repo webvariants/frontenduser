@@ -17,7 +17,7 @@ $newVersion = $service->getVersion('frontenduser');
 // 2.0: activated + confirmed, internal entfernt, wv16_rights entfernt
 
 function _wv16_addColumnSetting() {
-	if (WV8_Settings::exists(, 'be_columns')) return;
+	if (WV8_Settings::exists('frontenduser', 'be_columns')) return;
 
 	$prefix = sly_Core::config()->get('DATABASE/TABLE_PREFIX');
 

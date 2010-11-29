@@ -85,7 +85,7 @@ $setting = WV8_Settings::create(
 	/*         Titel */ 'Spalten in Benutzerliste',
 	/*     Hilfetext */ 'Wählen Sie, welche Informationen im Backend zusätzlich zum Login angezeigt werden sollen.',
 	/*      Datentyp */ 3,
-	/*     Parameter */ '1|1_1_0_5|SELECT name, title FROM '.WV_SQLEx::getPrefix().'wv16_attributes WHERE 1 ORDER BY title',
+	/*     Parameter */ '1|1_1_0_5|SELECT "___login___", "Login" UNION (SELECT name, title FROM '.WV_SQLEx::getPrefix().'wv16_attributes WHERE 1 ORDER BY title) UNION SELECT "___type___", "Benutzertyp" UNION SELECT "___registered___", "Registrier-Datum"',
 	/*        lokal? */ false,
 	/*    Seitenname */ $pagename,
 	/*        Gruppe */ 'Backend',
