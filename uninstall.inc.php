@@ -19,7 +19,8 @@ $settings  = array(
 	'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body',
 	'mail_activation_to', 'mail_activation_subject', 'mail_activation_body',
 	'mail_recovery_to', 'mail_recovery_subject', 'mail_recovery_body',
-	'mail_recoveryrequest_to', 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body'
+	'mail_recoveryrequest_to', 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body',
+	'be_columns'
 );
 
 foreach ($settings as $setting) {
