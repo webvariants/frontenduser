@@ -24,7 +24,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		}
 
 		sly_Core::getNavigation()->get('frontenduser', 'addon')->addSubpages($subpages);
-		sly_Core::getLayout()->pageHeader(t('frontenduser_title'), $subpages);
+
+		$layout = sly_Core::getLayout();
+		$layout->addCSSFile('../data/dyn/public/frontenduser/css/wv16.css');
+		$layout->addJavaScriptFile('../data/dyn/public/frontenduser/js/frontenduser.min.js');
+		$layout->pageHeader(t('frontenduser_title'), $subpages);
 	}
 
 	protected function index() {
