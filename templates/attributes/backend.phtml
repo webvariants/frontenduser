@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-$form      = new sly_Form('index.php', 'POST', 'Attribut '.($func == 'add' ? 'erstellen' : 'bearbeiten'));
+$form      = new sly_Form('index.php', 'POST', 'Attribut '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'attribute');
 $datatypes = WV_Datatype::getAll();
 
 $form->addHiddenValue('page',    'frontenduser');

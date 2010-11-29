@@ -27,3 +27,7 @@ input.checkbox {
 .wv16_hidden_attribute {
 	display: none !important;
 }
+
+form#attribute textarea#helptext {
+	height: 60px;
+}
