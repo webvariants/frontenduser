@@ -61,8 +61,8 @@ foreach ($users as $user) {
 						print '<td>&hellip;</td>';
 						continue;
 					}
-
-					print sly_html($value->getValue());
+					$valueValue = $value->getValue();
+					if (is_scalar($valueValue)) print sly_html($valueValue);
 					break;
 			}
 
