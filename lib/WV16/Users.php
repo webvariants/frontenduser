@@ -191,10 +191,16 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function loginUser(_WV16_User $user) {
 		session_regenerate_id(); // Session-Fixation verhindern
 		rex_set_session('frontenduser', $user->getID());
+		rex_register_extension_point('WV16_LOGIN', $user);
 	}
 
 	public static function logout() {
-		session_destroy();
+		$user = self::getCurrentUser();
+
+		if ($user) {
+			session_destroy();
+			rex_register_extension_point('WV16_LOGOUT', $user);
+		}
 	}
 
 	public static function getUser($login) {
