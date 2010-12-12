@@ -13,6 +13,8 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	const ERR_USER_UNKNOWN       = 1;
 	const ERR_INVALID_LOGIN      = 2;
 	const ERR_USER_NOT_ACTIVATED = 3;
+	const ERR_USER_NOT_CONFIRMED = 4;
+	const ERR_WRONG_PASSWORD     = 5;
 
 	public static function clearCache() {
 		$cache = sly_Core::cache();
@@ -176,16 +178,23 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	 * @param string $password
 	 * @return _WV16_User
 	 */
-	public static function login($login, $password) {
+	public static function login($login, $password, $allowNonConfirmed = false, $allowNonActivated = false) {
 		$userObj = self::getUser($login);
 
-		if ($userObj->isActivated() && self::checkPassword($userObj, $password)) {
-			self::loginUser($userObj);
-			return $userObj;
+		if (!$userObj->isActivated() && !$allowNonActivated) {
+			throw new WV16_Exception('This account has not yet been activated.', self::ERR_USER_NOT_ACTIVATED);
 		}
-		else {
-			throw new WV16_Exception('This user is not yet activated.', self::ERR_USER_NOT_ACTIVATED);
+
+		if (!$userObj->isConfirmed() && !$allowNonConfirmed) {
+			throw new WV16_Exception('This account has not yet been confirmed.', self::ERR_USER_NOT_CONFIRMED);
 		}
+
+		if (!self::checkPassword($userObj, $password)) {
+			throw new WV16_Exception('Bad credentials given.', self::ERR_WRONG_PASSWORD);
+		}
+
+		self::loginUser($userObj);
+		return $userObj;
 	}
 
 	public static function loginUser(_WV16_User $user) {
