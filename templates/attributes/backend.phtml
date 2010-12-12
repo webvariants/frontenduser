@@ -36,8 +36,7 @@ $hidden->setChecked($attribute && $attribute->isHidden());
 ////////////////////////////////////////////////////////////////////////////////
 // Datentypauswahl und -formularteile zusammenbauen
 
-$datatypeList  = array();
-$datatypeForms = array();
+$datatypeList = array();
 
 foreach ($datatypes as $id => &$className) {
 	$datatypeList[$id] = rex_translate(WV_Datatype::getTitle($id));
