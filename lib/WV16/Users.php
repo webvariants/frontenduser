@@ -16,9 +16,10 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	const ERR_USER_NOT_CONFIRMED = 4;
 	const ERR_WRONG_PASSWORD     = 5;
 
-	public static function clearCache() {
+	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser', true);
+		return isset($params['subject']) ? $params['subject'] : true;
 	}
 
 	public static function loginExists($login) {
