@@ -208,6 +208,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$user = self::getCurrentUser();
 
 		if ($user) {
+			rex_set_session('frontenduser', self::ANONYMOUS);
 			session_destroy();
 			rex_register_extension_point('WV16_LOGOUT', $user);
 		}
