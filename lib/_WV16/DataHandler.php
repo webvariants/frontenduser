@@ -302,7 +302,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 	 * @param  string $direction  die Sortierreihenfolge ("ASC" oder "DESC")
 	 * @return array              eine Liste von _WV2_ArticleType-Objekten, die passen
 	 */
-	public static function getAllAttributes($where = '', $sortby = 'position', $direction = 'ASC', $offset = 0, $max = 20) {
+	public static function getAllAttributes($where = '', $sortby = 'position', $direction = 'ASC', $offset = 0, $max = -1) {
 		if (empty($where)) $where = 'deleted = 0';
 		else $where .= ' AND deleted = 0';
 
