@@ -13,7 +13,7 @@
 $pagename  = 'translate:frontenduser_title';
 $namespace = 'frontenduser';
 $settings  = array(
-	'validation_article',
+	'validation_article', 'recovery_article',
 	'mail_from_name', 'mail_from_email',
 	'mail_report_subject', 'mail_report_body',
 	'mail_confirmation_to', 'mail_confirmation_subject', 'mail_confirmation_body',

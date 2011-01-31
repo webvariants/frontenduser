@@ -49,6 +49,19 @@ WV8_Settings::create(
 	/* mehrsprachig? */ true
 );
 
+WV8_Settings::create(
+	/*     Namespace */ $namespace,
+	/*          Name */ 'recovery_article',
+	/*         Titel */ 'Passwort zurücksetzen',
+	/*     Hilfetext */ 'Dieser Artikel muss das Zurücksetzen des Passworts für den Benutzer ermöglichen.',
+	/*      Datentyp */ 4,
+	/*     Parameter */ '1',
+	/*        lokal? */ false,
+	/*    Seitenname */ $pagename,
+	/*        Gruppe */ 'Validierungsartikel',
+	/* mehrsprachig? */ true
+);
+
 $helptext = 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.';
 
 $group = 'Ausgehende eMails';

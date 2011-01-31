@@ -17,7 +17,7 @@ abstract class WV16_Mailer {
 		if (empty($code)) {
 			// Bestätigungscode erzeugen und speichern
 
-			$code = WV16_Users::generateConfirmationCode($email);
+			$code = WV16_Users::generateConfirmationCode($user->getLogin());
 			$user->setConfirmationCode($code);
 			$user->update();
 		}
@@ -56,7 +56,18 @@ abstract class WV16_Mailer {
 	 */
 	public static function sendPasswordRecoveryRequest(_WV16_User $user, $code = false) {
 		if ($code !== false) $user->setConfirmationCode($code);
-		return self::sendToUser($user, 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body', 'mail_recoveryrequest_to');
+
+		$link = OOArticle::getArticleById(WV16_Users::getConfig('recovery_article'));
+
+		if ($link) {
+			$params = array('code' => $user->getConfirmationCode());
+			$link   = WV_Sally::getAbsoluteUrl($link, WV_Redaxo::CLANG_CURRENT, $params);
+			$extra  = array('#LINK#' => $link);
+
+			return self::sendToUser($user, 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body', 'mail_recoveryrequest_to', $extra);
+		}
+
+		return false;
 	}
 
 	protected static function sendToUser(_WV16_User $user, $subject, $body, $to, $extra = array()) {
