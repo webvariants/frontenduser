@@ -80,7 +80,7 @@ abstract class WV16_Mailer {
 		return self::send($email, $name, $to, '', $subject, $body);
 	}
 
-	protected static function sendToAdmin(_WV16_User $user, $subject, $body) {
+	protected static function sendToAdmin(_WV16_User $user, $subject, $body, $extra = array()) {
 		$name    = self::replaceValues('mail_from_name', 'Administrator', $user, $extra);
 		$email   = self::replaceValues('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
 		$subject = self::replaceValues($subject, 'Hallo #LOGIN#!', $user, $extra);
