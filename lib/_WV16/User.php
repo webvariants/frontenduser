@@ -301,7 +301,10 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return _WV16_UserValue  der Benutzerwert
 	 */
 	public function getValue($attribute, $default = null) {
-		return WV16_Users::userData($this, $attribute, $default);
+		$this->getValues();
+
+		$id = _WV16_FrontendUser::getIDForAttribute($attribute);
+		return isset($this->values[$id]) ? $this->values[$id] : new _WV16_UserValue($default, null, null, null);
 	}
 
 	/**
