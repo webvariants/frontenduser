@@ -19,6 +19,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			'attributes' => 'Attribute'
 		);
 
+		if (file_exists(SLY_DEVELOPFOLDER.'/frontenduser-exports.yml')) {
+			$pages['exports'] = 'Export';
+		}
+
 		foreach ($pages as $key => $value) {
 			if (WV_Sally::isAdminOrHasPerm('frontenduser['.$key.']')) {
 				$subpages[] = array($key, $value);

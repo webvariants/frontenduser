@@ -1,9 +1,9 @@
 page: frontenduser
 name: translate:frontenduser_title
 perm: 'frontenduser[]'
-extperm: ['frontenduser[types]', 'frontenduser[attributes]']
+extperm: ['frontenduser[types]', 'frontenduser[attributes]', 'frontenduser[exports]']
 author: Christoph Mewes
 supportpage: www.webvariants.de
 requires: [developer_utils, global_settings]
 sally: ['0.3']
-version: '2.0'
+version: '2.1'
