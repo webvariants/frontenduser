@@ -294,7 +294,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 						$replacement = $value->getValue();
 
 						if (is_array($replacement)) {
-							$replacement = sly_Util_String::humanImplode($replacement);
+							$replacement = sly_Util_String::humanImplode(array_values($replacement));
 						}
 						elseif (is_bool($replacement)) {
 							$replacement = $replacement ? 'ja' : 'nein';
