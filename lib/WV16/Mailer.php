@@ -55,7 +55,10 @@ abstract class WV16_Mailer {
 	 * @param mixed      $code  der Bestätigungscode (false = keine Änderung, null = neu generieren, string = Code)
 	 */
 	public static function sendPasswordRecoveryRequest(_WV16_User $user, $code = false) {
-		if ($code !== false) $user->setConfirmationCode($code);
+		if ($code !== false) {
+			$user->setConfirmationCode($code);
+			$user->update();
+		}
 
 		$link = OOArticle::getArticleById(WV16_Users::getConfig('recovery_article'));
 
