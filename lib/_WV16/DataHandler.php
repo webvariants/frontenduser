@@ -412,7 +412,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		if (!is_array($users)) {
 			$sql   = WV_SQLEx::getInstance();
 			$users = $sql->getArray(
-				'SELECT id FROM ~wv16_users at, ~article a WHERE type_id = ? ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
+				'SELECT id FROM ~wv16_users WHERE type_id = ? ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
 				$userType, '~'
 			);
 

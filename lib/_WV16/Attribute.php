@@ -25,6 +25,10 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 
 	private static $instances = array();
 
+	/**
+	 * @param  mixed $idOrName
+	 * @return _WV16_Attribute
+	 */
 	public static function getInstance($idOrName) {
 		$id = self::getIDForName($idOrName);
 
