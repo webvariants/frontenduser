@@ -160,6 +160,9 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		return $userID > 0;
 	}
 
+	/**
+	 * @return _WV16_User  or null if no user is logged in
+	 */
 	public static function getCurrentUser() {
 		try {
 			$userID = rex_session('frontenduser', 'int', self::ANONYMOUS);
