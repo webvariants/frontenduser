@@ -60,6 +60,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 			$headers[] = str_replace(array('"', "'", ';'), '', $attribute->getTitle());
 		}
 
+		print "\xef\xbb\xbf"; // UTF8-BOM
 		print implode(';', $headers).$nl;
 
 		// write user data
