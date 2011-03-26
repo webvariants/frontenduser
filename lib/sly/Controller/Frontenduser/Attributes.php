@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -35,8 +35,6 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		$usertypes = sly_postArray('utypes', 'int');
 
 		try {
-			WV_Sally::enforceMethod('POST');
-
 			if (!WV_Datatype::exists($datatype)) {
 				throw new WV16_Exception('Der gewählte Datentyp existiert nicht!');
 			}
@@ -45,12 +43,12 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 			$attribute = _WV16_Attribute::create($name, $title, $helptext, $datatype, $params, $default, $hidden, $usertypes);
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->add();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_ATTRIBUTE_ADDED', $attribute);
-		WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
+		print rex_info('Das Attribut wurde erfolgreich gespeichert.');
 
 		$this->index();
 	}
@@ -81,8 +79,6 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		$usertypes     = sly_postArray('utypes', 'int');
 
 		try {
-			WV_Sally::enforceMethod('POST');
-
 			if (!WV_Datatype::exists($datatype)) {
 				throw new WV16_Exception('Der gewählte Datentyp existiert nicht!');
 			}
@@ -111,12 +107,12 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 			$attribute->update(!$noconversion, $applyDefaults);
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_ATTRIBUTE_UPDATED', $attribute);
-		WV_Redaxo::success('Das Attribut wurde erfolgreich gespeichert.');
+		print rex_info('Das Attribut wurde erfolgreich gespeichert.');
 
 		$this->index();
 	}
@@ -126,18 +122,16 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		$attribute = null;
 
 		try {
-			WV_Redaxo::enforceMethod('POST');
-
 			$attribute = _WV16_Attribute::getInstance($id);
 			$attribute->delete();
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_ATTRIBUTE_DELETED', $attribute);
-		WV_Sally::success('Das Attribut wurde gelöscht.');
+		print rex_info('Das Attribut wurde gelöscht.');
 
 		$this->index();
 	}
@@ -160,7 +154,8 @@ class sly_Controller_Frontenduser_Attributes extends sly_Controller_Frontenduser
 		die;
 	}
 
-	public function checkPermission() {
-		return WV_Sally::isAdminOrHasPerm('frontenduser[attributes]');
+	protected function checkPermission() {
+		$user = sly_Util_User::getCurrentUser();
+		return $user->isAdmin() || $user->hasPerm('frontenduser[attributes]');
 	}
 }

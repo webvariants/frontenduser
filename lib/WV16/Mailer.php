@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -64,7 +64,7 @@ abstract class WV16_Mailer {
 
 		if ($link) {
 			$params = array('code' => $user->getConfirmationCode());
-			$link   = WV_Sally::getAbsoluteUrl($link, WV_Redaxo::CLANG_CURRENT, $params);
+			$link   = WV_Sally::getAbsoluteUrl($link, WV_Sally::CLANG_CURRENT, $params);
 			$extra  = array('#LINK#' => $link);
 
 			return self::sendToUser($user, 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body', 'mail_recoveryrequest_to', $extra);
@@ -101,8 +101,13 @@ abstract class WV16_Mailer {
 
 	protected static function send($from, $fromName, $to, $toName, $subject, $body) {
 		try {
-			WV_Mail::sendMail($from, $fromName, $to, $toName, $subject, $body, 'text/plain', 'UTf-8', true);
-			return true;
+			$mail = sly_Mail::factory();
+			$mail->addTo($to, $toName);
+			$mail->setFrom($from, $fromName);
+			$mail->setSubject($subject);
+			$mail->setBody($body);
+
+			return $mail->send();
 		}
 		catch (Exception $e) {
 			return false;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -35,8 +35,8 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	private function __construct($id) {
-		$sql  = WV_SQLEx::getInstance();
-		$data = $sql->safeFetch('*', 'wv16_utypes', 'id = ?', $id);
+		$sql  = WV_SQL::getInstance();
+		$data = $sql->fetch('*', 'wv16_utypes', 'id = ?', $id);
 
 		if (!$data) {
 			throw new WV16_Exception('Der Benutzertyp #'.$id.' konnte nicht gefunden werden!');
@@ -57,7 +57,7 @@ class _WV16_UserType extends WV_Object {
 			return true;
 		}
 
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 		return $sql->count('wv16_utypes', 'id = ?', (int) $typeID) == 1;
 	}
 
@@ -86,8 +86,8 @@ class _WV16_UserType extends WV_Object {
 			return (int) $id;
 		}
 
-		$sql = WV_SQLEx::getInstance();
-		$id  = $sql->safeFetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
+		$sql = WV_SQL::getInstance();
+		$id  = $sql->fetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
 
 		if (!$id) {
 			throw new WV16_Exception('Der Benutzertyp "'.$name.'" konnte nicht gefunden werden!');
@@ -111,7 +111,7 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	protected function _update() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		// Auf Eindeutigkeit des Namens prüfen
 
@@ -122,15 +122,15 @@ class _WV16_UserType extends WV_Object {
 		// Daten aktualisieren
 
 		$query = 'UPDATE ~wv16_utypes SET name = ?, title = ? WHERE id = ?';
-		$sql->queryEx($query, array($this->name, $this->title, $this->id), '~');
+		$sql->query($query, array($this->name, $this->title, $this->id), '~');
 
 		// Zugeordnete Attribute aktualisieren
 		// TODO: Das können wir effizienter.
 
-		$sql->queryEx('DELETE FROM ~wv16_utype_attrib WHERE user_type = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_utype_attrib WHERE user_type = ?', $this->id, '~');
 
 		foreach ($this->attributes as $aid) {
-			$sql->queryEx(
+			$sql->query(
 				'INSERT INTO ~wv16_utype_attrib (user_type,attribute_id) VALUES (?,?)',
 				array($this->id, (int) $aid), '~'
 			);
@@ -149,11 +149,11 @@ class _WV16_UserType extends WV_Object {
 			$query = 'DELETE FROM ~wv16_user_values WHERE set_id >= 0 AND user_id IN ('.$users.')';
 
 			if (empty($this->attributes)) {
-				$sql->queryEx($query, array(), '~');
+				$sql->query($query, array(), '~');
 			}
 			else {
 				$query .= ' AND attribute_id NOT IN ('.implode(',', $this->attributes).')';
-				$sql->queryEx($query, array(), '~');
+				$sql->query($query, array(), '~');
 			}
 
 			// Falls mehr Attribute diesem Typ zugewiesen wurden, übernehmen wir den Standardwert
@@ -171,7 +171,7 @@ class _WV16_UserType extends WV_Object {
 					'WHERE uv.attribute_id = a.id AND uv.set_id >= 0 '.
 					'AND user_id IN ('.$users.') AND id IN ('.implode(',', $newAttributes).')';
 
-				$sql->queryEx($query, array(), '~');
+				$sql->query($query, array(), '~');
 			}
 		}
 
@@ -199,7 +199,7 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	protected static function _create($name, $title, $attributes) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		// Auf Eindeutigkeit des Namens prüfen
 
@@ -209,14 +209,14 @@ class _WV16_UserType extends WV_Object {
 
 		// Daten eintragen
 
-		$sql->queryEx('INSERT INTO ~wv16_utypes (name,title) VALUES (?,?)', array($name, $title), '~');
+		$sql->query('INSERT INTO ~wv16_utypes (name,title) VALUES (?,?)', array($name, $title), '~');
 		$id = $sql->lastID();
 
 		// Zuordnungen zu den Attributen erzeugen
 		// TODO: Das können wir besser.
 
 		foreach ($attributes as $aid) {
-			$sql->queryEx(
+			$sql->query(
 				'INSERT INTO ~wv16_utype_attrib (user_type,attribute_id) VALUES (?,?)',
 				array($id, (int) $aid), '~'
 			);
@@ -247,7 +247,7 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	protected function _delete() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		// Welche Attribute gehörten zu diesem Typ?
 
@@ -262,12 +262,12 @@ class _WV16_UserType extends WV_Object {
 
 		// Daten löschen
 
-		$sql->queryEx('DELETE FROM ~wv16_utypes WHERE id = ?', $this->id, '~');
-		$sql->queryEx('DELETE FROM ~wv16_utype_attrib WHERE user_type = ?', $this->id, '~');
-		$sql->queryEx('UPDATE ~wv16_users SET type_id = ? WHERE type_id = ?', array(_WV16_FrontendUser::DEFAULT_USER_TYPE, $this->id), '~');
+		$sql->query('DELETE FROM ~wv16_utypes WHERE id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_utype_attrib WHERE user_type = ?', $this->id, '~');
+		$sql->query('UPDATE ~wv16_users SET type_id = ? WHERE type_id = ?', array(_WV16_FrontendUser::DEFAULT_USER_TYPE, $this->id), '~');
 
 		if (!empty($attrToDelete)) {
-			$sql->queryEx('DELETE FROM ~wv16_user_values WHERE attribute_id IN ('.implode(',', $attrToDelete).')', array(), '~');
+			$sql->query('DELETE FROM ~wv16_user_values WHERE attribute_id IN ('.implode(',', $attrToDelete).')', array(), '~');
 		}
 
 		$cache = sly_Core::cache();

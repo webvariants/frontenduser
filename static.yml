@@ -5,5 +5,5 @@ extperm: ['frontenduser[types]', 'frontenduser[attributes]', 'frontenduser[expor
 author: Christoph Mewes
 supportpage: www.webvariants.de
 requires: [developer_utils, global_settings]
-sally: ['0.3', '0.4']
-version: '2.1.1'
+sally: ['0.4']
+version: '3.0'

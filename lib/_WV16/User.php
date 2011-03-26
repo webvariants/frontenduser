@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -55,8 +55,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return void
 	 */
 	private function __construct($id) {
-		$sql  = WV_SQLEx::getInstance();
-		$data = $sql->safeFetch('*', 'wv16_users', 'id = ?', $id);
+		$sql  = WV_SQL::getInstance();
+		$data = $sql->fetch('*', 'wv16_users', 'id = ?', $id);
 
 		if (empty($data)) {
 			throw new WV16_Exception('Der Benutzer #'.$id.' konnte nicht gefunden werden!', self::ERR_UNKNOWN_USER);
@@ -82,7 +82,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return _WV16_User  der neu erzeugte Benutzer
 	 */
 	public static function register($login, $password, $userType = null) {
-		$sql      = WV_SQLEx::getInstance();
+		$sql      = WV_SQL::getInstance();
 		$password = trim($password);
 		$login    = trim($login);
 		$userType = _WV16_FrontendUser::getIDForUserType($userType, true);
@@ -113,9 +113,9 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected static function _register($login, $password, $userType, $registered, $confirmationCode) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
-		$sql->queryEx(
+		$sql->query(
 			'INSERT INTO ~wv16_users (login,password,registered,type_id,activated,confirmed,confirmation_code) VALUES (?,"",?,?,?,?,?)',
 			array($login, $registered, $userType, 0, 0, $confirmationCode), '~'
 		);
@@ -123,14 +123,14 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$userID = $sql->lastID();
 		$pwhash = sha1($userID.$password.$registered);
 
-		$sql->queryEx('UPDATE ~wv16_users SET password = ? WHERE id = ?', array($pwhash, $userID), '~');
+		$sql->query('UPDATE ~wv16_users SET password = ? WHERE id = ?', array($pwhash, $userID), '~');
 
 		// Attribute und ihre Standardwerte übernehmen
 
 		$attributes = WV16_Users::getAttributesForUserType($userType);
 
 		foreach ($attributes as $attr) {
-			$sql->queryEx(
+			$sql->query(
 				'INSERT INTO ~wv16_user_values (user_id,attribute_id,set_id,value) VALUES (?,?,?,?)',
 				array($userID, $attr->getID(), 1, $attr->getDefault()), '~'
 			);
@@ -151,7 +151,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected function _update() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		if ($sql->count('wv16_users','LOWER(login) = ? AND id <> ?', array(strtolower($this->login), $this->id)) != 0) {
 			throw new WV16_Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
@@ -166,13 +166,13 @@ class _WV16_User extends WV_Object implements WV16_User {
 			}
 		}
 
-		$sql->queryEx(
+		$sql->query(
 			'UPDATE ~wv16_users SET login = ?, password = ?, type_id = ?, activated = ?, confirmed = ?, confirmation_code = ? WHERE id = ?',
 			array($this->login, $this->password, $this->typeID, (int) $this->activated, (int) $this->confirmed, $this->confirmationCode, $this->id), '~'
 		);
 
 		if ($this->activated === true && $this->wasActivated === false) {
-			$sql->queryEx('UPDATE ~wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '~');
+			$sql->query('UPDATE ~wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '~');
 			$this->wasActivated = true;
 		}
 
@@ -189,7 +189,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 			if (!empty($toDelete)) {
 				$markers = implode(',', $toDelete);
 
-				$sql->queryEx(
+				$sql->query(
 					'DELETE FROM ~wv16_user_values WHERE user_id = ? AND attribute_id IN ('.$markers.')',
 					$this->id, '~'
 				);
@@ -198,7 +198,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 			if (!empty($toAdd)) {
 				$markers = implode(',', $toAdd);
 
-				$sql->queryEx(
+				$sql->query(
 					'INSERT INTO ~wv16_user_values (user_id,attribute_id,value) '.
 					'SELECT ?,id,default_value FROM ~wv16_attributes WHERE id IN ('.$markers.')',
 					$this->id, '~'
@@ -229,11 +229,11 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected function _delete() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
-		$sql->queryEx('DELETE FROM ~wv16_users WHERE id = ?', $this->id, '~');
-		$sql->queryEx('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
-		$sql->queryEx('DELETE FROM ~wv16_user_values WHERE user_id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_users WHERE id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ?', $this->id, '~');
 
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser.users', true);
@@ -256,8 +256,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 			return true;
 		}
 
-		$sql = WV_SQLEx::getInstance();
-		$id  = $sql->safeFetch('id', 'wv16_users','LOWER(login) = ?', strtolower($login));
+		$sql = WV_SQL::getInstance();
+		$id  = $sql->fetch('id', 'wv16_users','LOWER(login) = ?', strtolower($login));
 
 		if ($id !== false) {
 			$cache->set($namespace, $cacheKey, (int) $id);
@@ -370,11 +370,11 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected function _addGroup($group) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		if (_WV16_Group::exists($group)) {
 			if ($sql->count('wv16_user_groups', 'user_id = ? AND group_id = ?', array($this->id, $group)) == 0) {
-				$sql->queryEx('INSERT INTO ~wv16_user_groups (user_id,group_id) VALUES (?,?)', array($this->id, $group), '~');
+				$sql->query('INSERT INTO ~wv16_user_groups (user_id,group_id) VALUES (?,?)', array($this->id, $group), '~');
 				$this->groups[] = $group;
 			}
 		}
@@ -401,10 +401,10 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	protected function _removeGroup($group) {
 		$index = $this->groups === null ? false : array_search($group, $this->groups);
-		$sql   = WV_SQLEx::getInstance();
+		$sql   = WV_SQL::getInstance();
 		$query = 'DELETE FROM ~wv16_user_groups WHERE user_id = ? AND group_id = ?';
 
-		$sql->queryEx($query, array($this->id, $group), '~');
+		$sql->query($query, array($this->id, $group), '~');
 
 		if ($index !== false) {
 			unset($this->groups[$index]);
@@ -422,9 +422,9 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected function _removeAllGroups() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
-		$sql->queryEx('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
 		$this->groups = array();
 
 		$cache = sly_Core::cache();
@@ -523,7 +523,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public function setSetID($setID) {
 		$setID = (int) $setID;
-		$sql   = WV_SQLEx::getInstance();
+		$sql   = WV_SQL::getInstance();
 
 		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id = ?', array($this->id, $setID)) > 0) {
 			$this->currentSetID = $setID;
@@ -556,7 +556,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 		$includeReadOnly = $includeReadOnly ? '' : ' AND set_id >= 0';
 
-		$ids = WV_SQLEx::getInstance()->getArray(
+		$ids = WV_SQL::getInstance()->getArray(
 			'SELECT DISTINCT set_id FROM ~wv16_user_values WHERE user_id = ?'.$includeReadOnly.' ORDER BY set_id',
 			$this->id, '~'
 		);
@@ -568,7 +568,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public function createSetCopy($sourceSetID = null) {
 		$setID = $sourceSetID === null ? WV16_Users::getFirstSetID($this->id) : (int) $sourceSetID;
-		$newID = WV_SQLEx::getInstance()->safeFetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) + 1;
+		$newID = WV_SQL::getInstance()->fetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) + 1;
 
 		$this->copySet($setID, $newID);
 
@@ -580,7 +580,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public function createReadOnlySet($sourceSetID = null) {
 		$setID = $sourceSetID === null ? WV16_Users::getFirstSetID($this->id) : (int) $sourceSetID;
-		$newID = WV_SQLEx::getInstance()->safeFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) - 1;
+		$newID = WV_SQL::getInstance()->fetch('MIN(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) - 1;
 
 		// Ab Version 1.2.1 sind die Standard-IDs >= 0. Um Konflikten aus dem Weg zu gehen, wenn alte
 		// Daten aktualisiert werden, stellen wir hier sicher, dass die erste ReadOnly-ID garantiert
@@ -605,10 +605,10 @@ class _WV16_User extends WV_Object implements WV16_User {
 			throw new WV16_Exception('Schreibgeschützte Sets können nicht gelöscht werden.');
 		}
 
-		$sql    = WV_SQLEx::getInstance();
+		$sql    = WV_SQL::getInstance();
 		$params = array($this->id, $setID);
 
-		$sql->queryEx('DELETE FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?', $params, '~');
+		$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?', $params, '~');
 
 		$cache = sly_Core::cache();
 		$cache->delete('frontenduser.users', $this->id);
@@ -620,10 +620,10 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	protected function copySet($sourceSet, $targetSet) {
-		return WV_SQLEx::getInstance()->queryEx(
+		return WV_SQL::getInstance()->query(
 			'INSERT INTO ~wv16_user_values '.
 			'SELECT user_id,attribute_id,?,value FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?',
-			array($targetSet, $this->id, $sourceSet), '~', WV_SQLEx::RETURN_FALSE
+			array($targetSet, $this->id, $sourceSet), '~'
 		);
 	}
 

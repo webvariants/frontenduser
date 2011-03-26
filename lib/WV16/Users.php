@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -19,6 +19,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser', true);
+
 		return isset($params['subject']) ? $params['subject'] : true;
 	}
 
@@ -32,16 +33,9 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	}
 
 	public static function setConfig($name, $value) {
-		try {
-			$setting = _WV8_Setting::getInstance('frontenduser', $name);
-			$setting->setValue($value, WV_Sally::clang());
-			$setting->update();
-
-			return true;
-		}
-		catch (Exception $e) {
-			return false;
-		}
+		$setting = _WV8_Setting::getInstance('frontenduser', $name);
+		$setting->setValue($value, WV_Sally::clang());
+		$setting->update();
 	}
 
 	public static function getTotalUsers($where = '1') {
@@ -51,9 +45,10 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$total     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($total < 0) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$total = $sql->count('wv16_users', $where);
 			$total = $total === false ? -1 : (int) $total;
+
 			$cache->set($namespace, $cacheKey, $total);
 		}
 
@@ -71,7 +66,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$users = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($users)) {
-			$sql    = WV_SQLEx::getInstance();
+			$sql    = WV_SQL::getInstance();
 			$query  = 'SELECT id FROM ~wv16_users WHERE '.$where.' ORDER BY '.$orderBy.' '.$direction;
 			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
 			$query .= ' LIMIT '.$offset.','.$max;
@@ -100,10 +95,9 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$users = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($users)) {
-			$sql    = WV_SQLEx::getInstance();
-			$query  = 'SELECT id '.
-				'FROM ~wv16_users u '.
-				'LEFT JOIN ~wv16_user_groups ug ON u.id = ug.user_id '.
+			$sql    = WV_SQL::getInstance();
+			$query  =
+				'SELECT id FROM ~wv16_users u LEFT JOIN ~wv16_user_groups ug ON u.id = ug.user_id '.
 				'WHERE group_id = ? ORDER BY '.$orderBy.' '.$direction;
 
 			if ($offset > 0 || $max < 0) {
@@ -134,7 +128,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$groups = $cache->get($namespace, $cacheKey, -1);
 
 		if (!is_array($groups)) {
-			$sql    = WV_SQLEx::getInstance();
+			$sql    = WV_SQL::getInstance();
 			$query  = 'SELECT id FROM ~wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
 
 			if ($offset > 0 || $max < 0) {
@@ -156,7 +150,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	}
 
 	public static function isLoggedIn() {
-		$userID = rex_session('frontenduser', 'int', self::ANONYMOUS);
+		$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
 		return $userID > 0;
 	}
 
@@ -165,7 +159,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	 */
 	public static function getCurrentUser() {
 		try {
-			$userID = rex_session('frontenduser', 'int', self::ANONYMOUS);
+			$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
 			return $userID <= 0 ? null : _WV16_User::getInstance($userID);
 		}
 		catch (Exception $e) {
@@ -202,23 +196,23 @@ abstract class WV16_Users extends _WV16_DataHandler {
 	}
 
 	public static function loginUser(_WV16_User $user) {
-		session_regenerate_id(); // Session-Fixation verhindern
-		rex_set_session('frontenduser', $user->getID());
-		rex_register_extension_point('WV16_LOGIN', $user);
+		sly_Util_Session::regenerate_id(); // Session-Fixation verhindern
+		sly_Util_Session::set('frontenduser', $user->getID());
+		sly_Core::dispatcher()->notify('WV16_LOGIN', $user);
 	}
 
 	public static function logout() {
 		$user = self::getCurrentUser();
 
 		if ($user) {
-			rex_set_session('frontenduser', self::ANONYMOUS);
+			sly_Util_Session::set('frontenduser', self::ANONYMOUS);
 			session_destroy();
-			rex_register_extension_point('WV16_LOGOUT', $user);
+			sly_Core::dispatcher()->notify('WV16_LOGOUT', $user);
 		}
 	}
 
 	public static function getUser($login) {
-		$sql       = WV_SQLEx::getInstance();
+		$sql       = WV_SQL::getInstance();
 		$login     = strtolower(trim($login));
 		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.users.mappings';
@@ -227,7 +221,7 @@ abstract class WV16_Users extends _WV16_DataHandler {
 		$userID = $cache->get($namespace, $cacheKey, -1);
 
 		if ($userID < 0) {
-			$userID = $sql->safeFetch('id', 'wv16_users', 'deleted = 0 AND LOWER(login) = ?', $login);
+			$userID = $sql->fetch('id', 'wv16_users', 'deleted = 0 AND LOWER(login) = ?', $login);
 
 			if ($userID === false) {
 				throw new WV16_Exception('User unknown', self::ERR_USER_UNKNOWN);

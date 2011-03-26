@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -29,16 +29,15 @@ class sly_Controller_Frontenduser_Types extends sly_Controller_Frontenduser {
 		$attributes = sly_postArray('attributes', 'int');
 
 		try {
-			WV_Sally::enforceMethod('POST');
 			$type = _WV16_UserType::create($name, $title, $attributes);
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->add();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USERTYPE_ADDED', $type);
-		WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
+		print rex_info('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 		$this->index();
 	}
@@ -63,8 +62,6 @@ class sly_Controller_Frontenduser_Types extends sly_Controller_Frontenduser {
 		$attributes = sly_postArray('attributes', 'int');
 
 		try {
-			WV_Sally::enforceMethod('POST');
-
 			$type = _WV16_UserType::getInstance($id);
 
 			$type->setName($name);
@@ -73,12 +70,12 @@ class sly_Controller_Frontenduser_Types extends sly_Controller_Frontenduser {
 			$type->update();
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USERTYPE_UPDATED', $type);
-		WV_Redaxo::success('Der Benutzertyp wurde erfolgreich gespeichert.');
+		print rex_info('Der Benutzertyp wurde erfolgreich gespeichert.');
 
 		$this->index();
 	}
@@ -88,23 +85,22 @@ class sly_Controller_Frontenduser_Types extends sly_Controller_Frontenduser {
 		$type = null;
 
 		try {
-			WV_Sally::enforceMethod('POST');
-
 			$type = _WV16_UserType::getInstance($id);
 			$type->delete();
 		}
 		catch (Exception $e) {
-			WV_Sally::error($e->getMessage());
+			print rex_warning($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USERTYPE_DELETED', $type);
-		WV_Sally::success('Der Benutzertyp wurde gelöscht.');
+		print rex_info('Der Benutzertyp wurde gelöscht.');
 
 		$this->index();
 	}
 
-	public function checkPermission() {
-		return WV_Sally::isAdminOrHasPerm('frontenduser[types]');
+	protected function checkPermission() {
+		$user = sly_Util_User::getCurrentUser();
+		return $user->isAdmin() || $user->hasPerm('frontenduser[types]');
 	}
 }

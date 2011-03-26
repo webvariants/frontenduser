@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -14,7 +14,6 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 	protected function init() {
 		$pages = array(
 			''           => 'Benutzer',
-//			'groups'     => 'Gruppen',
 			'types'      => 'Benutzertypen',
 			'attributes' => 'Attribute'
 		);
@@ -23,8 +22,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$pages['exports'] = 'Export';
 		}
 
+		$user    = sly_Util_User::getCurrentUser();
+		$isAdmin = $user->isAdmin();
+
 		foreach ($pages as $key => $value) {
-			if (WV_Sally::isAdminOrHasPerm('frontenduser['.$key.']')) {
+			if ($isAdmin || $user->hasPerm('frontenduser['.$key.']')) {
 				$subpages[] = array($key, $value);
 			}
 		}
@@ -41,14 +43,12 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$search  = sly_Table::getSearchParameters('users');
 		$paging  = sly_Table::getPagingParameters('users', true, false);
 		$sorting = sly_Table::getSortingParameters('login', array('login', 'registered'));
-		$where   = '1';
+		$where   = 'deleted = 0';
+		$sql     = WV_SQL::getInstance();
 
 		if (!empty($search)) {
-			$searchSQL = ' AND (`login` = ? OR `registered` = ?)';
-			$searchSQL = str_replace('=', 'LIKE', $searchSQL);
-			$searchSQL = str_replace('?', '"%'.mysql_real_escape_string($search).'%"', $searchSQL);
-
-			$where .= $searchSQL;
+			$where .= ' AND (`login` LIKE ? OR `registered` LIKE ?)';
+			$where  = str_replace('?', $sql->quote('%'.$search.'%'), $where);
 		}
 
 		$users = WV16_Users::getAllUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
@@ -274,7 +274,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 	}
 
 	protected function checkPermission() {
-		return WV_Sally::isAdminOrHasPerm('frontenduser[]');
+		$user = sly_Util_User::getCurrentUser();
+		return $user->isAdmin() || $user->hasPerm('frontenduser[]');
 	}
 
 	private function serializeForm($userType) {

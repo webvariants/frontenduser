@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,17 +8,16 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-WV_Sally::p(
-	'Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier '.
+print
+	'<p>Attribute sind die Eigenschaften, die Sie Ihren Benutzern zuweisen können. Hier '.
 	'legen Sie fest, welche Attribute es gibt und wie diese gestaltet werden sollen. '.
 	'Bitte beachten Sie, dass die Felder &quot;Login&quot; und &quot;Passwort&quot; '.
-	'fest im System integriert sind und daher nicht geändert werden können.'
-);
+	'fest im System integriert sind und daher nicht geändert werden können.</p>';
 
 $base  = 'index.php?page=frontenduser&amp;subpage=attributes&amp;func=';
 $id    = '<a href="'.$base.'add"><img src="../data/dyn/public/frontenduser/images/attribute_add.png" alt="" title="Hinzufügen" /></a>';
 $table = new sly_Table('attributes');
-$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
 $table->addColumn(new sly_Table_Column('Attributename'));
 $table->addColumn(new sly_Table_Column('Feldtyp'));
 $table->addColumn(new sly_Table_Column('Feldbezeichnung'));
@@ -40,7 +39,7 @@ foreach ($attributes as $attr) {
 
 	?>
 	<tr id="attr<?= $attr->getID() ?>">
-		<td class="rex-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="<?= $icon ?>" alt="" title="Attribut bearbeiten" /></a></td>
+		<td class="sly-icon"><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><img src="<?= $icon ?>" alt="" title="Attribut bearbeiten" /></a></td>
 		<td><a href="<?= $base ?>edit&amp;id=<?= $attr->getID() ?>"><?= sly_html($attr->getName()) ?></a></td>
 		<td><?= rex_translate(WV_Datatype::getTitle($attr->getDatatypeID())) ?></td>
 		<td><?= sly_html($attr->getTitle()) ?></td>

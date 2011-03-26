@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,13 +8,13 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-WV_Sally::p('Die folgenden Benutzer sind auf Ihrer Website registriert.');
+print '<p>Die folgenden Benutzer sind auf Ihrer Website registriert.</p>';
 
 $id      = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../data/dyn/public/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
 $table   = new sly_Table('users');
 $columns = WV8_Settings::getValue('frontenduser', 'be_columns', array());
 
-$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
 
 if (empty($columns)) {
 	$columns = array('___login___' => 'Login');
@@ -34,7 +34,7 @@ $table->renderHeader($total);
 foreach ($users as $user) {
 	?>
 	<tr>
-		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="../data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
+		<td class="sly-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="../data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
 		<?
 		foreach ($columns as $name => $title) {
 			print '<td>';

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -34,8 +34,8 @@ class _WV16_Group extends WV_Object {
 	}
 
 	private function __construct($id) {
-		$sql  = WV_SQLEx::getInstance();
-		$data = $sql->safeFetch('*', 'wv16_groups', 'id = ?', $id);
+		$sql  = WV_SQL::getInstance();
+		$data = $sql->fetch('*', 'wv16_groups', 'id = ?', $id);
 
 		if (empty($data)) {
 			throw new WV16_Exception('Die Gruppe #'.$id.' konnte nicht gefunden werden!');
@@ -59,8 +59,8 @@ class _WV16_Group extends WV_Object {
 		$id = $cache->get($namespace, $cacheKey, -1);
 
 		if ($id < 0) {
-			$sql = WV_SQLEx::getInstance();
-			$id  = $sql->safeFetch('id', 'wv16_groups', 'name = ?', $group);
+			$sql = WV_SQL::getInstance();
+			$id  = $sql->fetch('id', 'wv16_groups', 'name = ?', $group);
 			$id  = $id === false ? -1 : (int) $id;
 
 			$cache->set($namespace, $cacheKey, $id);

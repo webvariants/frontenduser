@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -114,9 +114,9 @@ abstract class _WV16_DataHandler extends WV_Object {
 	}
 
 	protected static function _setDataForUser($user, $attribute, $value) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
-		$sql->queryEx(
+		$sql->query(
 			'UPDATE ~wv16_user_values SET value = ? WHERE user_id = ? AND set_id = ? AND attribute_id = ?',
 			array($value, $user->getID(), $user->getSetID(), $attribute), '~'
 		);
@@ -139,8 +139,8 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$firstSetID = $cache->get($namespace, $userID, null);
 
 		if ($firstSetID === null) {
-			$sql = WV_SQLEx::getInstance();
-			$id  = $sql->safeFetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
+			$sql = WV_SQL::getInstance();
+			$id  = $sql->fetch('MIN(set_id)', 'wv16_user_values', 'user_id = ? AND set_id >= 0', $userID);
 
 			// Die kleinste erlaubte ID ist 1. Wenn noch keine Werte vorhanden sein
 			// sollten, müssen wir dies hier dennoch sicherstellen.
@@ -169,8 +169,8 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$typeID     = $cache->get($namespace, $userID, null);
 
 		if ($typeID === null) {
-			$sql  = WV_SQLEx::getInstance();
-			$type = $sql->safeFetch('type_id', 'wv16_users', 'id = ?', $userID);
+			$sql  = WV_SQL::getInstance();
+			$type = $sql->fetch('type_id', 'wv16_users', 'id = ?', $userID);
 
 			$typeID = $type ? (int) $type : -1;
 			$cache->set($namespace, $userID, $typeID);
@@ -219,7 +219,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$query = 'SELECT id FROM ~wv16_utypes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction;
 
 			$max    = $max < 0 ? '18446744073709551615' : (int) $max;
@@ -245,7 +245,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$total     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($total < 0) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$total = $sql->count('wv16_utypes', $where);
 			$total = $total === false ? -1 : (int) $total;
 			$cache->set($namespace, $cacheKey, $total);
@@ -277,7 +277,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$return     = array();
 
 		if (!is_array($attributes)) {
-			$sql = WV_SQLEx::getInstance();
+			$sql = WV_SQL::getInstance();
 
 			// In utype_attrib stehen immer nur Live-Attribute (deleted=0), daher ist kein JOIN notwendig, um nur
 			// die Live-Attribute zu selektieren.
@@ -312,7 +312,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$max   = $max < 0 ? '18446744073709551615' : (int) $max;
 			$query = 'SELECT id FROM ~wv16_attributes WHERE '.$where.' ORDER BY '.$sortby.' '.$direction.' LIMIT '.$offset.','.$max;
 
@@ -336,7 +336,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$total     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($total < 0) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$total = $sql->count('wv16_attributes', $where);
 			$total = $total === false ? -1 : (int) $total;
 			$cache->set($namespace, $cacheKey, $total);
@@ -373,7 +373,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$count     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($count < 0) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$count = $sql->count('wv16_users', 'type_id = ?', $userType);
 
 			$cache->set($namespace, $cacheKey, $count);
@@ -410,7 +410,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$return    = array();
 
 		if (!is_array($users)) {
-			$sql   = WV_SQLEx::getInstance();
+			$sql   = WV_SQL::getInstance();
 			$users = $sql->getArray(
 				'SELECT id FROM ~wv16_users WHERE type_id = ? ORDER BY '.$sortby.' '.$direction.' '.$limitClause,
 				$userType, '~'
@@ -504,7 +504,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 
 		// Cache-Miss. Mist. Dann eben in die Datenbank...
 
-		$sql    = WV_SQLEx::getClone();
+		$sql    = WV_SQL::getClone();
 		$return = array();
 		$ids    = array();
 		$params = array($userID, $setID);
@@ -517,7 +517,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 			$params[] = $attribute;
 		}
 
-		$sql->queryEx($query, $params, '~');
+		$sql->query($query, $params, '~');
 
 		foreach ($sql as $row) {
 			// Daten holen
@@ -626,7 +626,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 				'LEFT JOIN ~wv16_users u ON u.id = uv.user_id '.
 				'WHERE a.id = ?';
 
-			$sql    = WV_SQLEx::getClone();
+			$sql    = WV_SQL::getClone();
 			$return = array();
 			$params = array($attribute);
 
@@ -639,7 +639,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 				$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
 			}
 
-			$sql->queryEx($query, $params, '~');
+			$sql->query($query, $params, '~');
 
 			// Nichts gefunden? Und tschüss!
 
@@ -843,10 +843,10 @@ abstract class _WV16_DataHandler extends WV_Object {
 		// Parameter auspacken. extract() wäre uns zu unsicher, daher lieber
 		// Stück für Stück von Hand.
 
-		$userIDs = wv_makeArray(isset($params['userID']) ? $params['userID'] : null);
-		$typeIDs = wv_makeArray(isset($params['typeID']) ? $params['typeID'] : null);
-		$names   = wv_makeArray(isset($params['name'])   ? $params['name']   : null);
-		$ids     = wv_makeArray(isset($params['id'])     ? $params['id']     : null);
+		$userIDs = sly_makeArray(isset($params['userID']) ? $params['userID'] : null);
+		$typeIDs = sly_makeArray(isset($params['typeID']) ? $params['typeID'] : null);
+		$names   = sly_makeArray(isset($params['name'])   ? $params['name']   : null);
+		$ids     = sly_makeArray(isset($params['id'])     ? $params['id']     : null);
 
 		// Attributnamen zu -IDs umformen, um einfachere und eindeutigere Queries zu erzeugen.
 
@@ -896,7 +896,7 @@ abstract class _WV16_DataHandler extends WV_Object {
 		$result    = array();
 
 		if (!is_array($data)) {
-			$sql->queryEx($query, $params, '~');
+			$sql->query($query, $params, '~');
 			$data = array();
 
 			foreach ($sql as $row) {

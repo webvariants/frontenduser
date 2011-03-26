@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class _WV16_Attribute extends WV_Object implements _WV_IProperty {
+class _WV16_Attribute extends WV_Object implements WV_IProperty {
 	protected $id;           ///< int      die interne ID
 	protected $name;         ///< string   der interne Name
 	protected $title;        ///< string   der angezeigte Name (Titel)
@@ -47,8 +47,8 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	}
 
 	private function __construct($id) {
-		$sql  = WV_SQLEx::getInstance();
-		$data = $sql->safeFetch('*', 'wv16_attributes', 'id = ?', $id);
+		$sql  = WV_SQL::getInstance();
+		$data = $sql->fetch('*', 'wv16_attributes', 'id = ?', $id);
 
 		if (!$data) {
 			throw new WV16_Exception('Das Attribut #'.$id.' konnte nicht gefunden werden!');
@@ -91,7 +91,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	public function update($convertDataIfRequired = true, $applyDefaults = false) {
 		if ($this->deleted) return false;
 
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		// Auf Eindeutigkeit des Namens prüfen
 
@@ -103,7 +103,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	}
 
 	protected function _update($convert, $apply) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		///////////////////////////////////////////////////////////////////////
 		// Alte Parameter für dieses Attribut holen
@@ -122,7 +122,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		///////////////////////////////////////////////////////////////////////
 		// Daten aktualisieren
 
-		$sql->queryEx(
+		$sql->query(
 			'UPDATE ~wv16_attributes SET name = ?, title = ?, helptext = ?, '.
 			'datatype = ?, params = ?, default_value = ?, hidden = ? WHERE id = ?',
 			array($this->name, $this->title, $this->helptext, $this->datatype,
@@ -132,18 +132,18 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		///////////////////////////////////////////////////////////////////////
 		// Zugeordnete Benutzertypen aktualisieren
 
-		$sql->queryEx('DELETE FROM ~wv16_utype_attrib WHERE attribute_id = ?', $this->id, '~');
+		$sql->query('DELETE FROM ~wv16_utype_attrib WHERE attribute_id = ?', $this->id, '~');
 
 		if (!empty($this->userTypes)) {
 			$params  = array();
-			$markers = WV_SQLEx::getMarkers(count($this->userTypes), '(?,?)');
+			$markers = WV_SQL::getMarkers(count($this->userTypes), '(?,?)');
 
 			foreach ($this->userTypes as $tid) {
 				$params[] = $this->id;
 				$params[] = $tid;
 			}
 
-			$sql->queryEx('INSERT INTO ~wv16_utype_attrib (attribute_id,user_type) VALUES '.$markers, $params, '~');
+			$sql->query('INSERT INTO ~wv16_utype_attrib (attribute_id,user_type) VALUES '.$markers, $params, '~');
 
 			$params  = null;
 			$markers = null;
@@ -170,7 +170,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		// Allerdings betrifft dies nur Sets, die nicht als read-only markiert sind.
 
 		if (!empty($users)) {
-			$sql->queryEx(
+			$sql->query(
 				'DELETE FROM ~wv16_user_values WHERE attribute_id = ? AND set_id >= 0 AND user_id IN ('.implode(',', $users).')',
 				$this->id, '~'
 			);
@@ -200,7 +200,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			}
 
 			if (!empty($users)) {
-				$sql->queryEx(
+				$sql->query(
 					'REPLACE INTO ~wv16_user_values '.
 					'SELECT user_id,?,set_id,? FROM ~wv16_user_values '.
 					'WHERE user_id IN ('.implode(',', $users).') AND set_id >= 0',
@@ -218,11 +218,11 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	}
 
 	private function createCopy() {
-		$sql   = WV_SQLEx::getInstance();
+		$sql   = WV_SQL::getInstance();
 		$oldID = $this->id;
 
 		// Attribut-Datensatz kopieren und direkt mit neuen Werten füllen
-		$sql->queryEx(
+		$sql->query(
 			'INSERT INTO ~wv16_attributes '.
 			'SELECT NULL,name,title,helptext,position,datatype,params,default_value,hidden,0 FROM ~wv16_attributes WHERE id = ?',
 			$this->id, '~'
@@ -232,13 +232,13 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		$this->deleted = false; // nur um sicherzugehen
 
 		// Den alten Datensatz als gelöscht / obsolet markieren
-		$sql->queryEx('UPDATE ~wv16_attributes SET deleted = 1 WHERE id = ?', $oldID, '~');
+		$sql->query('UPDATE ~wv16_attributes SET deleted = 1 WHERE id = ?', $oldID, '~');
 
 		// Verknüpfung zu diesem Attribut bei den Benutzertypen ändern
-		$sql->queryEx('UPDATE ~wv16_utype_attrib SET attribute_id = ? WHERE attribute_id = ?', array($this->id, $oldID), '~');
+		$sql->query('UPDATE ~wv16_utype_attrib SET attribute_id = ? WHERE attribute_id = ?', array($this->id, $oldID), '~');
 
 		// Verknüpfung bei den Benutzerdaten ändern (aber NUR bei den Live-Daten!)
-		$sql->queryEx(
+		$sql->query(
 			'UPDATE ~wv16_user_values SET attribute_id = ? WHERE attribute_id = ? AND set_id >= 0',
 			array($this->id, $oldID), '~'
 		);
@@ -259,7 +259,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	 * @return _WV16_Attribute        das neu erzeugte Objekt
 	 */
 	public static function create($name, $title, $helptext, $datatype, $params, $defaultValue, $hidden, $userTypes) {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		///////////////////////////////////////////////////////////////////////
 		// Daten prüfen
@@ -289,10 +289,10 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		///////////////////////////////////////////////////////////////////////
 		// Position ermitteln & Attribut anlegen
 
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 		$pos = (int) $sql->fetch('MAX(position)', 'wv16_attributes');
 
-		$sql->queryEx(
+		$sql->query(
 			'INSERT INTO ~wv16_attributes (name,title,helptext,datatype,params,default_value,'.
 			'position,hidden,deleted) VALUES (?,?,?,?,?,?,?,?,?)',
 			array($name, $title, $helptext, (int) $datatype, $params, $defaultValue,
@@ -306,14 +306,14 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 
 		if (!empty($userTypes)) {
 			$params  = array();
-			$markers = WV_SQLEx::getMarkers(count($userTypes), '(?,?)');
+			$markers = WV_SQL::getMarkers(count($userTypes), '(?,?)');
 
 			foreach ($userTypes as $tid) {
 				$params[] = $tid;
 				$params[] = $id;
 			}
 
-			$sql->queryEx('INSERT INTO ~wv16_utype_attrib (user_type,attribute_id) VALUES '.$markers, $params, '~');
+			$sql->query('INSERT INTO ~wv16_utype_attrib (user_type,attribute_id) VALUES '.$markers, $params, '~');
 
 			$params  = null;
 			$markers = null;
@@ -346,7 +346,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			// 4. Verwende dieses SELECT, um damit das INSERT-Statement zu befeuern.
 
 			$query = 'INSERT INTO ~wv16_user_values (user_id,attribute_id,set_id,value) '.$select;
-			$sql->queryEx($query, array($id, $defaultValue, $id, $defaultValue), '~');
+			$sql->query($query, array($id, $defaultValue, $id, $defaultValue), '~');
 
 			$markers = null;
 		}
@@ -363,7 +363,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	}
 
 	protected function _delete() {
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		// Prüfen, ob dieses Attribut in seiner jetzigen Form von read-only
 		// Daten genutzt wird. Wenn ja, dürfen wir es nicht löschen und müssen
@@ -372,16 +372,16 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		$isUsed = $sql->count('wv16_user_values', 'attribute_id = ? AND set_id < 0', $this->id) ? true : false;
 
 		if ($isUsed) {
-			$sql->queryEx('UPDATE ~wv16_attributes SET deleted = 1 WHERE id = ?', $this->id, '~');
+			$sql->query('UPDATE ~wv16_attributes SET deleted = 1 WHERE id = ?', $this->id, '~');
 			$this->deleted = true;
 		}
 		else {
-			$sql->queryEx('DELETE FROM ~wv16_attributes WHERE id = ?', $this->id, '~');
-			$sql->queryEx('DELETE FROM ~wv16_user_values WHERE attribute_id = ?', $this->id, '~');
+			$sql->query('DELETE FROM ~wv16_attributes WHERE id = ?', $this->id, '~');
+			$sql->query('DELETE FROM ~wv16_user_values WHERE attribute_id = ?', $this->id, '~');
 		}
 
-		$sql->queryEx('DELETE FROM ~wv16_utype_attrib WHERE attribute_id = ?', $this->id, '~');
-		$sql->queryEx('UPDATE ~wv16_attributes SET position = position - 1 WHERE position > ? AND deleted = 0', $this->position, '~');
+		$sql->query('DELETE FROM ~wv16_utype_attrib WHERE attribute_id = ?', $this->id, '~');
+		$sql->query('UPDATE ~wv16_attributes SET position = position - 1 WHERE position > ? AND deleted = 0', $this->position, '~');
 
 		// Fertig!
 
@@ -418,7 +418,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 	}
 
 	protected function _shift($position) {
-		$sql         = WV_SQLEx::getInstance();
+		$sql         = WV_SQL::getInstance();
 		$maxPosition = $sql->fetch('MAX(position)', 'wv16_attributes', 'deleted = 0');
 
 		if ($position > $maxPosition) {
@@ -430,12 +430,12 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			array($position, $this->position) :
 			array($this->position, $position);
 
-		$sql->queryEx(
+		$sql->query(
 			'UPDATE ~wv16_attributes SET position = position '.$relation.' 1 WHERE position BETWEEN ? AND ? AND deleted = 0',
 			array($a, $b), '~'
 		);
 
-		$sql->queryEx('UPDATE ~wv16_attributes SET position = ? WHERE id = ?', array($position, $this->id), '~');
+		$sql->query('UPDATE ~wv16_attributes SET position = ? WHERE id = ?', array($position, $this->id), '~');
 
 		// Fertig!
 
@@ -460,7 +460,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		// Wenn sich der Datentyp geändert hat, konvertieren wir.
 		// Falls es keinen Konverter gibt, löschen wir die Metadaten.
 
-		$sql = WV_SQLEx::getInstance();
+		$sql = WV_SQL::getInstance();
 
 		if ($oldDatatype != $this->datatype) {
 			$converter = new _WV_Convert_Manager($oldDatatype, $this->datatype, $oldParams, $this->params);
@@ -469,7 +469,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 				$converter->convert($this->id);
 			}
 			else {
-				$sql->queryEx('DELETE FROM ~wv16_user_values WHERE attribute_id = ?', $this->id, '~');
+				$sql->query('DELETE FROM ~wv16_user_values WHERE attribute_id = ?', $this->id, '~');
 				$this->origUserTypes = array(); // Performance des nachfolgenden Codes in update() verbessern
 			}
 		}
@@ -479,7 +479,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 
 			if ($oldParams != $this->params) {
 				$actionsToTake = WV_Datatype::call($oldDatatype, 'getIncompatibilityUpdateStatement', array($oldParams, $this->params));
-				$prefix        = WV_SQLEx::getPrefix();
+				$prefix        = WV_SQL::getPrefix();
 
 				foreach ($actionsToTake as $action) {
 					list ($type, $what, $where) = $action;
@@ -488,15 +488,15 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 
 					switch ($type) {
 						case 'DELETE':
-							$sql->queryEx('DELETE FROM '.$prefix.'wv16_user_values WHERE '.$where);
+							$sql->query('DELETE FROM '.$prefix.'wv16_user_values WHERE '.$where);
 							break;
 
 						case 'UPDATE':
-							$sql->queryEx('UPDATE '.$prefix.'wv16_user_values SET '.$what.' WHERE '.$where);
+							$sql->query('UPDATE '.$prefix.'wv16_user_values SET '.$what.' WHERE '.$where);
 							break;
 
 						default:
-							trigger_error('Unbekannte Aktion incompatibility update statement!', E_USER_WARNING);
+							trigger_error('Unbekannte Aktion!', E_USER_WARNING);
 					}
 				}
 			}
@@ -539,12 +539,12 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 			$affected = WV16_Users::getUsersWithAttribute($attribute);
 		}
 		else {
-			$sql      = WV_SQLEx::getInstance();
-			$prefix   = WV_SQLEx::getPrefix();
+			$sql      = WV_SQL::getInstance();
+			$prefix   = WV_SQL::getPrefix();
 			$where    = str_replace('$$$value_column$$$', 'value', $affected);
 			$affected = array();
 
-			$sql->queryEx('SELECT user_id FROM '.$prefix.'wv16_user_values WHERE '.$where);
+			$sql->query('SELECT user_id FROM '.$prefix.'wv16_user_values WHERE '.$where);
 
 			foreach ($sql as $row) {
 				$affected[] = _WV16_User::getInstance($row['user_id']);
@@ -566,7 +566,7 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		}
 
 		$attribute = self::getIDForName($attribute);
-		return WV_SQLEx::getInstance()->safeFetch('datatype, params', 'wv16_attributes', 'id = ?', $attribute);
+		return WV_SQL::getInstance()->fetch('datatype, params', 'wv16_attributes', 'id = ?', $attribute);
 	}
 
 	/**
@@ -601,8 +601,8 @@ class _WV16_Attribute extends WV_Object implements _WV_IProperty {
 		// Sind mehrere gelöschte mit dem gleichen Namen vorhanden, wird das letzte
 		// (jüngste) mit dem Namen selektiert.
 
-		$sql = WV_SQLEx::getInstance();
-		$id  = $sql->safeFetch('id', 'wv16_attributes', 'LOWER(name) = ? ORDER BY deleted ASC, id DESC', strtolower($name));
+		$sql = WV_SQL::getInstance();
+		$id  = $sql->fetch('id', 'wv16_attributes', 'LOWER(name) = ? ORDER BY deleted ASC, id DESC', strtolower($name));
 
 		if (!$id) {
 			throw new WV16_Exception('Das Attribut "'.$name.'" konnte nicht gefunden werden!');

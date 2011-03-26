@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,15 +8,14 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-WV_Sally::p(
-	'Jeder Benutzer auf Ihrer Webseite gehört zu einem bestimmten Typ, der regelt, welche Attribute für ihn '.
+print
+	'<p>Jeder Benutzer auf Ihrer Webseite gehört zu einem bestimmten Typ, der regelt, welche Attribute für ihn '.
 	'zutreffen. Der Typ eines Benutzers wirkt sich hingegen nicht auf die Benutzerrechte aus und ein Benutzer '.
-	'kann auch immer nur zu einem einzigen Typ gehören.'
-);
+	'kann auch immer nur zu einem einzigen Typ gehören.</p>';
 
 $id    = '<a href="index.php?page=frontenduser&amp;subpage=types&amp;func=add"><img src="../data/dyn/public/frontenduser/images/usertype_add.png" alt="" title="Hinzufügen" /></a>';
 $table = new sly_Table('usertypes');
-$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'rex-icon')));
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
 $table->addColumn(new sly_Table_Column('Interner Name'));
 $table->addColumn(new sly_Table_Column('Bezeichnung'));
 $table->addColumn(new sly_Table_Column('Zugehörige Attribute'));
@@ -27,8 +26,8 @@ $table->renderHeader($total);
 foreach ($types as $type) {
 	?>
 	<tr id="type<?= $type->getID() ?>">
-		<td class="rex-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><img src="../data/dyn/public/frontenduser/images/usertype.png" alt="" title="Typ bearbeiten" /></a></td>
-		<td><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><?= wv_html($type->getName()) ?></a></td>
+		<td class="sly-icon"><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><img src="../data/dyn/public/frontenduser/images/usertype.png" alt="" title="Typ bearbeiten" /></a></td>
+		<td><a href="index.php?page=frontenduser&amp;subpage=types&amp;func=edit&amp;id=<?= $type->getID() ?>"><?= sly_html($type->getName()) ?></a></td>
 		<td><?= sly_html($type->getTitle()) ?></td>
 		<td><?php
 

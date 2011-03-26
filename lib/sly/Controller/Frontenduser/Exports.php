@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2010, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -37,7 +37,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// find users
 
 		$type  = _WV16_UserType::getInstance($export['usertype'])->getID();
-		$sql   = WV_SQLEx::getInstance();
+		$sql   = WV_SQL::getInstance();
 		$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE type_id = ?', $type, '~');
 
 		if (empty($users)) {
@@ -47,7 +47,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 		// prepare head
 
-		WV_Redaxo::clearOutput();
+		WV_Sally::clearOutput();
 		ob_start('ob_gzhandler');
 
 		$nl      = "\n";
@@ -92,5 +92,10 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		header('Content-Disposition: attachment; filename='.$filename);
 		ob_end_flush();
 		die;
+	}
+
+	protected function checkPermission() {
+		$user = sly_Util_User::getCurrentUser();
+		return $user->isAdmin() || $user->hasPerm('frontenduser[exports]');
 	}
 }
