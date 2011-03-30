@@ -1,0 +1,139 @@
+global_settings:
+   frontenduser.mail.from_name:
+      title: eMail-Name
+      datatype: stringline
+      pagename: Benutzerverwaltung
+      group: 'Ausgehende eMails'
+      multilingual: true
+   frontenduser.mail.from_email:
+      title: eMail-Adresse
+      datatype: stringline
+      pagename: Benutzerverwaltung
+      group: 'Ausgehende eMails'
+      multilingual: true
+   frontenduser.be_columns:
+      title: 'Spalten in Benutzerliste'
+      datatype: select
+      params:
+         source: datatype
+         query: 'SELECT "___login___", "Login" UNION (SELECT name, title FROM sly_wv16_attributes WHERE 1 ORDER BY title) UNION SELECT "___type___", "Benutzertyp" UNION SELECT "___registered___", "Registrier-Datum"'
+         style: checkbox
+         min: 1
+         max: 5
+      helptext: 'Wählen Sie, welche Informationen im Backend zusätzlich zum Login angezeigt werden sollen.'
+      pagename: Benutzerverwaltung
+      group: Backend
+   frontenduser.mail.activation.subject:
+      title: Betreff
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird'
+      multilingual: true
+   frontenduser.mail.activation.body:
+      title: 'Inhalt (Template)'
+      datatype: stringtext
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird'
+      multilingual: true
+   frontenduser.mail.activation.to:
+      title: 'Empfänger (Template)'
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Benachrichtigung des Benutzers, wenn er im Backend aktiviert wird'
+      multilingual: true
+   frontenduser.mail.confirmation.subject:
+      title: Betreff
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Bestätigungsaufforderung an den neuen Benutzer'
+      multilingual: true
+   frontenduser.mail.confirmation.body:
+      title: 'Inhalt (Template)'
+      datatype: stringtext
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Bestätigungsaufforderung an den neuen Benutzer'
+      multilingual: true
+   frontenduser.mail.confirmation.to:
+      title: 'Empfänger (Template)'
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'Bestätigungsaufforderung an den neuen Benutzer'
+      multilingual: true
+   frontenduser.mail.report.subject:
+      title: Betreff
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)'
+      multilingual: true
+   frontenduser.mail.report.body:
+      title: 'Inhalt (Template)'
+      datatype: stringtext
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)'
+      multilingual: true
+   frontenduser.mail.recoveryrequest.subject:
+      title: Betreff
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-Anforderungs-eMails
+      multilingual: true
+   frontenduser.mail.recoveryrequest.body:
+      title: 'Inhalt (Template)'
+      datatype: stringtext
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-Anforderungs-eMails
+      multilingual: true
+   frontenduser.mail.recoveryrequest.to:
+      title: 'Empfänger (Template)'
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-Anforderungs-eMails
+      multilingual: true
+   frontenduser.mail.recovery.subject:
+      title: Betreff
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-eMails
+      multilingual: true
+   frontenduser.mail.recovery.body:
+      title: 'Inhalt (Template)'
+      datatype: stringtext
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-eMails
+      multilingual: true
+   frontenduser.mail.recovery.to:
+      title: 'Empfänger (Template)'
+      datatype: stringline
+      helptext: 'Verwenden Sie die internen Attributnamen und Rauten (#...#) als Platzhalter, z.B. #LOGIN# oder #FIRSTNAME#.'
+      pagename: Benutzerverwaltung
+      group: Passwort-vergessen-eMails
+      multilingual: true
+   frontenduser.articles.validation:
+      title: Validierungsartikel
+      datatype: linkbutton
+      params: {required: true}
+      helptext: 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.'
+      pagename: Benutzerverwaltung
+      group: Validierungsartikel
+      multilingual: true
+   frontenduser.articles.recovery:
+      title: 'Passwort zurücksetzen'
+      datatype: linkbutton
+      params: {required: true}
+      helptext: 'Dieser Artikel muss das Zurücksetzen des Passworts für den Benutzer ermöglichen.'
+      pagename: Benutzerverwaltung
+      group: Validierungsartikel
+      multilingual: true
