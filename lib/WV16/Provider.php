@@ -98,7 +98,7 @@ abstract class WV16_Provider {
 
 		if (!is_array($groups)) {
 			$sql    = WV_SQL::getInstance();
-			$query  = 'SELECT id FROM ~wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
+			$query  = 'SELECT name FROM ~wv16_groups WHERE 1 ORDER BY '.$orderBy.' '.$direction;
 
 			if ($offset > 0 || $max < 0) {
 				$max    = $max < 0 ? '18446744073709551615' : (int) $max;
@@ -148,16 +148,12 @@ abstract class WV16_Provider {
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
-			$all  = _WV16_Service_Attribute::loadAll();
-			$data = array();
+			$data = _WV16_Service_Attribute::loadAll();
 
-			if ($userType === null) {
-				$data = $all;
-			}
-			else {
-				foreach ($all as $name => $attribute) {
+			if ($userType !== null) {
+				foreach ($data as $name => $attribute) {
 					if (!in_array($userType, $attribute->getUserTypes())) {
-						unset($all[$name]);
+						unset($data[$name]);
 					}
 				}
 			}

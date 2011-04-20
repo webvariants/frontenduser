@@ -12,13 +12,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 	private $errors = array();
 
 	protected function init() {
-		$pages = array(
-			''           => 'Benutzer',
-			'types'      => 'Benutzertypen',
-			'attributes' => 'Attribute'
-		);
+		$pages   = array('' => 'Benutzer');
+		$exports = sly_Core::config()->get('frontenduser/exports', null);
 
-		if (file_exists(SLY_DEVELOPFOLDER.'/frontenduser-exports.yml')) {
+		if (!empty($exports)) {
 			$pages['exports'] = 'Export';
 		}
 
@@ -51,8 +48,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$where  = str_replace('?', $sql->quote('%'.$search.'%'), $where);
 		}
 
-		$users = WV16_Users::getAllUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
-		$total = WV16_Users::getTotalUsers($where);
+		$users = WV16_Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
+		$total = WV16_Provider::getTotalUsers($where);
 
 		$this->render('addons/frontenduser/templates/users/table.phtml', compact('users', 'total'));
 	}
@@ -68,10 +65,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$login     = sly_post('login', 'string');
 		$password1 = sly_post('password', 'string');
 		$password2 = sly_post('password2', 'string');
-		$userType  = sly_post('type', 'int');
+		$userType  = sly_post('type', 'string');
 		$activated = sly_post('activated', 'boolean', false);
 		$confirmed = sly_post('confirmed', 'boolean', false);
-		$groups    = sly_postArray('groups', 'int');
+		$groups    = sly_postArray('groups', 'string');
 
 		///////////////////////////////////////////////////////////////
 		// Passwort und Benutzertyp checken
@@ -81,7 +78,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 				throw new Exception('Die beiden Passwörter sind nicht identisch.');
 			}
 
-			$userTypeObj = _WV16_UserType::getInstance($userType);
+			// Holzhammer-Methode
+			WV16_Factory::getUserType($userType);
 		}
 		catch (Exception $e) {
 			print rex_warning($e->getMessage());
@@ -115,8 +113,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 
 			// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
 
-			foreach ($valuesToStore as $value) {
-				$user->setValue($value['attribute'], $value['value']);
+			foreach ($valuesToStore as $name => $value) {
+				$user->setValue($name, $value);
 			}
 
 			// Standardmäßig ist der Benutzer nun in der Gruppe "noch nicht bestätigt".
@@ -173,7 +171,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$user = _WV16_User::getInstance($id);
 
 			if ($password1 && $password1 != $password2) {
-				throw new WV_InputException('Die beiden Passwörter sind nicht identisch.');
+				throw new Exception('Die beiden Passwörter sind nicht identisch.');
 			}
 
 			$userTypeObj = _WV16_UserType::getInstance($userType);
@@ -279,78 +277,36 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 	}
 
 	private function serializeForm($userType) {
-		$requiredAttrs  = WV16_Users::getAttributesForUserType($userType);
-		$availableAttrs = WV16_Users::getAttributesForUserType(-1);
-		$valuesToStore  = array();
+		$requiredAttrs  = WV16_Provider::getAttributes($userType);
+		$availableAttrs = WV16_Provider::getAttributes();
+		$values         = array();
 
-		foreach ($availableAttrs as $attr) {
-			$isRequired = false;
-
-			foreach ($requiredAttrs as $rattr) {
-				if ($rattr->getID() == $attr->getID()) {
-					$isRequired = true;
-					break;
-				}
-			}
-
+		foreach ($availableAttrs as $name => $attr) {
 			// Wir lassen keine Daten zu, die nicht zu diesem Benutzertyp gehören.
-
-			if (!$isRequired) {
-				continue;
-			}
+			if (!isset($requiredAttrs[$name])) continue;
 
 			try {
-				$inputForUser = WV_Datatype::call($attr->getDatatypeID(), 'serializeForm', $attr);
-
-				// Keine gültige Eingabe aber benötigtes Feld? -> Abbruch!
-
-				if ($inputForUser === false && $isRequired) {
-					$this->errors[] = array(
-						'attribute' => $attr->getID(),
-						'error'     => 'Diese Angabe ist ein Pflichtfeld!'
-					);
-					continue;
-				}
-
-				// Woohoo! Eine Eingabe! Die merken wir uns.
-
-				$valuesToStore[] = array(
-					'value'     => $inputForUser,
-					'attribute' => $attr->getID()
-				);
+				$values[$name] = WV_Datatype::call($attr->getDatatypeID(), 'serializeForm', $attr);
 			}
-			catch (WV_DatatypeException $e) {
+			catch (Exception $e) {
 				$this->errors[] = array(
-					'attribute' => $attr->getID(),
+					'attribute' => $name,
 					'error'     => $e->getMessage()
 				);
 			}
 		}
 
-		return empty($this->errors) ? $valuesToStore : null;
+		return empty($this->errors) ? $values : null;
 	}
 
-	protected function getAttributesToDisplay($available, $assigned, $required) {
-		$return = array();
+	protected function getAttributesToDisplay($assigned, $required) {
+		$available = WV16_Provider::getAttributes();
+		$required  = array_keys($required);
+		$return    = array();
 
-		foreach ($available as $attribute) {
-			$metadata = null;
-			$req      = false;
-
-			foreach ($assigned as $data) {
-				if ($data->getAttributeID() == $attribute->getID()) {
-					$metadata = $data;
-					break;
-				}
-			}
-
-			foreach ($required as $rinfo) {
-				if ($rinfo->getID() == $attribute->getID()) {
-					$req = true;
-					break;
-				}
-			}
-
+		foreach ($available as $name => $attribute) {
+			$metadata = isset($assigned[$name]) ? $assigned[$name] : null;
+			$req      = in_array($name, $required);
 			$return[] = array('attribute' => $attribute, 'data' => $metadata, 'required' => $req);
 		}
 

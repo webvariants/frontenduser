@@ -33,14 +33,14 @@ $confirmed->setHelpText('Bestätigung bedeutet, dass der Benutzer sein Konto sel
 $activated->setChecked(!$user || $user->isActivated());
 $activated->setHelpText('Nur hier freigeschaltete Benutzer können sich einloggen.');
 
-$types       = WV16_Users::getAllUserTypes();
+$types       = WV16_Provider::getUserTypes();
 $typesSelect = array();
 
-foreach ($types as $type) {
-	$typesSelect[$type->getID()] = $type->getTitle();
+foreach ($types as $name => $type) {
+	$typesSelect[$name] = $type->getTitle();
 }
 
-$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
+$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
 
 $form->addElements(array($login, $password1, $password2, $activated, $confirmed, $type));
 
@@ -49,11 +49,11 @@ $form->addElements(array($login, $password1, $password2, $activated, $confirmed,
 
 $form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
 
-$userType      = $user ? $user->getTypeID() : __WV16_UserType::DEFAULT_NAME;
-$requiredInfos = WV16_Users::getAttributesForUserType($userType);
-$assignedData  = $user ? $user->getValues() : array();
-$dataToDisplay = $this->getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);
-$attributes    = $user ? WV16_Users::getUserTypeAsObject($user)->getAttributes() : $requiredInfos;
+$userType      = $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME;
+$requiredInfos = WV16_Provider::getAttributes($userType);
+$assignedData  = $user ? $user->getValues(true) : array();
+$dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
+$attributes    = $user ? $user->getType()->getAttributes() : $requiredInfos;
 $attributeIDs  = array();
 
 foreach ($attributes as $a) {
@@ -78,8 +78,8 @@ foreach ($dataToDisplay as $data) {
 ////////////////////////////////////////////////////////////////////////////////
 // Zuordnung zu den Gruppen
 
-$assignedGroups  = $user ? $user->getGroupIDs() : array();
-$availableGroups = WV16_Users::getAllGroups();
+$assignedGroups  = $user ? $user->getGroupNames() : array();
+$availableGroups = WV16_Provider::getGroups();
 $groups          = array();
 
 foreach ($availableGroups as $index => $group) {
@@ -99,7 +99,7 @@ else {
 // Buttons festlegen
 
 if ($user) {
-	$delete = new sly_Form_input_Button('submit', 'delete', 'Löschen');
+	$delete = new sly_Form_Input_Button('submit', 'delete', 'Löschen');
 	$delete->setAttribute('onclick', 'return confirm("Sicher, dass dieser Benutzer gelöscht werden soll?")');
 	$form->setDeleteButton($delete);
 }
@@ -119,8 +119,8 @@ wv16.attributesPerType = [];
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
 // vorhanden sind.
 
-foreach (WV16_Users::getAllUserTypes() as $type) {
-	print 'wv16.attributesPerType['.$type->getID().'] = [';
+foreach (WV16_Provider::getUserTypes() as $type) {
+	print 'wv16.attributesPerType[\''.$type->getName().'\'] = [';
 
 	$list = array();
 

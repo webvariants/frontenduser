@@ -28,7 +28,7 @@ class _WV16_Service_Value extends WV_Object {
 	}
 
 	public function write(_WV16_User $user, $setID, $attribute, $value) {
-		$setID  = $setID === null ? $user->getSetID() : (int) $setID;
+		$setID = $setID === null ? $user->getSetID() : (int) $setID;
 
 		// read-only?
 

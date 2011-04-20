@@ -10,12 +10,14 @@
 
 class _WV16_Attribute extends WV_Property {
 	protected $userTypes;  ///< array
+	protected $visible;    ///< boolean
 
 	public function __construct($name, array $data) {
 		parent::__construct($name, $data);
 
 		$this->multinigual = false;
 		$this->userTypes   = $this->getData('types', array());
+		$this->visible     = (boolean) $this->getData('visible', true);
 	}
 
 	public function getID() {
@@ -24,6 +26,10 @@ class _WV16_Attribute extends WV_Property {
 
 	public function getUserTypes() {
 		return $this->userTypes;
+	}
+
+	public function isVisible() {
+		return $this->visible;
 	}
 
 	public function deserialize($raw) {

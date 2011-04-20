@@ -131,7 +131,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	public function getRegistered()       { return $this->registered;       }
 	public function getPasswordHash()     { return $this->password;         }
 	public function getTypeName()         { return $this->type;             }
-	public function getGroupIDs()         { return $this->groups;           }
+	public function getGroupNames()       { return $this->groups;           }
 	public function isActivated()         { return $this->activated;        }
 	public function isConfirmed()         { return $this->confirmed;        }
 	public function getConfirmationCode() { return $this->confirmationCode; }
@@ -144,7 +144,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return _WV16_UserType  der Benutzertyp als Objekt
 	 */
 	public function getType() {
-		return _WV16_UserType::getInstance($this->type);
+		return WV16_Factory::getUserType($this->type);
 	}
 
 	/**

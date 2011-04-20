@@ -12,7 +12,7 @@ print '<p>Die folgenden Benutzer sind auf Ihrer Website registriert.</p>';
 
 $id      = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../data/dyn/public/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
 $table   = new sly_Table('users');
-$columns = WV8_Settings::getValue('frontenduser', 'be_columns', array());
+$columns = sly_Core::config()->get('frontenduser/be_columns', array());
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
 
@@ -58,12 +58,12 @@ foreach ($users as $user) {
 					$value = $user->getValue($name);
 
 					if ($value === null) {
-						print '<td>&hellip;</td>';
-						continue;
+						print '&hellip;';
+						break;
 					}
-					$valueValue = $value->getValue();
-					if (is_scalar($valueValue)) print sly_html($valueValue);
-					break;
+
+					if (is_scalar($value)) print sly_html($value);
+					else print sly_Util_String::humanImplode(array_values($value));
 			}
 
 			print '</td>';

@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS `%TABLE_PREFIX%wv16_users`;
 
 CREATE TABLE `%TABLE_PREFIX%wv16_groups` (
   `name`  VARCHAR(96)  NOT NULL,
-  `title` VARCHAR(200) DEFAULT NULL,
+  `title` VARCHAR(200) NOT NULL,
   PRIMARY KEY (`name`(96))
 ) ENGINE = InnoDB;
 
@@ -20,7 +20,7 @@ CREATE TABLE `%TABLE_PREFIX%wv16_user_values` (
   `user_id`    INT(10) UNSIGNED NOT NULL,
   `attribute`  VARCHAR(96)      NOT NULL,
   `set_id`     SMALLINT(5)      NOT NULL DEFAULT '1',
-  `value`      TEXT             NOT NULL,
+  `value`      TEXT,
   PRIMARY KEY (`user_id`, `attribute`(96), `set_id`)
 ) ENGINE = InnoDB;
 
