@@ -62,7 +62,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$data = $sql->fetch('*', 'wv16_users', 'id = ?', $id);
 
 		if (empty($data)) {
-			throw new WV16_Exception('Der Benutzer #'.$id.' konnte nicht gefunden werden!', self::ERR_UNKNOWN_USER);
+			throw new WV16_Exception('Der Benutzer #'.$id.' konnte nicht gefunden werden!');
 		}
 
 		$this->id               = (int) $data['id'];
