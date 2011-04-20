@@ -124,7 +124,16 @@ abstract class WV16_Provider {
 	 * @return array  assoziatives Array (name => title)
 	 */
 	public static function getUserTypes() {
-		return sly_Core::config()->get('frontenduser/types');
+		$cache     = sly_Core::cache();
+		$namespace = 'frontenduser.lists';
+		$data      = $cache->get($namespace, 'types', false);
+
+		if (!is_array($data)) {
+			$data = _WV16_Service_UserType::loadAll();
+			$cache->set($namespace, 'types', $data);
+		}
+
+		return $data;
 	}
 
 	/**
@@ -139,7 +148,7 @@ abstract class WV16_Provider {
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
-			$all  = _WV16_Service::loadAll();
+			$all  = _WV16_Service_Attribute::loadAll();
 			$data = array();
 
 			if ($userType === null) {

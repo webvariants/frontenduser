@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class _WV16_Service extends WV_Service_Property {
+class _WV16_Service_Attribute extends WV_Service_Property {
 	public static function loadAll() {
 		static $properties = null;
 
@@ -39,15 +39,7 @@ class _WV16_Service extends WV_Service_Property {
 		$struct = $cache->get('frontenduser', 'attributes', null);
 
 		if ($struct === null || $data !== $oldData) {
-			$struct     = array();
-			$attributes = parent::loadFromArray($data, $oldData);
-
-			foreach ($attributes as $attr) {
-				$name = $attr->getName();
-				$struct[$name] = $attr;
-			}
-
-			sly_Core::cache();
+			$struct = parent::loadFromArray($data, $oldData);
 			$cache->set('frontenduser', 'attributes', $struct);
 		}
 

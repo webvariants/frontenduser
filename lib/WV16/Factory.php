@@ -53,7 +53,7 @@ abstract class WV16_Factory {
 	}
 
 	public static function getAttribute($name) {
-		$all = WV2_MetaProvider::getAllObjectMetaInfos((int) $type);
+		$all = WV16_Provider::getAttributes();
 
 		if (!isset($all[$name])) {
 			throw new WV16_Exception('Attribute '.$name.' could not be found.');

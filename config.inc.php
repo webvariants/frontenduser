@@ -23,3 +23,13 @@ sly_Loader::addLoadPath(_WV16_PATH.'lib');
 // Initialisierungen
 
 sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_Users', 'clearCache'));
+
+// Attribute & Typen synchronieren
+
+if (sly_Core::isDeveloperMode()) {
+	sly_Core::cache()->delete('frontenduser', 'attributes');
+	sly_Core::cache()->delete('frontenduser', 'types');
+
+	_WV16_Service_Attribute::loadAll();
+	_WV16_Service_UserType::loadAll();
+}
