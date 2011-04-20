@@ -361,6 +361,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id = ?', array($this->id, $setID)) > 0) {
 			$this->currentSetID = $setID;
+			$this->rawValues    = null;
 			$this->values       = null;
 			$this->getValues();
 			return true;
