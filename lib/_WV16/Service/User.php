@@ -88,7 +88,7 @@ class _WV16_Service_User extends WV_Object {
 			throw new WV16_Exception('Der Login ist bereits vergeben.');
 		}
 
-		// Bestötigunsgcode neu setzen
+		// Bestätigunsgcode neu setzen
 
 		$code      = $user->getConfirmationCode();
 		$confirmed = $user->isConfirmed();
@@ -190,7 +190,7 @@ class _WV16_Service_User extends WV_Object {
 		}
 
 		$sql = WV_SQL::getInstance();
-		$id  = $sql->fetch('id', 'wv16_users','LOWER(login) = ?', strtolower($login));
+		$id  = $sql->fetch('id', 'wv16_users', 'LOWER(login) = ?', strtolower($login));
 
 		if ($id !== false) {
 			$cache->set($namespace, $cacheKey, (int) $id);
