@@ -24,7 +24,7 @@ abstract class WV16_Mailer {
 
 		// Artikel finden
 
-		$confirmArticle = OOArticle::getArticleById(WV16_Users::getConfig('validation_article'));
+		$confirmArticle = sly_Util_Article::findById(WV16_Users::getConfig('validation_article'));
 
 		if ($confirmArticle) {
 			$params = array($parameterName => $code);
@@ -60,7 +60,7 @@ abstract class WV16_Mailer {
 			$user->update();
 		}
 
-		$link = OOArticle::getArticleById(WV16_Users::getConfig('recovery_article'));
+		$link = sly_Util_Article::findById(WV16_Users::getConfig('recovery_article'));
 
 		if ($link) {
 			$params = array('code' => $user->getConfirmationCode());
