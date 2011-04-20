@@ -24,13 +24,7 @@ abstract class WV16_Users {
 
 	public static function getConfig($name, $default = null) {
 		$value = WV8_Settings::getValue('frontenduser', $name);
-		return empty($value) ? $default : $value; // Wenn leere Felder abgespeichert werden, sind sie ja nicht NULL
-	}
-
-	public static function setConfig($name, $value) {
-		$setting = _WV8_Setting::getInstance('frontenduser', $name);
-		$setting->setValue($value, WV_Sally::clang());
-		$setting->update();
+		return empty($value) ? $default : $value;
 	}
 
 	public static function isLoggedIn() {
@@ -43,23 +37,23 @@ abstract class WV16_Users {
 	}
 
 	/**
-	 * @param string $login
-	 * @param string $password
+	 * @param  string $login
+	 * @param  string $password
 	 * @return _WV16_User
 	 */
 	public static function login($login, $password, $allowNonConfirmed = false, $allowNonActivated = false) {
 		$userObj = self::getUser($login);
 
 		if (!$userObj->isActivated() && !$allowNonActivated) {
-			throw new WV16_Exception('This account has not yet been activated.', self::ERR_USER_NOT_ACTIVATED);
+			throw new WV16_Exception('This account has not yet been activated.');
 		}
 
 		if (!$userObj->isConfirmed() && !$allowNonConfirmed) {
-			throw new WV16_Exception('This account has not yet been confirmed.', self::ERR_USER_NOT_CONFIRMED);
+			throw new WV16_Exception('This account has not yet been confirmed.');
 		}
 
 		if (!self::checkPassword($userObj, $password)) {
-			throw new WV16_Exception('Bad credentials given.', self::ERR_WRONG_PASSWORD);
+			throw new WV16_Exception('Bad credentials given.');
 		}
 
 		self::loginUser($userObj);
@@ -82,6 +76,19 @@ abstract class WV16_Users {
 		}
 	}
 
+	/**
+	 * @return _WV16_User  or null if no user is logged in
+	 */
+	public static function getCurrentUser() {
+		try {
+			$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
+			return $userID <= 0 ? null : _WV16_User::getInstance($userID);
+		}
+		catch (Exception $e) {
+			return null;
+		}
+	}
+
 	public static function generatePassword($salt = null) {
 		if ($salt === null) {
 			$current = self::getCurrentUser();
@@ -97,7 +104,8 @@ abstract class WV16_Users {
 
 	public static function findByConfirmationCode($code) {
 		$where = 'confirmation_code = "'.preg_replace('#[^a-z0-9]#i', '', $code).'"';
-		$users = self::getAllUsers($where, 'id', 'asc', 0, 1);
+		$users = WV16_Provider::getUsers($where, 'id', 'asc', 0, 1);
+
 		return empty($users) ? null : reset($users);
 	}
 
@@ -133,8 +141,7 @@ abstract class WV16_Users {
 
 				default:
 					try {
-						$value       = $user->getValue($attributeName);
-						$replacement = $value->getValue();
+						$replacement = $user->getValue($attributeName);
 
 						if (is_array($replacement)) {
 							$replacement = sly_Util_String::humanImplode(array_values($replacement));

@@ -9,19 +9,6 @@
  */
 
 abstract class WV16_Factory {
-	/**
-	 * @return _WV16_User  or null if no user is logged in
-	 */
-	public static function getCurrentUser() {
-		try {
-			$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
-			return $userID <= 0 ? null : _WV16_User::getInstance($userID);
-		}
-		catch (Exception $e) {
-			return null;
-		}
-	}
-
 	public static function getUser($login) {
 		$sql       = WV_SQL::getInstance();
 		$login     = strtolower(trim($login));
@@ -57,6 +44,16 @@ abstract class WV16_Factory {
 
 		if (!isset($all[$name])) {
 			throw new WV16_Exception('Attribute '.$name.' could not be found.');
+		}
+
+		return $all[$name];
+	}
+
+	public static function getUserType($name) {
+		$all = WV16_Provider::getUserTypes();
+
+		if (!isset($all[$name])) {
+			throw new WV16_Exception('User type '.$name.' could not be found.');
 		}
 
 		return $all[$name];
