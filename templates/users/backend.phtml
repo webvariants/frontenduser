@@ -73,12 +73,11 @@ foreach ($dataToDisplay as $attrName => $data) {
 ////////////////////////////////////////////////////////////////////////////////
 // Zuordnung zu den Gruppen
 
-$assignedGroups  = $user ? $user->getGroupNames() : array();
-$availableGroups = WV16_Provider::getGroups();
-$groups          = array();
+$assignedGroups = $user ? $user->getGroupNames() : array();
+$groups         = array();
 
-foreach ($availableGroups as $index => $group) {
-	$groups[$group->getID()] = $group->getTitle();
+foreach (WV16_Provider::getGroups() as $name => $group) {
+	$groups[$name] = $group->getTitle();
 }
 
 if (!empty($groups)) {
