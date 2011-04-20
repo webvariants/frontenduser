@@ -15,9 +15,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 	}
 
 	private function getExports() {
-		$filename = SLY_DEVELOPFOLDER.'/frontenduser-exports.yml';
-		if (!file_exists($filename)) throw new sly_Exception($filename.' konnte nicht gefunden werden.');
-		return sly_Util_YAML::load($filename);
+		return sly_Core::config()->get('frontenduser/exports');
 	}
 
 	protected function export() {
@@ -36,9 +34,9 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 		// find users
 
-		$type  = _WV16_UserType::getInstance($export['usertype'])->getID();
+		$type  = $export['usertype'];
 		$sql   = WV_SQL::getInstance();
-		$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE type_id = ?', $type, '~');
+		$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE `type` = ?', $type, '~');
 
 		if (empty($users)) {
 			print rex_warning('Es wurden keine passenden Benutzer gefunden.');
@@ -47,7 +45,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 		// prepare head
 
-		WV_Sally::clearOutput();
+		while (ob_get_level()) ob_end_clean();
 		ob_start('ob_gzhandler');
 
 		$nl      = "\n";
@@ -56,7 +54,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// write header line
 
 		foreach ($export['attributes'] as $attrName) {
-			$attribute = _WV16_Attribute::getInstance($attrName);
+			$attribute = WV16_Factory::getAttribute($attrName);
 			$headers[] = str_replace(array('"', "'", ';'), '', $attribute->getTitle());
 		}
 
@@ -70,7 +68,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 			$line = array($userID, $user->getLogin());
 
 			foreach ($export['attributes'] as $attrName) {
-				$value = $user->getValue($attrName)->getValue();
+				$value = $user->getValue($attrName);
 
 				if (is_array($value)) {
 					$value = implode(', ', $value);
