@@ -62,42 +62,6 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	/**
-	 * ID ermitteln
-	 *
-	 * Diese Methode ermittelt für einen internen Namen eines Artikeltyps die
-	 * dazughörige ID.
-	 *
-	 * @throws Exception     falls der interne Name nicht gefunden wurde
-	 * @param  string $name  der interne Name
-	 * @return int           die gefundene ID
-	 */
-	public static function getIDForName($name) {
-		if (sly_Util_String::isInteger($name)) {
-			return (int) $name;
-		}
-
-		$cache     = sly_Core::cache();
-		$namespace = 'frontenduser.internal.usertypes';
-		$key       = sly_Cache::generateKey('mapping', strtolower($name));
-
-		$id = $cache->get($namespace, $key, -1);
-
-		if ($id > 0) {
-			return (int) $id;
-		}
-
-		$sql = WV_SQL::getInstance();
-		$id  = $sql->fetch('id', 'wv16_utypes', 'LOWER(name) = ?', strtolower($name));
-
-		if (!$id) {
-			throw new WV16_Exception('Der Benutzertyp "'.$name.'" konnte nicht gefunden werden!');
-		}
-
-		$cache->set($namespace, $key, (int) $id);
-		return (int) $id;
-	}
-
-	/**
 	 * Artikeltyp aktualisieren
 	 *
 	 * Diese Methode speichert und validiert alle Änderungen, die bisher mit den
@@ -303,37 +267,4 @@ class _WV16_UserType extends WV_Object {
 	}
 
 	/*@}*/
-
-	/** @name Setter */
-
-	/*@{*/
-
-	/**
-	 * Setter
-	 *
-	 * Diese Methode setzt die Eigenschaft auf einen neuen Wert. Das Prüfen der
-	 * Eingabe übernimmt erst die update()-Method der jeweiligen Instanz.
-	 *
-	 * @param mixed $value  der neue Wert der Eigenschaft
-	 */
-	public function setName($value)  { $this->name  = trim($value); }
-	public function setTitle($value) { $this->title = trim($value); }
-
-	public function setAttributes($value) {
-		$attributes = sly_makeArray($value);
-
-		$this->attributes = array();
-
-		foreach ($attributes as $attr) {
-			$id = _WV16_FrontendUser::getIDForAttribute($attr, false);
-
-			if ($id > 0) {
-				$this->attributes[] = $id;
-			}
-		}
-
-		$this->attributes = array_unique($this->attributes);
-	}
-
-	/* @} */
 }

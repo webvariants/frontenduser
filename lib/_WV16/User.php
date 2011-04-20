@@ -9,17 +9,12 @@
  */
 
 class _WV16_User extends WV_Object implements WV16_User {
-	const ERR_UNKNOWN_USER  = 1;
-	const ERR_INVALID_LOGIN = 2;
-	const ERR_PWD_TOO_SHORT = 3;
-	const ERR_LOGIN_EXISTS  = 4;
-
 	protected $id;
 	protected $login;
 	protected $password;
-	protected $typeID;
-	protected $origTypeID;
+	protected $type;
 	protected $registered;
+	protected $rawValues;
 	protected $values;
 	protected $groups;
 	protected $deleted;
@@ -30,6 +25,17 @@ class _WV16_User extends WV_Object implements WV16_User {
 	protected $confirmationCode;
 
 	private static $instances = array();
+
+	public function __sleep() {
+		return array('id', 'login', 'password', 'type', 'registered', 'rawValues',
+			'groups', 'deleted', 'activated', 'confirmed', 'wasActivated',
+			'currentSetID', 'confirmationCode'
+		);
+	}
+
+	public function __wakeup() {
+		$this->values = null;
+	}
 
 	/**
 	 * @return _WV16_User  der entsprechende Benutzer
@@ -51,9 +57,6 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return new self($id);
 	}
 
-	/**
-	 * @return void
-	 */
 	private function __construct($id) {
 		$sql  = WV_SQL::getInstance();
 		$data = $sql->fetch('*', 'wv16_users', 'id = ?', $id);
@@ -66,15 +69,15 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$this->login            = $data['login'];
 		$this->password         = $data['password'];
 		$this->registered       = $data['registered'];
-		$this->typeID           = (int) $data['type_id'];
-		$this->origTypeID       = $this->typeID;
+		$this->type             = $data['type'];
+		$this->rawValues        = null;
 		$this->values           = null;
 		$this->deleted          = (boolean) $data['deleted'];
 		$this->activated        = (boolean) $data['activated'];
 		$this->confirmed        = (boolean) $data['confirmed'];
 		$this->wasActivated     = (boolean) $data['was_activated'];
-		$this->currentSetID     = WV16_Users::getFirstSetID($this->id);
-		$this->groups           = $sql->getArray('SELECT group_id FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
+		$this->currentSetID     = $this->getFirstSetID();
+		$this->groups           = $sql->getArray('SELECT `group` FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
 		$this->confirmationCode = $data['confirmation_code'];
 	}
 
@@ -82,271 +85,115 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return _WV16_User  der neu erzeugte Benutzer
 	 */
 	public static function register($login, $password, $userType = null) {
-		$sql      = WV_SQL::getInstance();
-		$password = trim($password);
-		$login    = trim($login);
-		$userType = _WV16_FrontendUser::getIDForUserType($userType, true);
-
-		if ($userType === null) {
-			$userType = _WV16_FrontendUser::DEFAULT_USER_TYPE;
-		}
-
-		if (empty($login)) {
-			throw new WV16_Exception('Der Login darf nicht leer sein.', self::ERR_INVALID_LOGIN);
-		}
-
-		if (!preg_match('#^[a-z0-9_.,;\#+-@]+$#i', $login)) {
-			throw new WV16_Exception('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
-		}
-
-		if ($sql->count('wv16_users', 'LOWER(login) = ?', strtolower($login)) != 0) {
-			throw new WV16_Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
-		}
-
-		self::testPassword($password);
-
-		$registered       = date('Y-m-d H:i:s');
-		$confirmationCode = WV16_Users::generateConfirmationCode($login);
-		$params           = array($login, $password, $userType, $registered, $confirmationCode);
-
-		return self::transactionGuard(array(__CLASS__, '_register'), $params, 'WV16_Exception');
-	}
-
-	protected static function _register($login, $password, $userType, $registered, $confirmationCode) {
-		$sql = WV_SQL::getInstance();
-
-		$sql->query(
-			'INSERT INTO ~wv16_users (login,password,registered,type_id,activated,confirmed,confirmation_code) VALUES (?,"",?,?,?,?,?)',
-			array($login, $registered, $userType, 0, 0, $confirmationCode), '~'
-		);
-
-		$userID = $sql->lastID();
-		$pwhash = sha1($userID.$password.$registered);
-
-		$sql->query('UPDATE ~wv16_users SET password = ? WHERE id = ?', array($pwhash, $userID), '~');
-
-		// Attribute und ihre Standardwerte übernehmen
-
-		$attributes = WV16_Users::getAttributesForUserType($userType);
-
-		foreach ($attributes as $attr) {
-			$sql->query(
-				'INSERT INTO ~wv16_user_values (user_id,attribute_id,set_id,value) VALUES (?,?,?,?)',
-				array($userID, $attr->getID(), 1, $attr->getDefault()), '~'
-			);
-		}
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.counts', true);
-		$cache->flush('frontenduser.lists', true);
+		$service = new _WV16_Service_User();
+		$userID  = $service->register($login, $password, $userType);
 
 		return self::getInstance($userID);
 	}
 
-	/**
-	 * @return boolean  true im Erfolgsfall, sonst false
-	 */
 	public function update() {
-		return self::transactionGuard(array($this, '_update'), null, 'WV16_Exception');
+		$service = new _WV16_Service_User();
+		$service->update($this);
+
+		$this->values = null;
 	}
 
-	protected function _update() {
-		$sql = WV_SQL::getInstance();
-
-		if ($sql->count('wv16_users','LOWER(login) = ? AND id <> ?', array(strtolower($this->login), $this->id)) != 0) {
-			throw new WV16_Exception('Der Login ist bereits vergeben.', self::ERR_LOGIN_EXISTS);
-		}
-
-		if ($this->confirmationCode === null) {
-			if ($this->confirmed) {
-				$this->confirmationCode = '';
-			}
-			else {
-				$this->confirmationCode = WV16_Users::generateConfirmationCode($this->login);
-			}
-		}
-
-		$sql->query(
-			'UPDATE ~wv16_users SET login = ?, password = ?, type_id = ?, activated = ?, confirmed = ?, confirmation_code = ? WHERE id = ?',
-			array($this->login, $this->password, $this->typeID, (int) $this->activated, (int) $this->confirmed, $this->confirmationCode, $this->id), '~'
-		);
-
-		if ($this->activated === true && $this->wasActivated === false) {
-			$sql->query('UPDATE ~wv16_users SET was_activated = 1 WHERE id = ?', $this->id, '~');
-			$this->wasActivated = true;
-		}
-
-		if ($this->typeID != $this->origTypeID) {
-			$oldTypesAttributes = WV16_Users::getAttributesForUserType($this->origTypeID);
-			$newTypesAttributes = WV16_Users::getAttributesForUserType($this->typeID);
-
-			foreach ($oldTypesAttributes as $idx => $attr) $oldTypesAttributes[$idx] = $attr->getID();
-			foreach ($newTypesAttributes as $idx => $attr) $newTypesAttributes[$idx] = $attr->getID();
-
-			$toDelete = array_diff($oldTypesAttributes, $newTypesAttributes);
-			$toAdd    = array_diff($newTypesAttributes, $oldTypesAttributes);
-
-			if (!empty($toDelete)) {
-				$markers = implode(',', $toDelete);
-
-				$sql->query(
-					'DELETE FROM ~wv16_user_values WHERE user_id = ? AND attribute_id IN ('.$markers.')',
-					$this->id, '~'
-				);
-			}
-
-			if (!empty($toAdd)) {
-				$markers = implode(',', $toAdd);
-
-				$sql->query(
-					'INSERT INTO ~wv16_user_values (user_id,attribute_id,value) '.
-					'SELECT ?,id,default_value FROM ~wv16_attributes WHERE id IN ('.$markers.')',
-					$this->id, '~'
-				);
-			}
-		}
-
-		if ($this->typeID != $this->origTypeID) {
-			$this->values     = null; // neues Abrufen beim Aufruf von getAttributes() veranlassen
-			$this->origTypeID = $this->typeID;
-		}
-
-		$cache = sly_Core::cache();
-		$cache->delete('frontenduser.users', $this->id);
-		$cache->delete('frontenduser.users.firstsets', $this->id);
-		$cache->delete('frontenduser.users.typeids', $this->id);
-		$cache->flush('frontenduser.lists', true);
-		$cache->flush('frontenduser.counts', true);
-
-		return true;
-	}
-
-	/**
-	 * @return boolean  true im Erfolgsfall, sonst false
-	 */
 	public function delete() {
-		return self::transactionGuard(array($this, '_delete'), null, 'WV16_Exception');
-	}
-
-	protected function _delete() {
-		$sql = WV_SQL::getInstance();
-
-		$sql->query('DELETE FROM ~wv16_users WHERE id = ?', $this->id, '~');
-		$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
-		$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ?', $this->id, '~');
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.users', true);
-		$cache->flush('frontenduser.uservalues', true);
-		$cache->flush('frontenduser.lists', true);
-		$cache->flush('frontenduser.counts', true);
-
-		return true;
+		$service = new _WV16_Service_User();
+		$service->delete($this);
 	}
 
 	/**
 	 * @return boolean  true, falls ja, sonst false
 	 */
 	public static function exists($login) {
-		$cache     = sly_Core::cache();
-		$namespace = 'frontenduser.users';
-		$cacheKey  = sly_Cache::generateKey('mapping', $login);
+		$service = new _WV16_Service_User();
+		return $service->exists($login);
+	}
 
-		if ($cache->exists($namespace, $cacheKey)) {
-			return true;
-		}
+	public function checkPassword($password) {
+		$password = trim($password);
+		return sha1($this->id.$password.$this->registered) === $this->password;
+	}
 
-		$sql = WV_SQL::getInstance();
-		$id  = $sql->fetch('id', 'wv16_users','LOWER(login) = ?', strtolower($login));
-
-		if ($id !== false) {
-			$cache->set($namespace, $cacheKey, (int) $id);
-			return true;
-		}
-
-		return false;
+	/**
+	 * Prüft, ob ein Benutzer von einem bestimmten Typ ist
+	 *
+	 * @param  string $userType  der Name des Benutzertyps
+	 * @return bool              true oder false
+	 */
+	public function isOfType($userType) {
+		return $userType === $this->type;
 	}
 
 	public function getLogin()            { return $this->login;            }
 	public function getID()               { return $this->id;               }
 	public function getRegistered()       { return $this->registered;       }
 	public function getPasswordHash()     { return $this->password;         }
-	public function getTypeID()           { return $this->typeID;           }
+	public function getTypeName()         { return $this->type;             }
 	public function getGroupIDs()         { return $this->groups;           }
 	public function isActivated()         { return $this->activated;        }
 	public function isConfirmed()         { return $this->confirmed;        }
 	public function getConfirmationCode() { return $this->confirmationCode; }
+	public function getSetID()            { return $this->currentSetID;     }
+	public function isDeleted()           { return $this->deleted;          }
+	public function wasEverActivated()    { return $this->wasActivated;     }
+	public function wasNeverActivated()   { return !$this->wasActivated;    }
 
 	/**
 	 * @return _WV16_UserType  der Benutzertyp als Objekt
 	 */
 	public function getType() {
-		return _WV16_UserType::getInstance($this->typeID);
+		return _WV16_UserType::getInstance($this->type);
 	}
 
 	/**
 	 * @return array  Liste aller Gruppen als Objekte
 	 */
 	public function getGroups() {
-		$obj = array();
+		$return = array();
 
-		foreach ($this->groups as $id) {
-			$obj[] = _WV16_Group::getInstance($id);
+		foreach ($this->groups as $name) {
+			$return[$name] = _WV16_Group::getInstance($name);
 		}
 
-		return $obj;
+		return $return;
 	}
 
 	/**
-	 * @return _WV16_UserValue  der Benutzerwert
+	 * @return mixed  der Benutzerwert
 	 */
 	public function getValue($attribute, $default = null) {
-		$this->getValues();
-
-		$id = _WV16_FrontendUser::getIDForAttribute($attribute);
-		return isset($this->values[$id]) ? $this->values[$id] : new _WV16_UserValue($default, null, null, null);
+		$values = $this->getValues();
+		return isset($values[$attribute]) ? $values[$attribute] : $default;
 	}
 
 	/**
 	 * @return boolean  true im Erfolgsfall, sonst false
 	 */
 	public function setValue($attribute, $value) {
-		$retval = WV16_Users::setDataForUser($this, $attribute, $value);
+		$service = new _WV16_Service_Value();
+		$written = $service->write($this, null, $attribute, $value);
 
-		if ($retval) {
+		if ($written) {
 			$cache = sly_Core::cache();
 			$cache->delete('frontenduser.users', $this->id);
 			$cache->delete('frontenduser.users.firstsets', $this->id);
 			$cache->flush('frontenduser.lists', true);
-			$this->values = null;
+
+			$this->rawValues = null;
+			$this->values    = null;
 		}
 
-		return $retval;
+		return $written;
 	}
 
-	public function getValues() {
-		if ($this->values === null) {
-			$this->values = WV16_Users::getDataForUser($this->id, null, null, $this->currentSetID);
+	public function getValues($raw = false) {
+		// Wurden die Werte noch nicht abgerufen?
 
-			if ($this->values === null) {
-				$this->values = array();
-			}
-			elseif (!is_array($this->values)) {
-				$attr = $this->values;
-				unset($this->values);
-				$this->values[$attr->getAttributeName()] = $attr;
-			}
-
-			// von assoziativ auf normal-indiziert (IDs umschalten)
-
-			$a = array();
-
-			foreach ($this->values as $name => $attr) {
-				$a[$attr->getAttributeID()] = $attr;
-			}
-
-			$this->values = null; // Speicher freigeben
-			$this->values = $a;
+		if ($this->rawValues === null) {
+			$service         = new _WV16_Service_Value();
+			$this->rawValues = $service->read($this, null, true);
 
 			// Benutzer neu cachen
 
@@ -356,82 +203,85 @@ class _WV16_User extends WV_Object implements WV16_User {
 			$cache->set($namespace, $this->id, $this);
 		}
 
+		// Rohdaten zurückgeben?
+
+		if ($raw) {
+			return $this->rawValues;
+		}
+
+		// Werte deserialisieren
+
+		if (!is_array($this->values)) {
+			$this->values = array();
+		}
+
+		foreach ($this->rawValues as $attr => $rawValue) {
+			if (!isset($this->values[$attr])) {
+				$this->values[$attr] = WV16_Factory::getAttribute($attr)->deserialize($rawValue);
+			}
+		}
+
 		return $this->values;
 	}
 
+	/**
+	 * Prüfen, ob Wert vorhanden ist
+	 *
+	 * Diese Methode prüft, ob der Benutzer einen bestimmten Wert besitzt.
+	 *
+	 * @param  string $attribute  das Attribut
+	 * @param  mixed  $value      der gesuchte Wert
+	 * @return boolean            true, wenn der Benutzer den gesuchte Wert bestitzt, sonst false
+	 */
+	public function hasValue($attribute, $value) {
+		$value = $this->getValue($attribute);
+
+		if ($data === null) {
+			return false;
+		}
+
+		if (!is_array($v)) {
+			return $value == $v;
+		}
+
+		return in_array($value, array_keys($v)) || in_array($value, array_values($v));
+	}
+
+
+	/* Gruppen-Management */
+
+
 	public function isInGroup($group) {
-		$group = _WV16_FrontendUser::getIDForGroup($group, false);
 		return array_search($group, $this->groups) !== false;
 	}
 
 	public function addGroup($group) {
-		$group = _WV16_FrontendUser::getIDForGroup($group, false);
-		return self::transactionGuard(array($this, '_addGroup'), $group, 'WV16_Exception');
-	}
+		$service = new _WV16_Service_User();
 
-	protected function _addGroup($group) {
-		$sql = WV_SQL::getInstance();
-
-		if (_WV16_Group::exists($group)) {
-			if ($sql->count('wv16_user_groups', 'user_id = ? AND group_id = ?', array($this->id, $group)) == 0) {
-				$sql->query('INSERT INTO ~wv16_user_groups (user_id,group_id) VALUES (?,?)', array($this->id, $group), '~');
-				$this->groups[] = $group;
-			}
+		if ($service->addToGroup($this, $group)) {
+			$this->groups[] = $group;
+			return true;
 		}
 
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.users', true);
-		$cache->flush('frontenduser.lists', true);
-
-		return true;
-	}
-
-	public function wasEverActivated() {
-		return $this->wasActivated;
-	}
-
-	public function wasNeverActivated() {
-		return !$this->wasActivated;
+		return false;
 	}
 
 	public function removeGroup($group) {
-		$group = _WV16_FrontendUser::getIDForGroup($group, false);
-		return self::transactionGuard(array($this, '_removeGroup'), $group, 'WV16_Exception');
-	}
+		$service = new _WV16_Service_User();
+		$service->removeFromGroup($this, $group);
 
-	protected function _removeGroup($group) {
-		$index = $this->groups === null ? false : array_search($group, $this->groups);
-		$sql   = WV_SQL::getInstance();
-		$query = 'DELETE FROM ~wv16_user_groups WHERE user_id = ? AND group_id = ?';
-
-		$sql->query($query, array($this->id, $group), '~');
+		$index = array_search($group, $this->groups);
 
 		if ($index !== false) {
 			unset($this->groups[$index]);
 		}
 
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.users', true);
-		$cache->flush('frontenduser.lists', true);
-
 		return true;
 	}
 
 	public function removeAllGroups() {
-		return self::transactionGuard(array($this, '_removeAllGroups'), null, 'WV16_Exception');
-	}
-
-	protected function _removeAllGroups() {
-		$sql = WV_SQL::getInstance();
-
-		$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $this->id, '~');
-		$this->groups = array();
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.users', true);
-		$cache->flush('frontenduser.lists', true);
-
-		return true;
+		$service = new _WV16_Service_User();
+		return $service->removeFromAllGroups($this);
 	}
 
 	public function setConfirmationCode($code = null) {
@@ -439,6 +289,10 @@ class _WV16_User extends WV_Object implements WV16_User {
 		$this->confirmationCode = $code;
 		return $code;
 	}
+
+
+	/* Setter */
+
 
 	public function setConfirmed($isConfirmed = true, $confirmationCode = null) {
 		// Auf Wunsch kann auch diese Methode die Überprüfung auf den
@@ -457,27 +311,12 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	public function setLogin($login) {
-		// Benutzer, die mit Daten befüllt sind, die aus read-only Sets kommen, können sich nicht ändern.
-
-		if ($this->isReadOnly()) {
-			return false;
-		}
-
-		$login = trim($login);
-
-		if (!preg_match('#^[a-z0-9_.,;\#+-@]+$#i', $login)) {
-			throw new WV16_Exception('Der Login enthält ungültige Zeichen.', self::ERR_INVALID_LOGIN);
-		}
-
-		$this->login = $login;
+		if ($this->isReadOnly()) return false;
+		$this->login = trim($login);
 	}
 
 	public function setPassword($password, $passwordRepeat = null) {
-		// Benutzer, die mit Daten befüllt sind, die aus read-only Sets kommen, können sich nicht ändern.
-
-		if ($this->isReadOnly()) {
-			return false;
-		}
+		if ($this->isReadOnly()) return false;
 
 		$password = trim($password);
 		self::testPassword($password);
@@ -492,7 +331,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public static function testPassword($password) {
 		if (strlen($password) < 6) {
-			throw new WV16_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', self::ERR_PWD_TOO_SHORT);
+			throw new WV16_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)');
 		}
 
 		// Besteht das Passwort nur aus Zahlen?
@@ -501,25 +340,20 @@ class _WV16_User extends WV_Object implements WV16_User {
 			throw new WV16_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
 		}
 
-		// TODO: Hier genauere und im Backend konfigurierbare Testroutine einbauen.
-		// Entsprechende Implementierungen finden sich in der class.securepwd.php.
-
 		return true;
 	}
 
 	public function setUserType($userType) {
-		// Benutzer, die mit Daten befüllt sind, die aus read-only Sets kommen, können sich nicht ändern.
-
-		if ($this->isReadOnly()) {
-			return false;
-		}
-
-		$userType = _WV16_FrontendUser::getIDForUserType($userType, false);
+		if ($this->isReadOnly()) return false;
 
 		if (_WV16_UserType::exists($userType)) {
-			$this->typeID = $userType;
+			$this->type = $userType;
 		}
 	}
+
+
+	/* Set-Management */
+
 
 	public function setSetID($setID) {
 		$setID = (int) $setID;
@@ -535,103 +369,40 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return false;
 	}
 
-	public function getSetID() {
-		return $this->currentSetID;
-	}
-
-	public function isDeleted() {
-		return $this->deleted;
-	}
-
 	public function getSetIDs($includeReadOnly = false) {
-		$cache     = sly_Core::cache();
-		$namespace = 'frontenduser.lists';
-		$cacheKey  = sly_Cache::generateKey('set_ids', $this->id, $includeReadOnly);
+		$service = new _WV16_Service_Set();
+		return $service->getSetIDs($this, $includeReadOnly);
+	}
 
-		$ids = $cache->get($namespace, $cacheKey, null);
-
-		if (is_array($ids)) {
-			return $ids;
-		}
-
-		$includeReadOnly = $includeReadOnly ? '' : ' AND set_id >= 0';
-
-		$ids = WV_SQL::getInstance()->getArray(
-			'SELECT DISTINCT set_id FROM ~wv16_user_values WHERE user_id = ?'.$includeReadOnly.' ORDER BY set_id',
-			$this->id, '~'
-		);
-
-		$ids = array_map('intval', $ids);
-		$cache->set($namespace, $cacheKey, $ids);
-		return $ids;
+	public function getFirstSetID() {
+		$service = new _WV16_Service_Set();
+		return $service->getFirstSetID($this);
 	}
 
 	public function createSetCopy($sourceSetID = null) {
-		$setID = $sourceSetID === null ? WV16_Users::getFirstSetID($this->id) : (int) $sourceSetID;
-		$newID = WV_SQL::getInstance()->fetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) + 1;
-
-		$this->copySet($setID, $newID);
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.lists', true);
-		$cache->delete('frontenduser.users.firstsets', $this->id);
-		return $newID;
+		$service = new _WV16_Service_Set();
+		return $service->createSetCopy($this, $sourceSetID);
 	}
 
 	public function createReadOnlySet($sourceSetID = null) {
-		$setID = $sourceSetID === null ? WV16_Users::getFirstSetID($this->id) : (int) $sourceSetID;
-		$newID = WV_SQL::getInstance()->fetch('MIN(set_id)', 'wv16_user_values', 'user_id = ?', $this->id) - 1;
-
-		// Ab Version 1.2.1 sind die Standard-IDs >= 0. Um Konflikten aus dem Weg zu gehen, wenn alte
-		// Daten aktualisiert werden, stellen wir hier sicher, dass die erste ReadOnly-ID garantiert
-		// kleiner als 0 ist.
-
-		if ($newID == 0) {
-			$newID = -1;
-		}
-
-		$this->copySet($setID, $newID);
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.lists', true);
-		$cache->delete('frontenduser.users.firstsets', $this->id);
-		return $newID;
+		$service = new _WV16_Service_Set();
+		return $service->createReadOnlySet($this, $sourceSetID);
 	}
 
 	public function deleteSet($setID = null) {
-		$setID = $setID === null ? WV16_Users::getFirstSetID($this->id) : (int) $setID;
-
-		if (self::isReadOnlySet($setID)) {
-			throw new WV16_Exception('Schreibgeschützte Sets können nicht gelöscht werden.');
-		}
-
-		$sql    = WV_SQL::getInstance();
-		$params = array($this->id, $setID);
-
-		$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?', $params, '~');
-
-		$cache = sly_Core::cache();
-		$cache->delete('frontenduser.users', $this->id);
-		$cache->delete('frontenduser.users.firstsets', $this->id);
-		$cache->flush('frontenduser.lists', true);
-		$cache->flush('frontenduser.counts', true);
-
-		return $sql->affectedRows() > 0; // ein Set kann mehr als einen Wert enthalten
-	}
-
-	protected function copySet($sourceSet, $targetSet) {
-		return WV_SQL::getInstance()->query(
-			'INSERT INTO ~wv16_user_values '.
-			'SELECT user_id,attribute_id,?,value FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?',
-			array($targetSet, $this->id, $sourceSet), '~'
-		);
+		$service = new _WV16_Service_Set();
+		return $service->deleteSet($this, $setID);
 	}
 
 	public function isReadOnly() {
-		return self::isReadOnlySet($this->currentSetID);
+		return _WV16_Service_Set::isReadOnlySet($this->currentSetID);
 	}
 
-	public static function isReadOnlySet($setID) {
-		return $setID < 0;
+
+	/* Hilfsmethoden für den User-Service */
+
+
+	public function _setEverActivated() {
+		$this->wasActivated = true;
 	}
 }
