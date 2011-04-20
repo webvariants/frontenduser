@@ -14,13 +14,13 @@ class _WV16_UserType {
 	protected $name;   ///< string  der interne Name
 	protected $title;  ///< string  der angezeigte Titel
 
-	public function __construct($name, array $data) {
-		if (!isset($data['title'])) {
+	public function __construct($name, $title) {
+		if (empty($title)) {
 			throw new WV16_Exception('User types require a title.');
 		}
 
 		$this->name  = trim($name);
-		$this->title = trim($data['title']);
+		$this->title = trim($title);
 	}
 
 	public function getName()  { return $this->name;  }

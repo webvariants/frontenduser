@@ -127,7 +127,7 @@ class _WV16_Service_UserType {
 		WV16_Users::clearCache();
 	}
 
-	protected function createType($name, array $data) {
-		return new _WV16_UserType($name, $data);
+	protected function createType($name, $title) {
+		return new _WV16_UserType($name, $title);
 	}
 }

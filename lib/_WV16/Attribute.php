@@ -22,7 +22,7 @@ class _WV16_Attribute extends WV_Property {
 		return sprintf('%u', crc32($this->name));
 	}
 
-	public function getArticleTypes() {
+	public function getUserTypes() {
 		return $this->userTypes;
 	}
 
