@@ -11,18 +11,6 @@ global_settings:
       pagename: Benutzerverwaltung
       group: 'Ausgehende eMails'
       multilingual: true
-   frontenduser.be_columns:
-      title: 'Spalten in Benutzerliste'
-      datatype: select
-      params:
-         source: datatype
-         query: 'SELECT "___login___", "Login" UNION (SELECT name, title FROM sly_wv16_attributes WHERE 1 ORDER BY title) UNION SELECT "___type___", "Benutzertyp" UNION SELECT "___registered___", "Registrier-Datum"'
-         style: checkbox
-         min: 1
-         max: 5
-      helptext: 'Wählen Sie, welche Informationen im Backend zusätzlich zum Login angezeigt werden sollen.'
-      pagename: Benutzerverwaltung
-      group: Backend
    frontenduser.mail.activation.subject:
       title: Betreff
       datatype: stringline

@@ -4,21 +4,26 @@
 # title, usertype und attributes angegeben werden. ID und Login werden immer
 # mit exportiert.
 
-types:
-   default: Standardbenutzer
+frontenduser:
+   be_columns:
+      ___login___: Login
+      ___registered___: Registrier-Datum
 
-attributes:
-   firstname:
-      title: Vorname
-      datatype: stringline
-      types: [default]
-   email:
-      title: E-Mail
-      datatype: stringline
-      types: [default]
+   types:
+      default: Standardbenutzer
 
-exports:
-   users:
-      title: Vollständige Benutzerdaten
-      usertype: default
-      attributes: [attribute1, attribute2, attribute3]
+   attributes:
+      firstname:
+         title: Vorname
+         datatype: stringline
+         types: [default]
+      email:
+         title: E-Mail
+         datatype: stringline
+         types: [default]
+
+   exports:
+      users:
+         title: Vollständige Benutzerdaten
+         usertype: default
+         attributes: [attribute1, attribute2, attribute3]
