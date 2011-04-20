@@ -40,7 +40,7 @@ foreach ($types as $type) {
 	$typesSelect[$type->getID()] = $type->getTitle();
 }
 
-$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE, $typesSelect);
+$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeID() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
 
 $form->addElements(array($login, $password1, $password2, $activated, $confirmed, $type));
 
@@ -49,7 +49,7 @@ $form->addElements(array($login, $password1, $password2, $activated, $confirmed,
 
 $form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
 
-$userType      = $user ? $user->getTypeID() : _WV16_FrontendUser::DEFAULT_USER_TYPE;
+$userType      = $user ? $user->getTypeID() : __WV16_UserType::DEFAULT_NAME;
 $requiredInfos = WV16_Users::getAttributesForUserType($userType);
 $assignedData  = $user ? $user->getValues() : array();
 $dataToDisplay = $this->getAttributesToDisplay(WV16_Users::getAllAttributes('', 'position', 'ASC', 0, -1), $assignedData, $requiredInfos);

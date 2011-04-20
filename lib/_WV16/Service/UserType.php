@@ -98,7 +98,7 @@ class _WV16_Service_UserType {
 
 	protected function onDeleted(_WV16_UserType $type) {
 		$name    = $type->getName();
-		$default = _WV16_FrontendUser::DEFAULT_USER_TYPE;
+		$default = _WV16_UserType::DEFAULT_NAME;
 		$sql     = WV_SQL::getInstance();
 
 		if ($name === $default) {

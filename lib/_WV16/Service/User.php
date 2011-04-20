@@ -18,7 +18,7 @@ class _WV16_Service_User extends WV_Object {
 		$login    = trim($login);
 
 		if ($userType === null) {
-			$userType = _WV16_FrontendUser::DEFAULT_USER_TYPE;
+			$userType = _WV16_UserType::DEFAULT_NAME;
 		}
 
 		if (empty($login)) {

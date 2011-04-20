@@ -9,6 +9,8 @@
  */
 
 class _WV16_UserType {
+	const DEFAULT_NAME = 'default';
+
 	protected $name;   ///< string  der interne Name
 	protected $title;  ///< string  der angezeigte Titel
 
