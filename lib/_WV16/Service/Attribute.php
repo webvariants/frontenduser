@@ -156,7 +156,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 			if (!empty($deletedTypes)) {
 				$sql->query('DELETE v FROM ~wv16_user_values v, ~wv16_users u '.
 					'WHERE v.user_id = u.id AND u.type IN (\''.implode('\',\'', $deletedTypes).'\') AND v.set_id >= 0',
-					$type, '~'
+					null, '~'
 				);
 			}
 

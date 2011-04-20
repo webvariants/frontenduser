@@ -53,17 +53,12 @@ $userType      = $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME;
 $requiredInfos = WV16_Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
-$attributes    = $user ? $user->getType()->getAttributes() : $requiredInfos;
-$attributeIDs  = array();
+$attributes    = array_keys($user ? $user->getType()->getAttributes() : $requiredInfos);
 
-foreach ($attributes as $a) {
-	$attributeIDs[] = $a->getID();
-}
-
-foreach ($dataToDisplay as $data) {
-	$value      = !empty($data['data']) ? $data['data']->getSerializedValue() : null;
+foreach ($dataToDisplay as $attrName => $data) {
+	$value      = $data['value'];
 	$datatypeID = $data['attribute']->getDatatypeID();
-	$hidden     = !in_array($data['attribute']->getID(), $attributeIDs);
+	$hidden     = !in_array($attrName, $attributes);
 	$parameters = array($form, $data['attribute'], array($value));
 	$visible    = $data['attribute']->isVisible() ? '' : ' wv16_hidden_attribute';
 
@@ -113,7 +108,7 @@ print $form->render();
 ?>
 
 <script type="text/javascript">
-wv16.attributesPerType = [];
+var wv16 = {attributesPerType: []};
 <?php
 
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ

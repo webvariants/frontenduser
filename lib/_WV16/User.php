@@ -346,8 +346,14 @@ class _WV16_User extends WV_Object implements WV16_User {
 	public function setUserType($userType) {
 		if ($this->isReadOnly()) return false;
 
-		if (_WV16_UserType::exists($userType)) {
+		try {
+			WV16_Factory::getUserType($userType);
 			$this->type = $userType;
+
+			return true;
+		}
+		catch (Exception $e) {
+			return false;
 		}
 	}
 

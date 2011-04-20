@@ -117,10 +117,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 				$user->setValue($name, $value);
 			}
 
-			// Standardmäßig ist der Benutzer nun in der Gruppe "noch nicht bestätigt".
-			// Wir sind aber im Backend und ändern das daher gleich.
-
-			$user->removeAllGroups();
+			// Gruppen hinzufügen
 
 			foreach ($groups as $group) {
 				$user->addGroup($group);
@@ -156,10 +153,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$login     = sly_post('login', 'string');
 		$password1 = sly_post('password', 'string');
 		$password2 = sly_post('password2', 'string');
-		$userType  = sly_post('type', 'int');
+		$userType  = sly_post('type', 'string');
 		$activated = sly_post('activated', 'boolean', false);
 		$confirmed = sly_post('confirmed', 'boolean', false);
-		$groups    = sly_postArray('groups', 'int');
+		$groups    = sly_postArray('groups', 'string');
 
 		///////////////////////////////////////////////////////////////
 		// Passwort und Benutzertyp checken
@@ -168,13 +165,13 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			// Wir initialisieren das Objekt jetzt schon, damit wir im catch-Block
 			// direkt ein edit-Formular anbieten können.
 
-			$user = _WV16_User::getInstance($id);
+			$user = WV16_Factory::getUserByID($id);
 
 			if ($password1 && $password1 != $password2) {
 				throw new Exception('Die beiden Passwörter sind nicht identisch.');
 			}
 
-			$userTypeObj = _WV16_UserType::getInstance($userType);
+			WV16_Factory::getUserType($userType);
 		}
 		catch (Exception $e) {
 			print rex_warning($e->getMessage());
@@ -187,7 +184,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$valuesToStore = $this->serializeForm($userType);
 
 		if ($valuesToStore === null) {
-			$errors = $this->errors();
+			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
 				$errors[$idx] = $e['error'];
@@ -203,15 +200,20 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		// Attribute sind OK. Ab in die Datenbank damit.
 
 		try {
-			$user->setUserType($userType); // löscht automatisch alle überhängenden Attribute
+			WV_SQL::getInstance()->beginTransaction();
+
+			$user->setUserType($userType);
 			$user->setLogin($login);
 
 			if (!empty($password1)) {
 				$user->setPassword($password1);
 			}
 
-			foreach ($valuesToStore as $value) {
-				$user->setValue($value['attribute'], $value['value']);
+			// Attributmenge aktualisieren
+			$user->update();
+
+			foreach ($valuesToStore as $name => $value) {
+				$user->setValue($name, $value);
 			}
 
 			// Zu prüfen, in welcher Gruppe wir schon sind und in welcher nicht wäre
@@ -226,8 +228,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$user->setConfirmed($confirmed, null);
 			$user->setActivated($activated);
 			$user->update();
+
+			WV_SQL::getInstance()->commit();
 		}
 		catch (Exception $e) {
+			WV_SQL::getInstance()->rollBack();
 			print rex_warning($e->getMessage());
 			return $this->edit();
 		}
@@ -305,9 +310,9 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$return    = array();
 
 		foreach ($available as $name => $attribute) {
-			$metadata = isset($assigned[$name]) ? $assigned[$name] : null;
-			$req      = in_array($name, $required);
-			$return[] = array('attribute' => $attribute, 'data' => $metadata, 'required' => $req);
+			$value         = isset($assigned[$name]) ? $assigned[$name] : null;
+			$req           = in_array($name, $required);
+			$return[$name] = array('attribute' => $attribute, 'value' => $value, 'required' => $req);
 		}
 
 		return $return;

@@ -13,7 +13,7 @@ class _WV16_Service_Value extends WV_Object {
 		$setID  = $setID === null ? $user->getSetID() : (int) $setID;
 		$sql    = WV_SQL::getInstance();
 		$qry    = 'SELECT attribute, value FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?';
-		$data   = $sql->getArray($qry, array($setID, $user->getID()), '~');
+		$data   = $sql->getArray($qry, array($user->getID(), $setID), '~');
 		$result = array();
 
 		if ($raw) {

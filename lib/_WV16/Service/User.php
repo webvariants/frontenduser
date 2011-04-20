@@ -136,14 +136,14 @@ class _WV16_Service_User extends WV_Object {
 			}
 
 			foreach ($toAdd as $name) {
-				$attribute = WV16_Users::getAttribute($name);
+				$attribute = WV16_Factory::getAttribute($name);
 				$default   = $attribute->getDefault();
 
 				$sql->query(
 					'INSERT INTO ~wv16_user_values (user_id,set_id,attribute,value) '.
 					'SELECT v.user_id,v.set_id,?,? FROM ~wv16_user_values v, ~wv16_users u '.
-					'WHERE v.user_id = u.id AND u.id = ? AND v.set_id >= 0',
-					array($name, $default) , '~'
+					'WHERE v.user_id = u.id AND u.id = ? AND v.set_id >= 0 GROUP BY v.set_id',
+					array($name, $default, $id) , '~'
 				);
 			}
 		}
