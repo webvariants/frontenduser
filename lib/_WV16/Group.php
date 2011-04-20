@@ -41,10 +41,38 @@ class _WV16_Group extends WV_Object {
 		$this->title = $data['title'];
 	}
 
-	public static function exists($group) {
-		return $groupID > 0;
+	/**
+	 * @return _WV16_Group  der neu erzeugte Benutzer
+	 */
+	public static function create($name, $title) {
+		$service = new _WV16_Service_Group();
+		$service->create($name, $title);
+
+		return self::getInstance($name);
+	}
+
+	public function update() {
+		$service = new _WV16_Service_Group();
+		$service->update($this);
+	}
+
+	public function delete() {
+		$service = new _WV16_Service_Group();
+		$service->delete($this);
+	}
+
+	/**
+	 * @return boolean  true, falls ja, sonst false
+	 */
+	public static function exists($name) {
+		$service = new _WV16_Service_Group();
+		return $service->exists($name);
 	}
 
 	public function getName()  { return $this->name;  }
 	public function getTitle() { return $this->title; }
+
+	public function setTitle($title) {
+		$this->title = trim($title);
+	}
 }

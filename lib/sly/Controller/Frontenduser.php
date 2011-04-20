@@ -12,7 +12,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 	private $errors = array();
 
 	protected function init() {
-		$pages   = array('' => 'Benutzer');
+		$pages   = array('' => 'Benutzer', 'groups' => 'Gruppen');
 		$exports = sly_Core::config()->get('frontenduser/exports', null);
 
 		if (!empty($exports)) {
