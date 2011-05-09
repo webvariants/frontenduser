@@ -42,7 +42,7 @@ abstract class WV16_Users {
 	 * @return _WV16_User
 	 */
 	public static function login($login, $password, $allowNonConfirmed = false, $allowNonActivated = false) {
-		$userObj = self::getUser($login);
+		$userObj = WV16_Factory::getUser($login);
 
 		if (!$userObj->isActivated() && !$allowNonActivated) {
 			throw new WV16_Exception('This account has not yet been activated.');
