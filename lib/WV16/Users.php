@@ -52,7 +52,7 @@ abstract class WV16_Users {
 			throw new WV16_Exception('This account has not yet been confirmed.');
 		}
 
-		if (!self::checkPassword($userObj, $password)) {
+		if (!$userObj->checkPassword($password)) {
 			throw new WV16_Exception('Bad credentials given.');
 		}
 
