@@ -24,30 +24,30 @@ abstract class WV16_Mailer {
 
 		// Artikel finden
 
-		$confirmArticle = sly_Util_Article::findById(WV16_Users::getConfig('validation_article'));
+		$confirmArticle = sly_Util_Article::findById(WV16_Users::getConfig('articles', 'validation'));
 
 		if ($confirmArticle) {
 			$params = array($parameterName => $code);
 			$link   = WV_Sally::getAbsoluteUrl($confirmArticle, WV_Sally::CLANG_CURRENT, $params, '&');
 			$extra  = array('#CONFIRMATION_URL#' => $link, '#CONFIRM_URL#' => $link);
 
-			return self::sendToUser($user, 'mail_confirmation_subject', 'mail_confirmation_body', 'mail_confirmation_to', $extra);
+			return self::sendToUser($user, 'confirmation', $extra);
 		}
 
 		return false;
 	}
 
 	public static function reportNewUserToAdmin(_WV16_User $user) {
-		return self::sendToAdmin($user, 'mail_report_subject', 'mail_report_body');
+		return self::sendToAdmin($user, 'report');
 	}
 
 	public static function notifyUserOnActivation(_WV16_User $user) {
-		return self::sendToUser($user, 'mail_activation_subject', 'mail_activation_body', 'mail_activation_to');
+		return self::sendToUser($user, 'activation');
 	}
 
 	public static function sendPasswordRecovery(_WV16_User $user, $newPassword) {
 		$extra = array('#PASSWORD#' => $newPassword, '#PASSWORT#' => $newPassword);
-		return self::sendToUser($user, 'mail_recovery_subject', 'mail_recovery_body', 'mail_recovery_to', $extra);
+		return self::sendToUser($user, 'recovery', $extra);
 	}
 
 	/**
@@ -60,40 +60,40 @@ abstract class WV16_Mailer {
 			$user->update();
 		}
 
-		$link = sly_Util_Article::findById(WV16_Users::getConfig('recovery_article'));
+		$link = sly_Util_Article::findById(WV16_Users::getConfig('articles', 'recovery'));
 
 		if ($link) {
 			$params = array('code' => $user->getConfirmationCode());
 			$link   = WV_Sally::getAbsoluteUrl($link, WV_Sally::CLANG_CURRENT, $params);
 			$extra  = array('#LINK#' => $link);
 
-			return self::sendToUser($user, 'mail_recoveryrequest_subject', 'mail_recoveryrequest_body', 'mail_recoveryrequest_to', $extra);
+			return self::sendToUser($user, 'recoveryrequest', $extra);
 		}
 
 		return false;
 	}
 
-	protected static function sendToUser(_WV16_User $user, $subject, $body, $to, $extra = array()) {
-		$name    = self::replaceValues('mail_from_name', 'Administrator', $user, $extra);
-		$email   = self::replaceValues('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
-		$subject = self::replaceValues($subject, 'Hallo #LOGIN#!', $user, $extra);
-		$body    = self::replaceValues($body, '', $user, $extra);
-		$to      = self::replaceValues($to, '#EMAIL#', $user, $extra);
+	protected static function sendToUser(_WV16_User $user, $ns, $extra = array()) {
+		$name    = self::replaceValues('mail',      'from_name',  'Administrator',                  $user, $extra);
+		$email   = self::replaceValues('mail',      'from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
+		$subject = self::replaceValues('mail.'.$ns, 'subject',    'Hallo #LOGIN#!',                 $user, $extra);
+		$body    = self::replaceValues('mail.'.$ns, 'body',       '',                               $user, $extra);
+		$to      = self::replaceValues('mail.'.$ns, 'to',         '#EMAIL#',                        $user, $extra);
 
 		return self::send($email, $name, $to, '', $subject, $body);
 	}
 
-	protected static function sendToAdmin(_WV16_User $user, $subject, $body, $extra = array()) {
-		$name    = self::replaceValues('mail_from_name', 'Administrator', $user, $extra);
-		$email   = self::replaceValues('mail_from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
-		$subject = self::replaceValues($subject, 'Hallo #LOGIN#!', $user, $extra);
-		$body    = self::replaceValues($body, '', $user, $extra);
+	protected static function sendToAdmin(_WV16_User $user, $ns, $extra = array()) {
+		$name    = self::replaceValues('mail',      'from_name',  'Administrator',                  $user, $extra);
+		$email   = self::replaceValues('mail',      'from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
+		$subject = self::replaceValues('mail.'.$ns, 'subject',    'Hallo #LOGIN#!',                 $user, $extra);
+		$body    = self::replaceValues('mail.'.$ns, 'body',       '',                               $user, $extra);
 
 		return self::send($email, $name, $email, $name, $subject, $body);
 	}
 
-	protected static function replaceValues($setting, $default, _WV16_User $user, $extra = array()) {
-		$text = WV16_Users::getConfig($setting, $default);
+	protected static function replaceValues($namespace, $setting, $default, _WV16_User $user, $extra = array()) {
+		$text = WV16_Users::getConfig($namespace, $setting, $default);
 		$text = str_ireplace(array_keys($extra), array_values($extra), $text);
 
 		return WV16_Users::replaceAttributes($text, $user);

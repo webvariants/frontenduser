@@ -22,8 +22,8 @@ abstract class WV16_Users {
 		return _WV16_User::exists($login);
 	}
 
-	public static function getConfig($name, $default = null) {
-		$value = WV8_Settings::getValue('frontenduser', $name);
+	public static function getConfig($namespace, $name, $default = null) {
+		$value = WV8_Settings::getValue('frontenduser.'.$namespace, $name);
 		return empty($value) ? $default : $value;
 	}
 
