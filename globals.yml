@@ -116,7 +116,6 @@ global_settings:
       helptext: 'Dieser Artikel muss die Validierung des Bestätigungscodes (= entsprechendes Modul) für den Benutzer ermöglichen.'
       pagename: Benutzerverwaltung
       group: Validierungsartikel
-      multilingual: true
    frontenduser.articles.recovery:
       title: 'Passwort zurücksetzen'
       datatype: linkbutton
@@ -124,4 +123,3 @@ global_settings:
       helptext: 'Dieser Artikel muss das Zurücksetzen des Passworts für den Benutzer ermöglichen.'
       pagename: Benutzerverwaltung
       group: Validierungsartikel
-      multilingual: true
