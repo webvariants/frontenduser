@@ -15,9 +15,9 @@ class _WV16_Attribute extends WV_Property {
 	public function __construct($name, array $data) {
 		parent::__construct($name, $data);
 
-		$this->multinigual = false;
-		$this->userTypes   = $this->getData('types', array());
-		$this->visible     = (boolean) $this->getData('visible', true);
+		$this->multilingual = false;
+		$this->userTypes    = $this->getData('types', array());
+		$this->visible      = (boolean) $this->getData('visible', true);
 	}
 
 	public function getID() {
