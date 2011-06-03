@@ -27,9 +27,5 @@ sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_Users', 'clearCach
 // Attribute & Typen synchronieren
 
 if (sly_Core::isDeveloperMode()) {
-	sly_Core::cache()->delete('frontenduser', 'attributes');
-	sly_Core::cache()->delete('frontenduser', 'types');
-
-	_WV16_Service_Attribute::loadAll();
-	_WV16_Service_UserType::loadAll();
+	sly_Core::dispatcher()->register('ADDONS_INCLUDED', array('WV16_Users', 'syncYAML'));
 }

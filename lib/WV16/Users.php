@@ -160,4 +160,12 @@ abstract class WV16_Users {
 
 		return $text;
 	}
+
+	public static function syncYAML() {
+		sly_Core::cache()->delete('frontenduser', 'attributes');
+		sly_Core::cache()->delete('frontenduser', 'types');
+
+		_WV16_Service_Attribute::loadAll();
+		_WV16_Service_UserType::loadAll();
+	}
 }
