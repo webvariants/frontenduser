@@ -234,9 +234,9 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return boolean            true, wenn der Benutzer den gesuchte Wert bestitzt, sonst false
 	 */
 	public function hasValue($attribute, $value) {
-		$value = $this->getValue($attribute);
+		$v = $this->getValue($attribute);
 
-		if ($data === null) {
+		if ($v === null) {
 			return false;
 		}
 
