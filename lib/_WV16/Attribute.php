@@ -31,11 +31,4 @@ class _WV16_Attribute extends WV_Property {
 	public function isVisible() {
 		return $this->visible;
 	}
-
-	public function deserialize($raw) {
-		$datatype = $this->getDatatypeID();
-		$params   = $this->getParams();
-
-		return WV_Datatype::call($datatype, 'deserializeValue', array($raw, $params));
-	}
 }

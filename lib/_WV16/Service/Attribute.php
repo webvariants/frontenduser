@@ -113,10 +113,9 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 
 		// Jetzt könnnen die bestehenden Daten aktualisiert werden.
 
-		$oldDatatype   = $oldVersion->getDatatypeID();
 		$oldParams     = $oldVersion->getParams();
 		$newParams     = $newVersion->getParams();
-		$actionsToTake = WV_Datatype::call($oldDatatype, 'getIncompatibilityUpdateStatement', array($oldParams, $newParams));
+		$actionsToTake = $oldVersion->datatypeCall('getIncompatibilityUpdateStatement', array($oldParams, $newParams));
 		$prefix        = WV_SQL::getPrefix();
 
 		foreach ($actionsToTake as $action) {

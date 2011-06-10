@@ -291,7 +291,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			if (!isset($requiredAttrs[$name])) continue;
 
 			try {
-				$values[$name] = WV_Datatype::call($attr->getDatatypeID(), 'serializeForm', $attr);
+				$values[$name] = $attr->serializeForm();
 			}
 			catch (Exception $e) {
 				$this->errors[] = array(

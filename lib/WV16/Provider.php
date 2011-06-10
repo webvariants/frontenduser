@@ -295,13 +295,12 @@ abstract class WV16_Provider {
 
 				$users     = array();
 				$attribute = WV16_Users::getAttribute($attribute);
-				$datatype  = $attribute->getDatatypeID();
 				$params    = $attribute->getParams();
 
 				// Gefundene Daten durchgehen
 
 				foreach ($values as $userID => $userValue) {
-					$contained = WV_Datatype::call($datatype, 'isValueContained', array($value, $userValue, $params, $operator));
+					$contained = $attribute->datatypeCall('isValueContained', array($value, $userValue, $params, $operator));
 					if ($contained) $users[] = (int) $userID;
 				}
 			}
@@ -328,7 +327,6 @@ abstract class WV16_Provider {
 	 */
 	public static function getAttributeValueSet($attribute, $getOnlyExisting = false) {
 		$attribute = WV16_Users::getAttribute($attribute);
-		$datatype  = $attribute->getDatatypeID();
 		$params    = $attribute->getParams();
 
 		// Da PHP keine Arrays zulässt, bei denen die Keys zwar
@@ -337,7 +335,7 @@ abstract class WV16_Provider {
 		// oder normal zu behandeln ist.
 
 		$datalist = array();
-		$isAssoc  = WV_Datatype::call($datatype, 'usesAssociativeResults');
+		$isAssoc  = $attribute->datatypeCall('usesAssociativeResults');
 
 		if ($getOnlyExisting) {
 			$data = self::getUserDataForAttribute($attribute);
@@ -349,7 +347,7 @@ abstract class WV16_Provider {
 			$datalist = array_unique($datalist);
 		}
 		else {
-			$datalist = WV_Datatype::call($datatype, 'extractValuesFromParams', $params);
+			$datalist = $attribute->datatypeCall('extractValuesFromParams', array($params));
 		}
 
 		return $datalist;

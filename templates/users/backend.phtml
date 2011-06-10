@@ -56,17 +56,16 @@ $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
 $attributes    = array_keys($user ? $user->getType()->getAttributes() : $requiredInfos);
 
 foreach ($dataToDisplay as $attrName => $data) {
-	$value      = $data['value'];
-	$datatypeID = $data['attribute']->getDatatypeID();
-	$hidden     = !in_array($attrName, $attributes);
-	$parameters = array($form, $data['attribute'], array($value));
-	$visible    = $data['attribute']->isVisible() ? '' : ' wv16_hidden_attribute';
+	$attribute = $data['attribute'];
+	$value     = $data['value'];
+	$hidden    = !in_array($attrName, $attributes);
+	$visible   = $attribute->isVisible() ? '' : ' wv16_hidden_attribute';
 
 	$style    = $hidden ? ' style="display:none"' : '';
-	$fragment = new sly_Form_Fragment('<div id="wv16_attribute'.$data['attribute']->getID().'_row" class="wv16_attribute_row'.$visible.'"'.$style.'>');
+	$fragment = new sly_Form_Fragment('<div id="wv16_attribute'.$attribute->getID().'_row" class="wv16_attribute_row'.$visible.'"'.$style.'>');
 
 	$form->add($fragment);
-	WV_Datatype::call($datatypeID, 'renderForm', $parameters);
+	$attribute->renderForm($form, array($value));
 	$form->add(new sly_Form_Fragment('</div>'));
 }
 
