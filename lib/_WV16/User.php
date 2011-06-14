@@ -165,7 +165,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 */
 	public function getValue($attribute, $default = null) {
 		$values = $this->getValues();
-		return isset($values[$attribute]) ? $values[$attribute] : $default;
+		return array_key_exists($attribute, $values) ? $values[$attribute] : $default;
 	}
 
 	/**
