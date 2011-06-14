@@ -161,6 +161,14 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	/**
+	 * @return boolean  check whether attribute exists or not
+	 */
+	public function hasAttribute($attribute) {
+		$values = $this->getValues();
+		return array_key_exists($attribute, $values);
+	}
+
+	/**
 	 * @return mixed  der Benutzerwert
 	 */
 	public function getValue($attribute, $default = null) {
