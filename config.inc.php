@@ -23,6 +23,7 @@ sly_Loader::addLoadPath(_WV16_PATH.'lib');
 // Initialisierungen
 
 sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_Users', 'clearCache'));
+sly_Core::dispatcher()->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('WV16_Users', 'isProtectedListener'));
 
 // Attribute & Typen synchronieren
 

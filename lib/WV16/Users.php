@@ -168,4 +168,22 @@ abstract class WV16_Users {
 		_WV16_Service_Attribute::loadAll();
 		_WV16_Service_UserType::loadAll();
 	}
+
+	public static function isProtectedListener(array $params) {
+		// if someone else has already decied that this file is protected, do nothing
+		if ($params['subject']) return true;
+
+		$file     = $params['file']; // e.g. "data/mediapool/foo.jpg"
+		$basename = basename($file);
+
+		// if the file is not stored in mediapool, it cannot be protected by FrontendUser
+		if (!sly_Util_String::startsWith($file, 'data/mediapool')) return false;
+
+		// find file in mediapool
+		$fileObj = OOMedia::getMediaByFileName($basename);
+		if ($fileObj === null) return false;
+
+		// let the project decide whether the file is protected
+		return sly_Core::dispatcher()->filter('WV16_IS_FILE_PROJECTED', false, compact('fileObj'));
+	}
 }
