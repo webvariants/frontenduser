@@ -53,6 +53,15 @@ class _WV16_Service_Set extends WV_Object {
 		return $firstSetID;
 	}
 
+	public function createSetCopy(_WV16_User $user, $sourceSetID = null) {
+		$setID = $sourceSetID === null ? $this->getFirstSetID($user) : (int) $sourceSetID;
+		$id    = $user->getID();
+		$newID = WV_SQL::getInstance()->fetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $id) + 1;
+
+		$this->copySet($user, $setID, $newID);
+		return $newID;
+	}
+
 	public function createReadOnlySet(_WV16_User $user, $sourceSetID = null) {
 		$setID = $sourceSetID === null ? $this->getFirstSetID($user) : (int) $sourceSetID;
 		$id    = $user->getID();
@@ -67,11 +76,6 @@ class _WV16_Service_Set extends WV_Object {
 		}
 
 		$this->copySet($user, $setID, $newID);
-
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.lists', true);
-		$cache->delete('frontenduser.users.firstsets', $id);
-
 		return $newID;
 	}
 
@@ -102,10 +106,16 @@ class _WV16_Service_Set extends WV_Object {
 	}
 
 	protected function copySet(_WV16_User $user, $sourceSet, $targetSet) {
-		return WV_SQL::getInstance()->query(
+		$userID = $user->getID();
+
+		WV_SQL::getInstance()->query(
 			'INSERT INTO ~wv16_user_values '.
 			'SELECT user_id,attribute,?,value FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?',
-			array($targetSet, $user->getID(), $sourceSet), '~'
+			array($targetSet, $userID, $sourceSet), '~'
 		);
+
+		$cache = sly_Core::cache();
+		$cache->flush('frontenduser.lists', true);
+		$cache->delete('frontenduser.users.firstsets', $userID);
 	}
 }
