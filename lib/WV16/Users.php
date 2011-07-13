@@ -184,6 +184,6 @@ abstract class WV16_Users {
 		if ($fileObj === null) return false;
 
 		// let the project decide whether the file is protected
-		return sly_Core::dispatcher()->filter('WV16_IS_FILE_PROJECTED', false, compact('fileObj'));
+		return sly_Core::dispatcher()->filter('WV16_IS_FILE_PROTECTED', false, compact('fileObj'));
 	}
 }
