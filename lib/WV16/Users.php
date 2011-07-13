@@ -63,6 +63,7 @@ abstract class WV16_Users {
 	public static function loginUser(_WV16_User $user) {
 		sly_Util_Session::regenerate_id(); // Session-Fixation verhindern
 		sly_Util_Session::set('frontenduser', $user->getID());
+		sly_Util_Session::set('frontenduser_groups', $user->getGroupNames());
 		sly_Core::dispatcher()->notify('WV16_LOGIN', $user);
 	}
 
@@ -71,6 +72,7 @@ abstract class WV16_Users {
 
 		if ($user) {
 			sly_Util_Session::set('frontenduser', self::ANONYMOUS);
+			sly_Util_Session::set('frontenduser_groups', array());
 			session_destroy();
 			sly_Core::dispatcher()->notify('WV16_LOGOUT', $user);
 		}
