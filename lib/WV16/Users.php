@@ -175,11 +175,17 @@ abstract class WV16_Users {
 		// if someone else has already decied that this file is protected, do nothing
 		if ($params['subject']) return true;
 
-		$file     = $params['file']; // e.g. "data/mediapool/foo.jpg"
+		$file     = $params['file']; // e.g. "data/mediapool/foo.jpg" or (with image_resize) "data/mediapool/600w__foo.jpg"
 		$basename = basename($file);
 
 		// if the file is not stored in mediapool, it cannot be protected by FrontendUser
 		if (!sly_Util_String::startsWith($file, 'data/mediapool')) return false;
+
+		// image_resize request?
+		if (sly_Service_Factory::getAddOnService()->isAvailable('image_resize')) {
+			$result = A2_Extensions::parseFilename($basename);
+			if ($result) $basename = $result['filename']; // "600w__foo.jpg" -> "foo.jpg"
+		}
 
 		// find file in mediapool
 		$fileObj = OOMedia::getMediaByFileName($basename);
