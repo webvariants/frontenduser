@@ -27,9 +27,11 @@ abstract class WV16_Users {
 		return empty($value) ? $default : $value;
 	}
 
-	public static function isLoggedIn() {
+	public static function isLoggedIn($checkID = false) {
 		$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
-		return $userID > 0;
+		if ($userID <= 0) return false;
+
+		return $checkID ? self::getCurrentUser() !== null : true;
 	}
 
 	public static function register($login, $password, $userType = null) {
@@ -70,10 +72,11 @@ abstract class WV16_Users {
 	public static function logout() {
 		$user = self::getCurrentUser();
 
+		sly_Util_Session::set('frontenduser', self::ANONYMOUS);
+		sly_Util_Session::set('frontenduser_groups', array());
+		session_destroy();
+
 		if ($user) {
-			sly_Util_Session::set('frontenduser', self::ANONYMOUS);
-			sly_Util_Session::set('frontenduser_groups', array());
-			session_destroy();
 			sly_Core::dispatcher()->notify('WV16_LOGOUT', $user);
 		}
 	}
