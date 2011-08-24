@@ -13,13 +13,14 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 
 	protected function index() {
 		$groups = WV16_Provider::getGroups();
-		$this->render('addons/frontenduser/templates/groups/table.phtml', compact('groups'));
+		print $this->render('groups/table.phtml', compact('groups'));
 	}
 
 	protected function add() {
 		$group = null;
 		$func  = 'add';
-		$this->render('addons/frontenduser/templates/groups/backend.phtml', compact('group', 'func'));
+
+		print $this->render('groups/backend.phtml', compact('group', 'func'));
 	}
 
 	protected function do_add() {
@@ -31,12 +32,12 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 			$group = _WV16_Group::create($name, $title);
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->add();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_GROUP_ADDED', $group);
-		print rex_info('Die Gruppe wurde erfolgreich angelegt.');
+		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich angelegt.');
 
 		$this->index();
 	}
@@ -45,7 +46,8 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$name  = sly_request('name', 'string');
 		$group = WV16_Factory::getGroup($name);
 		$func  = 'edit';
-		$this->render('addons/frontenduser/templates/groups/backend.phtml', compact('group', 'func'));
+
+		print $this->render('groups/backend.phtml', compact('group', 'func'));
 	}
 
 	protected function do_edit() {
@@ -62,12 +64,12 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 			$group->update();
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_GROUP_UPDATED', $group);
-		print rex_info('Die Gruppe wurde erfolgreich bearbeitet.');
+		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich bearbeitet.');
 
 		$this->index();
 	}
@@ -80,18 +82,18 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 			$group->delete();
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_GROUP_DELETED', $group);
-		print rex_info('Die Gruppe wurde erfolgreich gelöscht.');
+		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich gelöscht.');
 
 		$this->index();
 	}
 
 	protected function checkPermission() {
 		$user = sly_Util_User::getCurrentUser();
-		return $user->isAdmin() || $user->hasPerm('frontenduser[groups]');
+		return $user && ($user->isAdmin() || $user->hasRight('frontenduser[groups]'));
 	}
 }

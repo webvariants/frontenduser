@@ -9,7 +9,7 @@
  */
 
 if (sly_Core::config()->get('SETUP') || defined('_WV16_PATH')) return;
-define('_WV16_PATH', SLY_INCLUDE_PATH.'/addons/frontenduser/');
+define('_WV16_PATH', SLY_ADDONFOLDER.'/frontenduser/');
 
 // AddOn-Konfiguration
 
@@ -25,8 +25,14 @@ sly_Loader::addLoadPath(_WV16_PATH.'lib');
 sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_Users', 'clearCache'));
 sly_Core::dispatcher()->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('WV16_Users', 'isProtectedListener'));
 
+// rebuild complete metadata table when importing a dump or clearing the cache
+
+$dispatcher   = sly_Core::dispatcher();
+$rebuildEvent = sly_Core::isDeveloperMode() ? 'ALL_GENERATED' : 'SLY_DB_IMPORTER_AFTER';
+$dispatcher->register($rebuildEvent, array('WV16_Users', 'rebuildUserdata'));
+
 // Attribute & Typen synchronieren
 
 if (sly_Core::isDeveloperMode()) {
-	sly_Core::dispatcher()->register('ADDONS_INCLUDED', array('WV16_Users', 'syncYAML'));
+	$dispatcher->register('ADDONS_INCLUDED', array('WV16_Users', 'syncYAML'));
 }

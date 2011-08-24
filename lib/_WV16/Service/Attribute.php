@@ -79,7 +79,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 
 			// 4. Verwende dieses SELECT, um damit das INSERT-Statement zu befeuern.
 
-			$query = 'INSERT INTO ~wv16_user_values (user_id,attribute,set_id,value) '.$select;
+			$query = 'INSERT IGNORE INTO ~wv16_user_values (user_id,attribute,set_id,value) '.$select;
 			$sql->query($query, array($name, $default, $name, $default), '~');
 		}
 
@@ -163,7 +163,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 
 			if (!empty($addedTypes)) {
 				$sql->query(
-					'INSERT INTO ~wv16_user_values '.
+					'INSERT IGNORE INTO ~wv16_user_values '.
 					'SELECT v.user_id,?,v.set_id,? FROM ~wv16_user_values v, ~wv16_users u '.
 					'WHERE v.user_id = u.id AND u.type IN (\''.implode('\',\'', $addedTypes).'\') AND v.set_id >= 0',
 					array($name, $newVersion->getDefault()) , '~'

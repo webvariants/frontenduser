@@ -8,8 +8,12 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class sly_Controller_Frontenduser extends sly_Controller_Sally {
+class sly_Controller_Frontenduser extends sly_Controller_Backend {
 	private $errors = array();
+
+	protected function getViewFolder() {
+		return _WV16_PATH.'templates/';
+	}
 
 	protected function init() {
 		$pages   = array('' => 'Benutzer', 'groups' => 'Gruppen');
@@ -31,8 +35,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		sly_Core::getNavigation()->get('frontenduser', 'addon')->addSubpages($subpages);
 
 		$layout = sly_Core::getLayout();
-		$layout->addCSSFile('../data/dyn/public/frontenduser/css/wv16.css');
-		$layout->addJavaScriptFile('../data/dyn/public/frontenduser/js/frontenduser.min.js');
+		$layout->addCSSFile('../sally/data/dyn/public/frontenduser/css/wv16.css');
+		$layout->addJavaScriptFile('../sally/data/dyn/public/frontenduser/js/frontenduser.min.js');
 		$layout->pageHeader(t('frontenduser_title'), $subpages);
 	}
 
@@ -51,13 +55,14 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$users = WV16_Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
 		$total = WV16_Provider::getTotalUsers($where);
 
-		$this->render('addons/frontenduser/templates/users/table.phtml', compact('users', 'total'));
+		print $this->render('users/table.phtml', compact('users', 'total'));
 	}
 
 	protected function add() {
 		$user = null;
 		$func = 'add';
-		$this->render('addons/frontenduser/templates/users/backend.phtml', compact('user', 'func'));
+
+		print $this->render('users/backend.phtml', compact('user', 'func'));
 	}
 
 	protected function do_add() {
@@ -82,7 +87,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			WV16_Factory::getUserType($userType);
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->add();
 		}
 
@@ -99,7 +104,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			}
 
 			$errormsg = implode('<br />', $errors);
-			print rex_warning($errormsg);
+			print sly_Helper_Message::warn($errormsg);
 			return $this->add();
 		}
 
@@ -126,12 +131,12 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$user->update();
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->add();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USER_ADDED', $user, array('password' => $password1));
-		print rex_info('Der Benutzer wurde erfolgreich angelegt.');
+		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich angelegt.');
 
 		$this->index();
 	}
@@ -140,7 +145,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		$id   = sly_request('id', 'int');
 		$user = _WV16_User::getInstance($id);
 		$func = 'edit';
-		$this->render('addons/frontenduser/templates/users/backend.phtml', compact('user', 'func'));
+
+		print $this->render('users/backend.phtml', compact('user', 'func'));
 	}
 
 	protected function do_edit() {
@@ -174,7 +180,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			WV16_Factory::getUserType($userType);
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->edit();
 		}
 
@@ -190,7 +196,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 				$errors[$idx] = $e['error'];
 			}
 
-			print rex_warning(implode('<br />', $errors));
+			print sly_Helper_Message::warn(implode('<br />', $errors));
 			return $this->edit();
 		}
 
@@ -233,13 +239,13 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		}
 		catch (Exception $e) {
 			WV_SQL::getInstance()->rollBack();
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->edit();
 		}
 
 		$params = !empty($password1) ? array('password' => $password1) : array();
 		sly_Core::dispatcher()->notify('WV16_USER_UPDATED', $user, $params);
-		print rex_info('Der Benutzer wurde erfolgreich bearbeitet.');
+		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich bearbeitet.');
 
 		// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.
 
@@ -248,10 +254,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 		if ($firstTimeActivation) {
 			try {
 				WV16_Mailer::notifyUserOnActivation($user);
-				print rex_info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
+				print sly_Helper_Message::info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
 			}
 			catch (Exception $e) {
-				print rex_warning('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.sly_html($e->getMessage()).'.');
+				print sly_Helper_Message::warn('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.sly_html($e->getMessage()).'.');
 			}
 		}
 
@@ -266,19 +272,19 @@ class sly_Controller_Frontenduser extends sly_Controller_Sally {
 			$user->delete();
 		}
 		catch (Exception $e) {
-			print rex_warning($e->getMessage());
+			print sly_Helper_Message::warn($e->getMessage());
 			return $this->edit();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USER_DELETED', $user, array('values' => $values));
-		print rex_info('Der Benutzer wurde erfolgreich gelöscht.');
+		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich gelöscht.');
 
 		$this->index();
 	}
 
 	protected function checkPermission() {
 		$user = sly_Util_User::getCurrentUser();
-		return $user->isAdmin() || $user->hasPerm('frontenduser[]');
+		return $user && ($user->isAdmin() || $user->hasRight('frontenduser[]'));
 	}
 
 	private function serializeForm($userType) {

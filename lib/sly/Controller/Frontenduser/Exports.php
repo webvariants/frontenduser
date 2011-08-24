@@ -11,7 +11,7 @@
 class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 	protected function index() {
 		$exports = $this->getExports();
-		$this->render('addons/frontenduser/templates/exports.phtml', compact('exports'));
+		print $this->render('exports.phtml', compact('exports'));
 	}
 
 	private function getExports() {
@@ -25,7 +25,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// check export
 
 		if (!isset($exports[$export])) {
-			print rex_warning('Der angeforderte Export konnte nicht gefunden werden.');
+			print sly_Helper_Message::warn('Der angeforderte Export konnte nicht gefunden werden.');
 			return $this->index();
 		}
 
@@ -39,7 +39,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE `type` = ?', $type, '~');
 
 		if (empty($users)) {
-			print rex_warning('Es wurden keine passenden Benutzer gefunden.');
+			print sly_Helper_Message::warn('Es wurden keine passenden Benutzer gefunden.');
 			return $this->index();
 		}
 
@@ -94,6 +94,6 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 	protected function checkPermission() {
 		$user = sly_Util_User::getCurrentUser();
-		return $user->isAdmin() || $user->hasPerm('frontenduser[exports]');
+		return $user && ($user->isAdmin() || $user->hasRight('frontenduser[exports]'));
 	}
 }
