@@ -57,7 +57,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return new self($id);
 	}
 
-	private function __construct($id) {
+	protected function __construct($id) {
 		$sql  = WV_SQL::getInstance();
 		$data = $sql->fetch('*', 'wv16_users', 'id = ?', $id);
 
