@@ -1,0 +1,73 @@
+frontenduser:
+   types:
+      fbconnect: Facebook Connect
+   attributes:
+      facebook_id:
+         title: Facebook-ID
+         datatype: stringline
+         types: [fbconnect]
+      facebook_name:
+         title: FB-Name
+         datatype: stringline
+         types: [fbconnect]
+      facebook_first_name:
+         title: FB-Vorname
+         datatype: stringline
+         types: [fbconnect]
+      facebook_last_name:
+         title: FB-Vorname
+         datatype: stringline
+         types: [fbconnect]
+      facebook_link:
+         title: FB-Link
+         datatype: stringline
+         types: [fbconnect]
+      facebook_username:
+         title: FB-Benutzername
+         datatype: stringline
+         types: [fbconnect]
+      facebook_gender:
+         title: FB-Geschlecht
+         datatype: select
+         params:
+           source: values
+           values: {male: männlich, female: weiblich}
+           min: 1
+           max: 1
+           size: 1
+         types: [fbconnect]
+      facebook_timezone:
+         title: FB-Zeitzone
+         datatype: stringline
+         types: [fbconnect]
+      facebook_locale:
+         title: FB-Locale
+         datatype: stringline
+         types: [fbconnect]
+      facebook_verified:
+         title: FB verfiziert
+         datatype: select
+         params:
+           source: values
+           values: {0: nein, 1: ja}
+           min: 1
+           max: 1
+           size: 1
+         types: [fbconnect]
+   exports:
+      fbconnect_users:
+         title: Facebook-Accounts
+         usertype: fbconnect
+         attributes: [fb_id]
+
+global_settings:
+   frontenduser.fbconnect.appid:
+      title: App-ID
+      datatype: stringline
+      pagename: Facebook Connect
+      group: App-Konfiguration
+   frontenduser.fbconnect.appsecret:
+      title: App-Secret
+      datatype: stringline
+      pagename: Facebook Connect
+      group: App-Konfiguration
