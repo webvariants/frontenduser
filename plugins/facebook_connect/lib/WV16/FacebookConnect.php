@@ -42,15 +42,8 @@ abstract class WV16_FacebookConnect {
 	}
 
 	public static function getCurrentUser() {
-		static $user = null;
-
 		if (!self::isLoggedIn()) return null;
-
-		if ($user === null) {
-			$user = new WV16_FacebookConnect_User(self::getCurrentUserID());
-		}
-
-		return $user;
+		return WV16_FacebookConnect_User::getInstance(self::getCurrentUserID());
 	}
 
 	public static function getCurrentUserID() {
@@ -68,38 +61,6 @@ abstract class WV16_FacebookConnect {
 
 		$id    = self::getCurrentUserID();
 		$users = WV16_Provider::getUsersWithAttribute('fb_id', self::getUserType(), 1, $id);
-
-		return !empty($users);
-	}
-
-	public static function register() {
-		if (!self::isLoggedIn()) {
-			throw new WV16_Exception('Cannot register when not logged in.');
-		}
-
-		if (self::isRegistered()) {
-			throw new WV16_Exception('User is already registered.');
-		}
-
-		$id   = self::getCurrentUserID();
-		$user = WV16_Users::register('fb_'.$id, $pass, self::getUserType());
-
-		$user->setConfirmed($confirmed);
-		$user->setActivated($activated);
-
-		// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
-
-		foreach ($valuesToStore as $name => $value) {
-			$user->setValue($name, $value);
-		}
-
-		// Gruppen hinzufügen
-
-		foreach ($groups as $group) {
-			$user->addGroup($group);
-		}
-
-		$user->update();
 
 		return !empty($users);
 	}

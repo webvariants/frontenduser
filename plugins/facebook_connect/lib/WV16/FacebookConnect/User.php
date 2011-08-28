@@ -8,47 +8,30 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User extends _WV16_User {
-	private static $instances = array();
-
+abstract class WV16_FacebookConnect_User {
 	/**
 	 * @return WV16_FacebookConnect_User  der entsprechende Benutzer
 	 */
-	public static function getInstance($userID) {
-		$userID = (int) $userID;
+	public static function getInstance($facebookID) {
+		$facebookID = (int) $facebookID;
 
-		if ($userID <= 0) {
+		if ($facebookID <= 0) {
 			return null;
 		}
 
-		$localUserID = self::getLocalID($userID);
+		$localUserID = self::getLocalID($facebookID);
 
-		if ($userID === null) {
-			return null;
+		if ($localUserID === null) {
+			return WV16_FacebookConnect_User_Facebook::getInstance();
 		}
 
-		if (empty(self::$instances[$userID])) {
-			$callback = array(__CLASS__, '_getInstance');
-			$instance = self::getFromCache('frontenduser.users', $localUserID, $callback, $localUserID);
-
-			self::$instances[$userID] = $instance;
-		}
-
-		return self::$instances[$userID];
-	}
-
-	protected static function _getInstance($id) {
-		return new self($id);
-	}
-
-	protected function __construct($id) {
-		parent::__construct($id);
+		return WV16_FacebookConnect_User_Local::getInstance($localUserID);
 	}
 
 	public static function getLocalID($facebookID) {
-		$users = WV16_Provider::getUsersWithAttribute('fb_id', WV16_FacebookConnect::getUserType(), 1, $facebookID);
+		$users = WV16_Provider::getUsersWithAttribute('facebook_id', WV16_FacebookConnect::getUserType(), 1, $facebookID);
 		if (empty($users)) return null;
 		$user = reset($users);
-		return $user->getValue('facebook_id');
+		return $user->getId();
 	}
 }
