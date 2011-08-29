@@ -275,7 +275,7 @@ abstract class WV16_Provider {
 				$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
 			}
 
-			$values = $sql->query($query, $params, '~');
+			$values = $sql->getArray($query, $params, '~');
 
 			// Nichts gefunden? Und tschüss!
 
@@ -294,7 +294,7 @@ abstract class WV16_Provider {
 				// Datentyp ermitteln
 
 				$users     = array();
-				$attribute = WV16_Users::getAttribute($attribute);
+				$attribute = WV16_Factory::getAttribute($attribute);
 				$params    = $attribute->getParams();
 
 				// Gefundene Daten durchgehen
