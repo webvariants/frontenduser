@@ -8,9 +8,10 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User_Facebook implements WV16_User {
+class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConnect_User_Interface {
 	private $facebook;
 	private $facebookID;
+	private $fbdata;
 
 	private static $instance;
 
@@ -29,6 +30,7 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User {
 	protected function __construct() {
 		$this->facebook   = WV16_FacebookConnect::getFacebook();
 		$this->facebookID = WV16_FacebookConnect::getCurrentUserID();
+		$this->fbdata     = null;
 	}
 
 	public function getLogin() {
@@ -43,40 +45,59 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User {
 		return WV16_FacebookConnect::isRegistered();
 	}
 
-	public function register() {
-		if (!self::isLoggedIn()) {
-			throw new WV16_Exception('Cannot register when not logged in.');
-		}
-
-		if (self::isRegistered()) {
+	public function register($confirmed = true, $activated = true) {
+		if ($this->isRegistered()) {
 			throw new WV16_Exception('User is already registered.');
 		}
 
-		$id   = self::getCurrentUserID();
-		$user = WV16_Users::register('fb_'.$id, $pass, self::getUserType());
+		$id   = $this->getLogin();
+		$pass = sly_Util_String::getRandomString(30, 30);
+		$type = WV16_FacebookConnect::getUserType();
+		$user = WV16_Users::register($id, $pass, $type);
 
 		$user->setConfirmed($confirmed);
 		$user->setActivated($activated);
 
 		// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
 
-		foreach ($valuesToStore as $name => $value) {
+		foreach ($this->getFacebookDetails() as $name => $value) {
 			$user->setValue($name, $value);
-		}
-
-		// Gruppen hinzufügen
-
-		foreach ($groups as $group) {
-			$user->addGroup($group);
 		}
 
 		$user->update();
 
-		return !empty($users);
+		return WV16_FacebookConnect_User::getInstance($this->facebookID);
 	}
 
+	public function getFacebookDetails() {
+		if ($this->fbdata === null) {
+			$data         = $this->facebook->api('/me');
+			$this->fbdata = array();
+
+			foreach ($data as $key => $value) {
+				if ($key === 'updated_time') continue;
+				$key = 'facebook_'.$key;
+				$this->fbdata[$key] = $value;
+			}
+		}
+
+		return $this->fbdata;
+	}
+
+	public function getFacebookID() { return $this->getValue('facebook_id',         '');    }
+	public function getName()       { return $this->getValue('facebook_name',       '');    }
+	public function getFirstname()  { return $this->getValue('facebook_first_name', '');    }
+	public function getLastname()   { return $this->getValue('facebook_last_name',  '');    }
+	public function getLink()       { return $this->getValue('facebook_link',       '');    }
+	public function getUsername()   { return $this->getValue('facebook_username',   '');    }
+	public function getGender()     { return $this->getValue('facebook_gender',     '');    }
+	public function getTimezone()   { return $this->getValue('facebook_timezone',   '');    }
+	public function getLocale()     { return $this->getValue('facebook_locale',     '');    }
+	public function isVerified()    { return $this->getValue('facebook_verified',   false); }
+
 	public function getValue($attribute, $default = null) {
-		return $default;
+		$data = $this->getFacebookDetails();
+		return isset($data[$attribute]) ? $data[$attribute] : $default;
 	}
 
 	public function setValue($attribute, $value) {

@@ -58,7 +58,7 @@ frontenduser:
       fbconnect_users:
          title: Facebook-Accounts
          usertype: fbconnect
-         attributes: [fb_id]
+         attributes: [facebook_id]
 
 global_settings:
    frontenduser.fbconnect.appid:

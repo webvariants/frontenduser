@@ -13,9 +13,7 @@ abstract class WV16_FacebookConnect_User {
 	 * @return WV16_FacebookConnect_User  der entsprechende Benutzer
 	 */
 	public static function getInstance($facebookID) {
-		$facebookID = (int) $facebookID;
-
-		if ($facebookID <= 0) {
+		if ($facebookID == 0) {
 			return null;
 		}
 
