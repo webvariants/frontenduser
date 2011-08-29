@@ -1,0 +1,16 @@
+frontenduser:
+   types:
+      gfc: Google Friend Connect
+   attributes: []
+   exports:
+      gfc_users:
+         title: Google Friend Connect-Accounts
+         usertype: gfc
+         attributes: []
+
+global_settings:
+   frontenduser.gfc.siteid:
+      title: Seiten-ID
+      datatype: stringline
+      pagename: Google Friend Connect
+      group: Konfiguration
