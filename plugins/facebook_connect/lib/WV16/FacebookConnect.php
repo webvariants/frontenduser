@@ -57,11 +57,7 @@ abstract class WV16_FacebookConnect {
 	}
 
 	public static function isRegistered() {
-		if (!self::isLoggedIn()) return false;
-
-		$id    = self::getCurrentUserID();
-		$users = WV16_Provider::getUsersWithAttribute('fb_id', self::getUserType(), 1, $id);
-
-		return !empty($users);
+		$id = self::getCurrentUserID();
+		return $id && WV16_FacebookConnect_User::getLocalID($id) !== null;
 	}
 }
