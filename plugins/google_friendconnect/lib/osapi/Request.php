@@ -21,7 +21,7 @@
  *
  * @author Chris Chabot
  */
-class osapi_IO_Request {
+class osapi_Request {
   public $method;
   public $params;
   public $id;
@@ -69,7 +69,7 @@ class osapi_IO_Request {
 	    }
     }
     // Everything checks out, create the request object & return it
-    return new osapi_IO_Request($method, $params);
+    return new self($method, $params);
   }
 
   /**
