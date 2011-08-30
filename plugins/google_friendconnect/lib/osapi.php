@@ -37,17 +37,17 @@ class osapi {
   private $config;
   private $strictMode = false;
   private $availableServices = array(
-    'people' => 'osapiPeople',
-    'activities' => 'osapiActivities',
-    'appdata' => 'osapiAppData',
-    'messages' => 'osapiMessages',
-    'albums' => 'osapiAlbums',
-    'mediaitems' => 'osapiMediaItems',
-    'system' => 'osapiSystem',
-    'statusmood'=>'osapiStatusMood',
-    'notifications'=>'osapiNotifications',
-    'groups'=>'osapiGroups',
-    'profilecomments'=>'osapiProfileComments'
+    'people' => 'osapi_Service_People',
+    'activities' => 'osapi_Service_Activities',
+    'appdata' => 'osapi_Service_AppData',
+    'messages' => 'osapi_Service_Messages',
+    'albums' => 'osapi_Service_Albums',
+    'mediaitems' => 'osapi_Service_MediaItems',
+    'system' => 'osapi_Service_System',
+    'statusmood'=>'osapi_Service_StatusMood',
+    'notifications'=>'osapi_Service_Notifications',
+    'groups'=>'osapi_Service_Groups',
+    'profilecomments'=>'osapi_Service_ProfileComments'
   );
 
   /**

@@ -8,26 +8,26 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-abstract class WV16_FacebookConnect_User {
+abstract class WV16_FriendConnect_User {
 	/**
-	 * @return WV16_FacebookConnect_User  der entsprechende Benutzer
+	 * @return WV16_FriendConnect_User  der entsprechende Benutzer
 	 */
-	public static function getInstance($facebookID) {
-		if ($facebookID == 0) {
+	public static function getInstance($gfcID) {
+		if ($gfcID == 0) {
 			return null;
 		}
 
-		$localUserID = self::getLocalID($facebookID);
+		$localUserID = self::getLocalID($gfcID);
 
 		if ($localUserID === null) {
-			return WV16_FacebookConnect_User_Facebook::getInstance();
+			return WV16_FriendConnect_User_FriendConnect::getInstance();
 		}
 
-		return WV16_FacebookConnect_User_Local::getInstance($localUserID);
+		return WV16_FriendConnect_User_Local::getInstance($localUserID);
 	}
 
-	public static function getLocalID($facebookID) {
-		$users = WV16_Provider::getUsersWithAttribute('facebook_id', WV16_FacebookConnect::getUserType(), 1, $facebookID);
+	public static function getLocalID($gfcID) {
+		$users = WV16_Provider::getUsersWithAttribute('gfc_id', WV16_FriendConnect::getUserType(), 1, $gfcID);
 		if (empty($users)) return null;
 		$user = reset($users);
 		return $user->getId();

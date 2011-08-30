@@ -8,16 +8,10 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-interface WV16_FacebookConnect_User_Interface {
-	public function getFacebookID();
+interface WV16_FriendConnect_User_Interface {
+	public function getFriendConnectID();
+	public function getDiplayName();
 	public function getName();
-	public function getFirstname();
-	public function getLastname();
-	public function getLink();
-	public function getUsername();
-	public function getGender();
-	public function getTimezone();
-	public function getLocale();
-	public function isVerified();
-	public function isRegistered();
+	public function getThumbnail();
+	public function getURLs();
 }

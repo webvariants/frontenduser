@@ -8,11 +8,11 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User_Local extends _WV16_User {
+class WV16_FriendConnect_User_Local extends _WV16_User {
 	private static $instances = array();
 
 	/**
-	 * @return WV16_FacebookConnect_User_Local  der entsprechende Benutzer
+	 * @return WV16_FriendConnect_User_Local  der entsprechende Benutzer
 	 */
 	public static function getInstance($localID) {
 		$localID = (int) $localID;
@@ -41,14 +41,19 @@ class WV16_FacebookConnect_User_Local extends _WV16_User {
 		return null;
 	}
 
-	public function getFacebookID() { return $this->getValue('facebook_id',         ''); }
-	public function getName()       { return $this->getValue('facebook_name',       ''); }
-	public function getFirstname()  { return $this->getValue('facebook_first_name', ''); }
-	public function getLastname()   { return $this->getValue('facebook_last_name',  ''); }
-	public function getLink()       { return $this->getValue('facebook_link',       ''); }
-	public function getUsername()   { return $this->getValue('facebook_username',   ''); }
-	public function getGender()     { return $this->getValue('facebook_gender',     ''); }
-	public function getTimezone()   { return $this->getValue('facebook_timezone',   ''); }
-	public function getLocale()     { return $this->getValue('facebook_locale',     ''); }
-	public function isVerified()    { return $this->getValue('facebook_verified',   ''); }
+	public function getFriendConnectID() { return $this->getValue('gfc_id',         '');  }
+	public function getDiplayName()      { return $this->getValue('gfc_displayname', ''); }
+	public function getName()            { return $this->getValue('gfc_name', '');        }
+	public function getThumbnail()       { return $this->getValue('gfc_thumbnail', '');   }
+
+	public function getURLs() {
+		$data = array_filter(explode("\n", $this->getValue('gfc_urls', '')));
+		$urls = array();
+
+		foreach ($data as $row) {
+			$urls[] = json_decode($row, true);
+		}
+
+		return $urls;
+	}
 }

@@ -1,7 +1,28 @@
 frontenduser:
    types:
       gfc: Google Friend Connect
-   attributes: []
+   attributes:
+      gfc_id:
+         title: FriendConnect-ID
+         datatype: stringline
+         types: [gfc]
+      gfc_displayname:
+         title: FC-Anzeigename
+         datatype: stringline
+         types: [gfc]
+      gfc_name:
+         title: FC-Name
+         datatype: stringline
+         types: [gfc]
+      gfc_thumbnail:
+         title: FC-Avatar
+         datatype: stringline
+         types: [gfc]
+         hidden: true
+      gfc_urls:
+         title: FC-URLs
+         datatype: stringtext
+         types: [gfc]
    exports:
       gfc_users:
          title: Google Friend Connect-Accounts
@@ -14,3 +35,15 @@ global_settings:
       datatype: stringline
       pagename: Google Friend Connect
       group: Konfiguration
+   frontenduser.gfc.consumerkey:
+      title: Nutzerschlüssel
+      datatype: stringline
+      pagename: Google Friend Connect
+      group: OAuth (REST-API)
+      helptext: Zu finden unter 'http://www.google.com/friendconnect/admin/site/restapi?id=<Seiten-ID>'
+   frontenduser.gfc.consumersecret:
+      title: Nutzergeheimnis
+      datatype: stringline
+      pagename: Google Friend Connect
+      group: OAuth (REST-API)
+      helptext: Zu finden unter 'http://www.google.com/friendconnect/admin/site/restapi?id=<Seiten-ID>'

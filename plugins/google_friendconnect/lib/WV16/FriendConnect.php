@@ -29,11 +29,19 @@ abstract class WV16_FriendConnect {
 		return WV8_Settings::getValue('frontenduser.gfc', 'siteid');
 	}
 
+	public static function getConsumerKey() {
+		return WV8_Settings::getValue('frontenduser.gfc', 'consumerkey');
+	}
+
+	public static function getConsumerSecret() {
+		return WV8_Settings::getValue('frontenduser.gfc', 'consumersecret');
+	}
+
 	public static function getAPI() {
 		static $gfc = null;
 
 		if ($gfc === null) {
-			$gfc = new WV16_FriendConnect_API(self::getSiteID(), self::getAuthToken());
+			$gfc = new WV16_FriendConnect_API(self::getAuthToken());
 		}
 
 		return $gfc;
@@ -45,9 +53,12 @@ abstract class WV16_FriendConnect {
 	}
 
 	public static function getCurrentUserID() {
+		$auth = self::getAuthToken();
+		if (empty($auth)) return null;
+
 		$gfc = self::getAPI();
-		$id  = $gfc->getUser();
-		return $id ? $id : null;
+		$me  = $gfc->getMe();
+		return $me ? $me->id : null;
 	}
 
 	public static function isLoggedIn() {
@@ -55,11 +66,7 @@ abstract class WV16_FriendConnect {
 	}
 
 	public static function isRegistered() {
-		if (!self::isLoggedIn()) return false;
-
-		$id    = self::getCurrentUserID();
-		$users = WV16_Provider::getUsersWithAttribute('gfc_id', self::getUserType(), 1, $id);
-
-		return !empty($users);
+		$id = self::getCurrentUserID();
+		return $id && WV16_FriendConnect_User::getLocalID($id) !== null;
 	}
 }
