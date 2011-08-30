@@ -27,7 +27,7 @@ frontenduser:
       gfc_users:
          title: Google Friend Connect-Accounts
          usertype: gfc
-         attributes: []
+         attributes: [gfc_id, gfc_displayname, gfc_name]
 
 global_settings:
    frontenduser.gfc.siteid:
