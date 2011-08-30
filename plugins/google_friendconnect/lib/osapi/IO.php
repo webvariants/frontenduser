@@ -33,31 +33,31 @@ abstract class osapi_IO {
     if($method == 'get'){
         switch ($service) {
           case 'people':
-            $converted = osapi_People::convertArray($val, $strictMode);
+            $converted = osapi_Service_People::convertArray($val, $strictMode);
             break;
           case 'activities':
-            $converted = osapi_Activities::convertArray($val, $strictMode);
+            $converted = osapi_Service_Activities::convertArray($val, $strictMode);
             break;
           case 'appdata':
-            $converted = osapi_AppData::convertArray($val, $strictMode);
+            $converted = osapi_Service_AppData::convertArray($val, $strictMode);
             break;
           case 'messages':
-            $converted = osapi_Messages::convertArray($val, $strictMode);
+            $converted = osapi_Service_Messages::convertArray($val, $strictMode);
             break;
           case 'mediaItems':
-            $converted = osapi_MediaItems::convertArray($val, $strictMode);
+            $converted = osapi_Service_MediaItems::convertArray($val, $strictMode);
             break;
           case 'albums':
-            $converted = osapi_Albums::convertArray($val, $strictMode);
+            $converted = osapi_Service_Albums::convertArray($val, $strictMode);
             break;
           case 'statusmood':
-            $converted = osapi_StatusMood::convertArray($val, $strictMode);
+            $converted = osapi_Service_StatusMood::convertArray($val, $strictMode);
             break;
           case 'notifications':
-            $converted = osapi_Notifications::convertArray($val, $strictMode);
+            $converted = osapi_Service_Notifications::convertArray($val, $strictMode);
             break;
           case 'groups':
-            $converted = osapi_Groups::convertArray($val, $strictMode);
+            $converted = osapi_Service_Groups::convertArray($val, $strictMode);
             break;
         }
     }
