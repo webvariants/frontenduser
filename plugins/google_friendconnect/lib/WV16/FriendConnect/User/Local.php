@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FriendConnect_User_Local extends _WV16_User {
+class WV16_FriendConnect_User_Local extends _WV16_User implements WV16_FriendConnect_User_Interface {
 	private static $instances = array();
 
 	/**
@@ -42,7 +42,7 @@ class WV16_FriendConnect_User_Local extends _WV16_User {
 	}
 
 	public function getFriendConnectID() { return $this->getValue('gfc_id',         '');  }
-	public function getDiplayName()      { return $this->getValue('gfc_displayname', ''); }
+	public function getDisplayName()     { return $this->getValue('gfc_displayname', ''); }
 	public function getName()            { return $this->getValue('gfc_name', '');        }
 	public function getThumbnail()       { return $this->getValue('gfc_thumbnail', '');   }
 

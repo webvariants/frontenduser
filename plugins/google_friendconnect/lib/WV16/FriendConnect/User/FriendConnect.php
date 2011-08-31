@@ -85,10 +85,10 @@ class WV16_FriendConnect_User_FriendConnect implements WV16_User, WV16_FriendCon
 		return $this->me;
 	}
 
-	public function getDiplayName() { return $this->getMe()->displayName;  }
-	public function getName()       { return $this->getMe()->name;         }
-	public function getThumbnail()  { return $this->getMe()->thumbnailUrl; }
-	public function getURLs()       { return $this->getMe()->urls;         }
+	public function getDisplayName() { return $this->getMe()->displayName;  }
+	public function getName()        { return $this->getMe()->name;         }
+	public function getThumbnail()   { return $this->getMe()->thumbnailUrl; }
+	public function getURLs()        { return $this->getMe()->urls;         }
 
 	public function getValue($attribute, $default = null) {
 		return $default;

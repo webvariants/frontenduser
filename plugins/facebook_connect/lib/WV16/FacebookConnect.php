@@ -60,4 +60,16 @@ abstract class WV16_FacebookConnect {
 		$id = self::getCurrentUserID();
 		return $id && WV16_FacebookConnect_User::getLocalID($id) !== null;
 	}
+
+	public static function getAuthToken() {
+		$cookieName = 'fbsr_'.self::getAppID();
+		return isset($_COOKIE[$cookieName]) ? $_COOKIE[$cookieName] : null;
+	}
+
+	public static function getAuthData() {
+		$token = self::getAuthToken();
+		$key   = 'fbsr_'.self::getAppID();
+
+		return $token ? array($key => $token) : $token;
+	}
 }

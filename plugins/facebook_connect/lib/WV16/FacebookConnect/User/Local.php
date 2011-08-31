@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User_Local extends _WV16_User {
+class WV16_FacebookConnect_User_Local extends _WV16_User implements WV16_FacebookConnect_User_Interface {
 	private static $instances = array();
 
 	/**

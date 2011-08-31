@@ -10,7 +10,7 @@
 
 interface WV16_FriendConnect_User_Interface {
 	public function getFriendConnectID();
-	public function getDiplayName();
+	public function getDisplayName();
 	public function getName();
 	public function getThumbnail();
 	public function getURLs();

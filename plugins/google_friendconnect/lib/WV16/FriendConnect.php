@@ -21,6 +21,13 @@ abstract class WV16_FriendConnect {
 		return isset($_COOKIE[$cookieName]) ? $_COOKIE[$cookieName] : null;
 	}
 
+	public static function getAuthData() {
+		$token = self::getAuthToken();
+		$key   = 'fcauth'.self::getSiteID();
+
+		return $token ? array($key => $token) : $token;
+	}
+
 	public static function getUserType() {
 		return 'gfc';
 	}
