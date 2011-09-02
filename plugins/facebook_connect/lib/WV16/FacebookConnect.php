@@ -32,7 +32,7 @@ abstract class WV16_FacebookConnect {
 		static $fb = null;
 
 		if ($fb === null) {
-			$fb = new Facebook(array(
+			$fb = new WV16_FacebookConnect_API(array(
 				'appId'  => self::getAppID(),
 				'secret' => self::getAppSecret()
 			));
@@ -56,12 +56,17 @@ abstract class WV16_FacebookConnect {
 		if ($ok === null) {
 			$fb = self::getFacebook();
 
-			try {
-				$fb->api('/me');
-				$ok = true;
-			}
-			catch (FacebookApiException $e) {
+			if ($fb->getSignedRequest() === null) {
 				$ok = false;
+			}
+			else {
+				try {
+					$fb->api('/me');
+					$ok = true;
+				}
+				catch (FacebookApiException $e) {
+					$ok = false;
+				}
 			}
 		}
 
