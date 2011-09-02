@@ -60,12 +60,22 @@ abstract class WV16_FriendConnect {
 	}
 
 	public static function getCurrentUserID() {
-		$auth = self::getAuthToken();
-		if (empty($auth)) return null;
+		static $id = false;
 
-		$gfc = self::getAPI();
-		$me  = $gfc->getMe();
-		return $me ? $me->id : null;
+		if ($id === false) {
+			$auth = self::getAuthToken();
+
+			if (empty($auth)) {
+				$id = null;
+			}
+			else {
+				$gfc = self::getAPI();
+				$me  = $gfc->getMe();
+				$id  = $me ? $me->id : null;
+			}
+		}
+
+		return $id;
 	}
 
 	public static function isLoggedIn() {
