@@ -22,7 +22,28 @@ class WV16_FriendConnect_API {
 	}
 
 	public function getMe() {
-		return $this->executeRequest($this->osapi->people->get(array('userId' => '@me', 'groupId' => '@self', 'fields' => '@all')));
+		// since this is needed to get the correct namespace ID, we cannot use the
+		// regular caching methods for doing this request. *But* we can manually
+		// cache the result ourselves.
+
+		$cache     = sly_Core::cache();
+		$namespace = 'gfc.tokens';
+		$cacheKey  = md5(json_encode($this->auth));
+		$me        = $cache->get($namespace, $cacheKey);
+
+		if ($me === null) {
+			$request = $this->osapi->people->get(array('userId' => '@me', 'groupId' => '@self', 'fields' => '@all'));
+			$batch   = $this->osapi->newBatch();
+
+			$batch->add($request, 'me');
+
+			$result = $batch->execute();
+			$me     = $result['me'];
+
+			$cache->set($namespace, $cacheKey, $me);
+		}
+
+		return $me;
 	}
 
 	/**
@@ -78,7 +99,7 @@ class WV16_FriendConnect_API {
 	}
 
 	protected function getNamespace() {
-		return 'friendconnect.users.'.md5($this->authToken);
+		return 'gfc.users.'.$this->getFriendConnectID();
 	}
 
 	protected function getCacheData(osapi_Request $request) {
@@ -98,7 +119,6 @@ class WV16_FriendConnect_API {
 	}
 
 	public function getFriendConnectID() {
-		$user = $this->getUser();
-		return $user['id'];
+		return $this->getMe()->id;
 	}
 }
