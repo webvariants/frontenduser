@@ -42,18 +42,30 @@ abstract class WV16_FacebookConnect {
 	}
 
 	public static function getCurrentUser() {
-		if (!self::isLoggedIn()) return null;
-		return WV16_FacebookConnect_User::getInstance(self::getCurrentUserID());
+		$id = self::getCurrentUserID();
+		return $id ? WV16_FacebookConnect_User::getInstance($id) : null;
 	}
 
 	public static function getCurrentUserID() {
-		$fb = self::getFacebook();
-		$id = $fb->getUser();
-		return $id ? $id : null;
+		return self::isLoggedIn() ? self::getFacebook()->getUser() : null;
 	}
 
 	public static function isLoggedIn() {
-		return self::getCurrentUserID() !== null;
+		static $ok = null;
+
+		if ($ok === null) {
+			$fb = self::getFacebook();
+
+			try {
+				$fb->api('/me');
+				$ok = true;
+			}
+			catch (FacebookApiException $e) {
+				$ok = false;
+			}
+		}
+
+		return $ok;
 	}
 
 	public static function isRegistered() {
@@ -62,8 +74,10 @@ abstract class WV16_FacebookConnect {
 	}
 
 	public static function getAuthToken() {
-		$cookieName = 'fbsr_'.self::getAppID();
-		return isset($_COOKIE[$cookieName]) ? $_COOKIE[$cookieName] : null;
+		$fb    = self::getFacebook();
+		$token = $fb->getSignedRequest();
+
+		return $token ? $token : null;
 	}
 
 	public static function getAuthData() {
