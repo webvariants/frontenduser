@@ -15,6 +15,7 @@ interface WV16_FacebookConnect_User_Interface {
 	public function getLastname();
 	public function getLink();
 	public function getUsername();
+	public function getEMail();
 	public function getGender();
 	public function getTimezone();
 	public function getLocale();

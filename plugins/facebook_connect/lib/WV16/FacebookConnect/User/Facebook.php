@@ -90,6 +90,7 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 	public function getLastname()   { return $this->getValue('facebook_last_name',  '');    }
 	public function getLink()       { return $this->getValue('facebook_link',       '');    }
 	public function getUsername()   { return $this->getValue('facebook_username',   '');    }
+	public function getEMail()      { return $this->getValue('email',               '');    }
 	public function getGender()     { return $this->getValue('facebook_gender',     '');    }
 	public function getTimezone()   { return $this->getValue('facebook_timezone',   '');    }
 	public function getLocale()     { return $this->getValue('facebook_locale',     '');    }
