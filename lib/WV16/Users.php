@@ -11,6 +11,10 @@
 abstract class WV16_Users {
 	const ANONYMOUS = 0;
 
+	const ERR_NOT_ACTIVATED   = 1;
+	const ERR_NOT_CONFIRMED   = 2;
+	const ERR_BAD_CREDENTIALS = 3;
+
 	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser', true);
@@ -47,15 +51,15 @@ abstract class WV16_Users {
 		$userObj = WV16_Factory::getUser($login);
 
 		if (!$userObj->isActivated() && !$allowNonActivated) {
-			throw new WV16_Exception('This account has not yet been activated.');
+			throw new WV16_Exception('This account has not yet been activated.', self::ERR_NOT_ACTIVATED);
 		}
 
 		if (!$userObj->isConfirmed() && !$allowNonConfirmed) {
-			throw new WV16_Exception('This account has not yet been confirmed.');
+			throw new WV16_Exception('This account has not yet been confirmed.', self::ERR_NOT_CONFIRMED);
 		}
 
 		if (!$userObj->checkPassword($password)) {
-			throw new WV16_Exception('Bad credentials given.');
+			throw new WV16_Exception('Bad credentials given.', self::ERR_BAD_CREDENTIALS);
 		}
 
 		self::loginUser($userObj);
