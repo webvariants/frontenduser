@@ -177,6 +177,13 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	/**
+	 * @return mixed  der Benutzerwert
+	 */
+	public function toString($format) {
+		return WV16_Users::replaceAttributes($format, $this);
+	}
+
+	/**
 	 * @return boolean  true im Erfolgsfall, sonst false
 	 */
 	public function setValue($attribute, $value) {
