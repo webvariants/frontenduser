@@ -53,6 +53,11 @@ global_settings:
       pagename: Benutzerverwaltung
       group: 'Bestätigungsaufforderung an den neuen Benutzer'
       multilingual: true
+   frontenduser.mail.report.to:
+      title: Empfänger
+      datatype: stringline
+      pagename: Benutzerverwaltung
+      group: 'eMail-Benachrichtigung bei neuen Benutzern (für den Administrator)'
    frontenduser.mail.report.subject:
       title: Betreff
       datatype: stringline

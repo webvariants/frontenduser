@@ -88,8 +88,9 @@ abstract class WV16_Mailer {
 		$email   = self::replaceValues('mail',      'from_email', 'admin@'.$_SERVER['SERVER_NAME'], $user, $extra);
 		$subject = self::replaceValues('mail.'.$ns, 'subject',    'Hallo #LOGIN#!',                 $user, $extra);
 		$body    = self::replaceValues('mail.'.$ns, 'body',       '',                               $user, $extra);
+		$to      = self::replaceValues('mail.'.$ns, 'to',         $email,                           $user, $extra);
 
-		return self::send($email, $name, $email, $name, $subject, $body);
+		return self::send($email, $name, $to, $name, $subject, $body);
 	}
 
 	protected static function replaceValues($namespace, $setting, $default, _WV16_User $user, $extra = array()) {
