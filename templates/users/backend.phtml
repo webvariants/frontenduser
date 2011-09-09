@@ -101,6 +101,7 @@ if ($user) {
 // Fertig!
 
 $form->setFocus('login');
+$form = sly_Core::dispatcher()->filter('WV16_USER_FORM', $form, compact('user', 'func'));
 print $form->render();
 
 ?>
