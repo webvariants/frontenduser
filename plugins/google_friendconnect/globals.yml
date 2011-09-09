@@ -35,15 +35,18 @@ global_settings:
       datatype: stringline
       pagename: Google Friend Connect
       group: Konfiguration
+      local: true
    frontenduser.gfc.consumerkey:
       title: Nutzerschlüssel
       datatype: stringline
       pagename: Google Friend Connect
       group: OAuth (REST-API)
       helptext: Zu finden unter 'http://www.google.com/friendconnect/admin/site/restapi?id=<Seiten-ID>'
+      local: true
    frontenduser.gfc.consumersecret:
       title: Nutzergeheimnis
       datatype: stringline
       pagename: Google Friend Connect
       group: OAuth (REST-API)
       helptext: Zu finden unter 'http://www.google.com/friendconnect/admin/site/restapi?id=<Seiten-ID>'
+      local: true

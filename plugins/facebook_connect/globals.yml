@@ -66,8 +66,10 @@ global_settings:
       datatype: stringline
       pagename: Facebook Connect
       group: App-Konfiguration
+      local: true
    frontenduser.fbconnect.appsecret:
       title: App-Secret
       datatype: stringline
       pagename: Facebook Connect
       group: App-Konfiguration
+      local: true
