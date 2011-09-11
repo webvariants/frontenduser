@@ -6,4 +6,4 @@ author: Christoph Mewes
 supportpage: www.webvariants.de
 requires: [developer_utils, global_settings]
 sally: ['0.5']
-version: '3.3'
+version: '3.4'
