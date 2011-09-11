@@ -201,4 +201,28 @@ abstract class WV16_Users {
 		// let the project decide whether the file is protected
 		return sly_Core::dispatcher()->filter('WV16_IS_FILE_PROTECTED', false, compact('fileObj'));
 	}
+
+	public static function rebuildUserdata(array $params) {
+		// refresh the attributes
+		sly_Core::cache()->delete('frontenduser', 'types');
+		sly_Core::cache()->delete('frontenduser', 'attributes');
+
+		$allTypes      = _WV16_Service_UserType::loadAll(true);
+		$allAttributes = _WV16_Service_Attribute::loadAll(true);
+
+		$sql = WV_SQL::getInstance();
+		$sql->beginTransaction();
+
+		// and here we go (re-using the implementation of some methods)
+		$service = new _WV16_Service_UserType();
+		$service->rebuild($allTypes);
+
+		$service = new _WV16_Service_Attribute();
+		$service->rebuild($allAttributes);
+
+		$sql->commit();
+
+		// done :-)
+		return $params['subject'];
+	}
 }

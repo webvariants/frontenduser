@@ -9,10 +9,10 @@
  */
 
 class _WV16_Service_Attribute extends WV_Service_Property {
-	public static function loadAll() {
+	public static function loadAll($forceRefresh = false) {
 		static $properties = null;
 
-		if ($properties === null) {
+		if ($properties === null || $forceRefresh) {
 			$config     = sly_Core::config();
 			$attributes = $config->get('frontenduser/attributes', array());
 			$cacheFile  = sly_Service_Factory::getAddOnService()->internalFolder('frontenduser').'/attributes.php';
@@ -176,5 +176,48 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 
 	protected function createProperty($name, array $property) {
 		return new _WV16_Attribute($name, $property);
+	}
+
+	public function rebuild(array $attributes) {
+		$sql   = WV_SQL::getInstance();
+		$names = array_keys($attributes);
+		$names = array_map(array($sql, 'quote'), $names);
+
+		// delete all uservalues which don't have a valid attribute
+
+		$sql->query(
+			'DELETE FROM ~wv16_user_values WHERE 1'.(empty($names) ? '' : ' AND attribute NOT IN ('.implode(',', $names).')'),
+			null, '~'
+		);
+
+		// check if the linked users still exist
+
+		if (!empty($names)) {
+			foreach ($attributes as $name => $attribute) {
+				$uTypes = $attribute->getUserTypes();
+
+				// If this attribute is not assigned to *any* type, delete all occurences
+				// of it. Otherwise just delete those uservalues which belong to users
+				// that don't have the required user types.
+
+				if (empty($uTypes)) {
+					$users = '';
+				}
+				else {
+					$uTypes = array_map(array($sql, 'quote'), $uTypes);
+					$users  = ' AND user_id NOT IN (SELECT id FROM ~wv16_users WHERE `type` IN ('.implode(',', $uTypes).'))';
+				}
+
+				$sql->query('DELETE FROM ~wv16_user_values WHERE attribute = ?'.$users, $name, '~');
+			}
+		}
+
+		// add missing database rows
+		// (doing this after the deletion makes the DELETEs a bit faster in worst
+		// case scenarios where just everything is missing and has to be inserted)
+
+		foreach ($attributes as $attribute) {
+			$this->onNew($attribute); // run INSERT IGNORE
+		}
 	}
 }

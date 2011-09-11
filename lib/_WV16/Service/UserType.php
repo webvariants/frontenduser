@@ -9,10 +9,10 @@
  */
 
 class _WV16_Service_UserType {
-	public static function loadAll() {
+	public static function loadAll($forceRefresh = false) {
 		static $types = null;
 
-		if ($types === null) {
+		if ($types === null || $forceRefresh) {
 			$config    = sly_Core::config();
 			$curState  = $config->get('frontenduser/types', array());
 			$cacheFile = sly_Service_Factory::getAddOnService()->internalFolder('frontenduser').'/types.php';
@@ -129,5 +129,22 @@ class _WV16_Service_UserType {
 
 	protected function createType($name, $title) {
 		return new _WV16_UserType($name, $title);
+	}
+
+	public function rebuild(array $types) {
+		if (empty($types)) return;
+
+		// Find users not belonging to the existing types and turn
+		// them over to the dark side, aka the default usertype.
+
+		$sql     = WV_SQL::getInstance();
+		$types   = array_map(array($sql, 'quote'), array_keys($types));
+		$userIDs = $sql->getArray('SELECT id FROM ~wv16_users WHERE `type` NOT IN ('.implode(',', $types).')', null, '~');
+
+		foreach ($userIDs as $userID) {
+			$user = WV16_Factory::getUserByID($userID);
+			$user->setUserType(_WV16_UserType::DEFAULT_NAME);
+			$user->update();
+		}
 	}
 }
