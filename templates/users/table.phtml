@@ -10,9 +10,10 @@
 
 print '<p>Die folgenden Benutzer sind auf Ihrer Website registriert.</p>';
 
-$id      = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../sally/data/dyn/public/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
-$table   = new sly_Table('users');
-$columns = sly_Core::config()->get('frontenduser/be_columns', array());
+$id        = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../sally/data/dyn/public/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
+$table     = new sly_Table('users');
+$columns   = array_merge(array('___id___' => ''), sly_Core::config()->get('frontenduser/be_columns', array()));
+$callbacks = sly_Core::config()->get('frontenduser/be_column_callbacks', array());
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
 
@@ -20,7 +21,8 @@ if (empty($columns)) {
 	$columns = array('___login___' => 'Login');
 }
 
-foreach ($columns as $title) {
+foreach ($columns as $name => $title) {
+	if ($name === '___id___') continue;
 	$table->addColumn(new sly_Table_Column($title));
 }
 
@@ -34,38 +36,46 @@ $table->openBuffer();
 foreach ($users as $user) {
 	?>
 	<tr>
-		<td class="sly-icon"><a href="index.php?page=frontenduser&amp;func=edit&amp;id=<?= $user->getID() ?>"><img src="../sally/data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a></td>
 		<?
 		foreach ($columns as $name => $title) {
-			print '<td>';
+			print $name === '___id___' ? '<td class="sly-icon">' : '<td>';
 
 			switch ($name) {
+				case '___id___':
+					$value = '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'"><img src="../sally/data/dyn/public/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a>';
+					break;
+
 				case '___login___':
-					print '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'">';
-					print sly_html($user->getLogin());
-					print '</a>';
+					$value  = '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'">';
+					$value .= sly_html($user->getLogin());
+					$value .= '</a>';
 					break;
 
 				case '___type___':
-					print sly_html($user->getType()->getTitle());
+					$value = sly_html($user->getType()->getTitle());
 					break;
 
 				case '___registered___':
-					print sly_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered())));
+					$value = sly_html(strftime('%d.%m.%Y um %H:%M Uhr', strtotime($user->getRegistered())));
 					break;
 
 				default:
 					$value = $user->getValue($name);
 
 					if ($value === null) {
-						print '&hellip;';
+						$value = '&hellip;';
 						break;
 					}
 
-					if (is_scalar($value)) print sly_html($value);
-					else print sly_Util_String::humanImplode(array_values($value));
+					if (is_scalar($value)) $value = sly_html($value);
+					else $value = sly_Util_String::humanImplode(array_values($value));
 			}
 
+			if (isset($callbacks[$name])) {
+				$value = call_user_func_array($callbacks[$name], array($user, $value, $name));
+			}
+
+			print $value;
 			print '</td>';
 		}
 		?>

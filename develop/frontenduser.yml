@@ -9,6 +9,22 @@ frontenduser:
       ___login___: Login
       ___registered___: Registrier-Datum
 
+   # Callbacks dienen dazu, die Ausgabe von Zellinhalten noch einmal zu verändern
+   # oder gänzlich eigene Inhalte pro Benutzer auszugeben. Dazu muss hier jeweils
+   # der Key der Spalte (es funktionieren sowohl virtuelle Spalten wie ___id___
+   # als auch eigene). Jeder Callback erhält drei Argumente: Den aktuellen
+   # Benutzer, den Standardwert für diese Spalte (String) und den Namen (Key)
+   # der Spalte (String).
+   #
+   #    myCallback(_WV16_User $user, $default, $column) { return ''; }
+   #
+   # Die zurückgegebenen Werte müssen bereits HTML-kodiert sein (= eigenes HTML
+   # ist möglich).
+
+#   be_column_callbacks:
+#      ___id___: myCallback
+#      mycol:    [myClass, myMethod]
+
    types:
       default: Standardbenutzer
 
