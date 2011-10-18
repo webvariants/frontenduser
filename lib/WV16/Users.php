@@ -30,11 +30,6 @@ abstract class WV16_Users {
 		return _WV16_User::exists($login);
 	}
 
-	public static function getConfig($namespace, $name, $default = null) {
-		$value = WV8_Settings::getValue('frontenduser.'.$namespace, $name);
-		return empty($value) ? $default : $value;
-	}
-
 	public static function isLoggedIn($checkID = false) {
 		$userID = sly_Util_Session::get('frontenduser', 'int', self::ANONYMOUS);
 		if ($userID <= 0) return false;
@@ -127,51 +122,7 @@ abstract class WV16_Users {
 	}
 
 	public static function replaceAttributes($text, WV16_User $user, $prefix = '') {
-		$matches = array();
-		$prefix  = preg_quote($prefix, '/');
-
-		preg_match_all('/#'.$prefix.'([a-z0-9_.,;:+~§$%&-]+)#/i', $text, $matches, PREG_SET_ORDER);
-
-		foreach ($matches as $match) {
-			$attributeName = strtolower($match[1]);
-			$replacement   = '';
-
-			switch ($attributeName) {
-				case 'login':
-					$replacement = $user->getLogin();
-					break;
-
-				case 'confirmation_code':
-				case 'code':
-				case 'conf_code':
-				case 'ccode':
-					$replacement = $user->getConfirmationCode();
-					break;
-
-				case 'registered':
-					$replacement = strftime('%d.%m.%Y %H:%M', strtotime($user->getRegistered()));
-					break;
-
-				default:
-					try {
-						$replacement = $user->getValue($attributeName);
-
-						if (is_array($replacement)) {
-							$replacement = sly_Util_String::humanImplode(array_values($replacement));
-						}
-						elseif (is_bool($replacement)) {
-							$replacement = $replacement ? 'ja' : 'nein';
-						}
-					}
-					catch (Exception $e) {
-						// Eingabefehler, Tippfehler, Random Noise -> pass...
-					}
-			}
-
-			$text = str_replace($match[0], $replacement, $text);
-		}
-
-		return $text;
+		return WV_UserWorkflows_Helper::replaceAttributes($text, $user, $prefix);
 	}
 
 	public static function syncYAML() {

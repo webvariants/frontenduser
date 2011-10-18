@@ -253,7 +253,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 
 		if ($firstTimeActivation) {
 			try {
-				WV16_Mailer::notifyUserOnActivation($user);
+				WV_UserWorkflows::notifyUserOnActivation($user);
 				print sly_Helper_Message::info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
 			}
 			catch (Exception $e) {

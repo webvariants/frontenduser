@@ -4,6 +4,6 @@ perm: 'frontenduser[]'
 extperm: ['frontenduser[exports]', 'frontenduser[groups]']
 author: Christoph Mewes
 supportpage: www.webvariants.de
-requires: [developer_utils, global_settings]
+requires: [developer_utils, global_settings, userworkflows]
 sally: ['0.5']
-version: '3.4'
+version: '3.5'
