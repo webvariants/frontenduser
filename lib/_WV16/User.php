@@ -346,13 +346,13 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public static function testPassword($password) {
 		if (strlen($password) < 6) {
-			throw new WV16_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)');
+			throw new WV16_Exception('Das Passwort ist zu kurz (mindestens 6 Zeichen!)', WV16_Users::ERR_PWD_TOO_SHORT);
 		}
 
 		// Besteht das Passwort nur aus Zahlen?
 
 		if (preg_match('#^[0-9]$#', $password)) {
-			throw new WV16_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!');
+			throw new WV16_Exception('Das Passwort ist anfällig gegenüber Wörterbuch-Angriffen!', WV16_Users::ERR_PWD_TOO_WEAK);
 		}
 
 		return true;

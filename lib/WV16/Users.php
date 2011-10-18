@@ -14,6 +14,10 @@ abstract class WV16_Users {
 	const ERR_NOT_ACTIVATED   = 1;
 	const ERR_NOT_CONFIRMED   = 2;
 	const ERR_BAD_CREDENTIALS = 3;
+	const ERR_LOGIN_TAKEN     = 4;
+	const ERR_EMPTY_LOGIN     = 5;
+	const ERR_PWD_TOO_SHORT   = 6;
+	const ERR_PWD_TOO_WEAK    = 7;
 
 	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();

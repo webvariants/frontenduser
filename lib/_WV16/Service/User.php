@@ -22,11 +22,11 @@ class _WV16_Service_User extends WV_Object {
 		}
 
 		if (empty($login)) {
-			throw new WV16_Exception('Der Login darf nicht leer sein.');
+			throw new WV16_Exception('Der Login darf nicht leer sein.', WV16_Users::ERR_EMPTY_LOGIN);
 		}
 
 		if ($sql->count('wv16_users', 'LOWER(login) = ?', strtolower($login)) != 0) {
-			throw new WV16_Exception('Der Login ist bereits vergeben.');
+			throw new WV16_Exception('Der Login ist bereits vergeben.', WV16_Users::ERR_LOGIN_TAKEN);
 		}
 
 		_WV16_User::testPassword($password);
