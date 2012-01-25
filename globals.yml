@@ -1,0 +1,7 @@
+authorisation:
+  frontenduser:
+    title: translate:frontenduser_title
+    token:
+      users: users
+      groups: groups
+      exports: exports

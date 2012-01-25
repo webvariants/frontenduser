@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2012, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,39 +8,27 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class sly_Controller_Frontenduser extends sly_Controller_Backend {
+class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_Controller_Interface {
 	private $errors = array();
+	private $init   = false;
 
 	protected function getViewFolder() {
 		return _WV16_PATH.'templates/';
 	}
 
 	protected function init() {
-		$pages   = array('' => 'Benutzer', 'groups' => 'Gruppen');
-		$exports = sly_Core::config()->get('frontenduser/exports', null);
-
-		if (!empty($exports)) {
-			$pages['exports'] = 'Export';
-		}
-
-		$user    = sly_Util_User::getCurrentUser();
-		$isAdmin = $user->isAdmin();
-
-		foreach ($pages as $key => $value) {
-			if ($isAdmin || $user->hasPerm('frontenduser['.$key.']')) {
-				$subpages[] = array($key, $value);
-			}
-		}
-
-		sly_Core::getNavigation()->get('frontenduser', 'addon')->addSubpages($subpages);
+		if ($this->init) return;
+		$this->init = true;
 
 		$layout = sly_Core::getLayout();
-		$layout->addCSSFile('../sally/data/dyn/public/frontenduser/css/wv16.css');
-		$layout->addJavaScriptFile('../sally/data/dyn/public/frontenduser/js/frontenduser.min.js');
-		$layout->pageHeader(t('frontenduser_title'), $subpages);
+		$layout->addCSSFile('../data/dyn/public/frontenduser/css/wv16.css');
+		$layout->addJavaScriptFile('../data/dyn/public/frontenduser/js/frontenduser.min.js');
+		$layout->pageHeader(t('frontenduser_title'));
 	}
 
-	protected function index() {
+	public function indexAction() {
+		$this->init();
+
 		$search  = sly_Table::getSearchParameters('users');
 		$paging  = sly_Table::getPagingParameters('users', true, false);
 		$sorting = sly_Table::getSortingParameters('login', array('login', 'registered'));
@@ -58,14 +46,18 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		print $this->render('users/table.phtml', compact('users', 'total'));
 	}
 
-	protected function add() {
+	public function addAction() {
+		$this->init();
+
 		$user = null;
 		$func = 'add';
 
 		print $this->render('users/backend.phtml', compact('user', 'func'));
 	}
 
-	protected function do_add() {
+	public function do_addAction() {
+		$this->init();
+
 		$user      = null;
 		$login     = sly_post('login', 'string');
 		$password1 = sly_post('password', 'string');
@@ -88,7 +80,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		}
 		catch (Exception $e) {
 			print sly_Helper_Message::warn($e->getMessage());
-			return $this->add();
+			return $this->addAction();
 		}
 
 		///////////////////////////////////////////////////////////////
@@ -105,7 +97,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 
 			$errormsg = implode('<br />', $errors);
 			print sly_Helper_Message::warn($errormsg);
-			return $this->add();
+			return $this->addAction();
 		}
 
 		///////////////////////////////////////////////////////////////
@@ -132,16 +124,18 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		}
 		catch (Exception $e) {
 			print sly_Helper_Message::warn($e->getMessage());
-			return $this->add();
+			return $this->addAction();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USER_ADDED', $user, array('password' => $password1));
 		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich angelegt.');
 
-		$this->index();
+		$this->indexAction();
 	}
 
-	protected function edit() {
+	public function editAction() {
+		$this->init();
+
 		$id   = sly_request('id', 'int');
 		$user = _WV16_User::getInstance($id);
 		$func = 'edit';
@@ -149,9 +143,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		print $this->render('users/backend.phtml', compact('user', 'func'));
 	}
 
-	protected function do_edit() {
+	public function do_editAction() {
+		$this->init();
+
 		if (isset($_POST['delete'])) {
-			return $this->delete();
+			return $this->deleteAction();
 		}
 
 		$id        = sly_request('id', 'int');
@@ -181,7 +177,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		}
 		catch (Exception $e) {
 			print sly_Helper_Message::warn($e->getMessage());
-			return $this->edit();
+			return $this->editAction();
 		}
 
 		///////////////////////////////////////////////////////////////
@@ -197,7 +193,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 			}
 
 			print sly_Helper_Message::warn(implode('<br />', $errors));
-			return $this->edit();
+			return $this->editAction();
 		}
 
 		$wasActivated = $user->wasEverActivated();
@@ -240,7 +236,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 		catch (Exception $e) {
 			WV_SQL::getInstance()->rollBack();
 			print sly_Helper_Message::warn($e->getMessage());
-			return $this->edit();
+			return $this->editAction();
 		}
 
 		$params = !empty($password1) ? array('password' => $password1) : array();
@@ -261,30 +257,33 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend {
 			}
 		}
 
-		$this->index();
+		$this->indexAction();
 	}
 
-	protected function delete() {
+	public function deleteAction() {
+		$this->init();
+
 		try {
 			$id     = sly_request('id', 'int');
 			$user   = _WV16_User::getInstance($id);
 			$values = $user->getValues(); // für den EP vor der Vernichtung retten
+
 			$user->delete();
 		}
 		catch (Exception $e) {
 			print sly_Helper_Message::warn($e->getMessage());
-			return $this->edit();
+			return $this->editAction();
 		}
 
 		sly_Core::dispatcher()->notify('WV16_USER_DELETED', $user, array('values' => $values));
 		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich gelöscht.');
 
-		$this->index();
+		$this->indexAction();
 	}
 
-	protected function checkPermission() {
+	public function checkPermission($action) {
 		$user = sly_Util_User::getCurrentUser();
-		return $user && ($user->isAdmin() || $user->hasRight('frontenduser[]'));
+		return $user && ($user->isAdmin() || $user->hasRight('frontenduser', 'users'));
 	}
 
 	private function serializeForm($userType) {

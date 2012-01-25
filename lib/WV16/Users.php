@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2012, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -179,5 +179,28 @@ abstract class WV16_Users {
 
 		// done :-)
 		return $params['subject'];
+	}
+
+	public static function initMenu(array $params) {
+		$user = sly_Util_User::getCurrentUser();
+
+		if ($user) {
+			$isAdmin = $user->isAdmin();
+			$nav     = sly_Core::getLayout()->getNavigation();
+			$exports = sly_Core::config()->get('frontenduser/exports', null);
+
+			if ($isAdmin || $user->hasRight('frontenduser', 'users')) {
+				$page = $nav->addPage('addon', 'frontenduser', t('frontenduser_title'));
+				$page->addSubpage('frontenduser', t('users'));
+
+				if ($isAdmin || $user->hasRight('frontenduser', 'groups')) {
+					$page->addSubpage('frontenduser_groups', 'Gruppen');
+				}
+
+				if ($exports && ($isAdmin || $user->hasRight('frontenduser', 'groups'))) {
+					$page->addSubpage('frontenduser_exports', 'Export');
+				}
+			}
+		}
 	}
 }

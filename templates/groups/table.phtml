@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2012, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-$id    = '<a href="index.php?page=frontenduser&amp;subpage=groups&amp;func=add"><img src="../sally/data/dyn/public/frontenduser/images/group_add.png" alt="" title="Hinzufügen" /></a>';
+$id    = '<a href="index.php?page=frontenduser_groups&amp;func=add"><img src="../data/dyn/public/frontenduser/images/group_add.png" alt="" title="Hinzufügen" /></a>';
 $table = new sly_Table('groups');
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
@@ -23,10 +23,10 @@ $table->enableSorting(false);
 $table->openBuffer();
 
 foreach ($groups as $group) {
-	$url = 'index.php?page=frontenduser&amp;subpage=groups&amp;func=edit&amp;name='.urlencode($group->getName());
+	$url = 'index.php?page=frontenduser_groups&amp;func=edit&amp;name='.urlencode($group->getName());
 	?>
 	<tr>
-		<td class="sly-icon"><a href="<?= $url ?>"><img src="../sally/data/dyn/public/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
+		<td class="sly-icon"><a href="<?= $url ?>"><img src="../data/dyn/public/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
 		<td><a href="<?= $url ?>"><?= sly_html($group->getTitle()) ?></a></td>
 		<td><?= sly_html($group->getName()) ?></td>
 	</tr>

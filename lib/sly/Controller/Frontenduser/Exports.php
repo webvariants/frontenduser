@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2012, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -9,7 +9,9 @@
  */
 
 class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
-	protected function index() {
+	public function indexAction() {
+		$this->init();
+
 		$exports = $this->getExports();
 		print $this->render('exports.phtml', compact('exports'));
 	}
@@ -18,7 +20,9 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		return sly_Core::config()->get('frontenduser/exports');
 	}
 
-	protected function export() {
+	public function exportAction() {
+		$this->init();
+
 		$exports = $this->getExports();
 		$export  = sly_get('export', 'string');
 
@@ -26,7 +30,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 		if (!isset($exports[$export])) {
 			print sly_Helper_Message::warn('Der angeforderte Export konnte nicht gefunden werden.');
-			return $this->index();
+			return $this->indexAction();
 		}
 
 		$key    = $export;
@@ -40,7 +44,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 
 		if (empty($users)) {
 			print sly_Helper_Message::warn('Es wurden keine passenden Benutzer gefunden.');
-			return $this->index();
+			return $this->indexAction();
 		}
 
 		// prepare head
@@ -92,8 +96,8 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		die;
 	}
 
-	protected function checkPermission() {
+	public function checkPermission($action) {
 		$user = sly_Util_User::getCurrentUser();
-		return $user && ($user->isAdmin() || $user->hasRight('frontenduser[exports]'));
+		return $user && ($user->isAdmin() || $user->hasRight('frontenduser', 'exports'));
 	}
 }

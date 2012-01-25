@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2011, webvariants GbR, http://www.webvariants.de
+ * Copyright (c) 2012, webvariants GbR, http://www.webvariants.de
  *
  * This file is released under the terms of the MIT license. You can find the
  * complete text in the attached LICENSE file or online at:
@@ -14,9 +14,8 @@ if (!empty($errormsg)) {
 
 $form = new sly_Form('index.php', 'POST', 'Gruppe '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
 
-$form->addHiddenValue('page',    'frontenduser');
-$form->addHiddenValue('subpage', 'groups');
-$form->addHiddenValue('func',    'do_'.$func);
+$form->addHiddenValue('page', 'frontenduser_groups');
+$form->addHiddenValue('func', 'do_'.$func);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normale Felder
