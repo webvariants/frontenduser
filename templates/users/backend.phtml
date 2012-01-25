@@ -37,7 +37,7 @@ $types       = WV16_Provider::getUserTypes();
 $typesSelect = array();
 
 foreach ($types as $name => $type) {
-	$typesSelect[$name] = $type->getTitle();
+	$typesSelect[$name] = sly_translate($type->getTitle());
 }
 
 $type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
@@ -76,7 +76,7 @@ $assignedGroups = $user ? $user->getGroupNames() : array();
 $groups         = array();
 
 foreach (WV16_Provider::getGroups() as $name => $group) {
-	$groups[$name] = $group->getTitle();
+	$groups[$name] = sly_translate($group->getTitle());
 }
 
 if (!empty($groups)) {

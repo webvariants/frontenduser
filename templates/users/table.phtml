@@ -52,7 +52,7 @@ foreach ($users as $user) {
 					break;
 
 				case '___type___':
-					$value = sly_html($user->getType()->getTitle());
+					$value = sly_translate($user->getType()->getTitle(), true);
 					break;
 
 				case '___registered___':
