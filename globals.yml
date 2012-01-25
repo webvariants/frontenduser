@@ -2,6 +2,8 @@ authorisation:
   frontenduser:
     title: translate:frontenduser_title
     token:
-      users: users
-      groups: groups
-      exports: exports
+      users: Benutzer verwalten
+      groups: Gruppen verwalten
+      exports: Daten exportieren
+    supers:
+      users: ['groups', 'exports']
