@@ -24,3 +24,17 @@ input.checkbox {
 form#attribute textarea#helptext {
 	height: 60px;
 }
+
+.sly-form {
+	.wv16_attribute_row {
+		.sly-form-row {
+			border-top: 1px dotted #ACA9A9;
+		}
+
+		&:first-child {
+			.sly-form-row {
+				border-top: none;
+			}
+		}
+	}
+}
