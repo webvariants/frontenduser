@@ -40,20 +40,28 @@ foreach ($types as $name => $type) {
 	$typesSelect[$name] = sly_translate($type->getTitle());
 }
 
-$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
+$form->addElements(array($login, $password1, $password2, $activated, $confirmed));
 
-$form->addElements(array($login, $password1, $password2, $activated, $confirmed, $type));
+if (count($types) === 1) {
+	$form->addHiddenValue('type', key($types));
+}
+else {
+	$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
+	$form->add($type);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
-
-$form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
 
 $userType      = $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME;
 $requiredInfos = WV16_Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
 $attributes    = array_keys($user ? $user->getType()->getAttributes() : $requiredInfos);
+
+if (!empty($dataToDisplay)) {
+	$form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
+}
 
 foreach ($dataToDisplay as $attrName => $data) {
 	$attribute = $data['attribute'];
@@ -84,7 +92,7 @@ if (!empty($groups)) {
 	$groups = new sly_Form_Select_Checkbox('groups', 'Benutzergruppen', $assignedGroups, $groups);
 	$form->add($groups);
 }
-else {
+elseif (!empty($dataToDisplay)) {
 	$form->beginFieldset('Optionen');
 }
 
