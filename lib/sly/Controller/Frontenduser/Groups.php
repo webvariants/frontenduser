@@ -91,7 +91,7 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 			$name  = sly_post('name', 'string');
 			$group = WV16_Factory::getGroup($name);
 
-			$group->deleteAction();
+			$group->delete();
 		}
 		catch (Exception $e) {
 			print sly_Helper_Message::warn($e->getMessage());
