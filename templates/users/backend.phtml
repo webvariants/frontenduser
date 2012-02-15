@@ -43,6 +43,7 @@ foreach ($types as $name => $type) {
 $form->addElements(array($login, $password1, $password2, $activated, $confirmed));
 
 if (count($types) === 1) {
+	reset($types);
 	$form->addHiddenValue('type', key($types));
 }
 else {
