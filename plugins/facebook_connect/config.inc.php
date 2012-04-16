@@ -8,6 +8,12 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-sly_Loader::addLoadPath(_WV16_PATH.'plugins/facebook_connect/lib/Facebook');
-sly_Loader::addLoadPath(_WV16_PATH.'plugins/facebook_connect/lib');
-sly_Core::dispatcher()->register('ALL_GENERATED', array('WV16_FacebookConnect', 'clearCache'));
+$dir = dirname(__FILE__);
+sly_Loader::addLoadPath($dir.'/lib');
+
+// since the FB API sucks we have to load it manually
+require_once $dir.'/lib/Facebook/facebook.php';
+
+$listener = array('WV16_FacebookConnect', 'clearCache');
+sly_Core::dispatcher()->register('ALL_GENERATED',     $listener);
+sly_Core::dispatcher()->register('SLY_CACHE_CLEARED', $listener);
