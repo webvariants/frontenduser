@@ -91,4 +91,15 @@ abstract class WV16_FacebookConnect {
 
 		return $token ? array($key => $token) : $token;
 	}
+
+	public static function addRoute(array $params) {
+		$router = $params['subject'];
+
+		$router->addRoute('/fbrt', array(
+			'controller' => 'FacebookRealtime',
+			'action'     => 'index'
+		));
+
+		return $router;
+	}
 }

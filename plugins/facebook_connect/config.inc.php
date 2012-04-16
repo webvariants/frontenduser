@@ -14,6 +14,9 @@ sly_Loader::addLoadPath($dir.'/lib');
 // since the FB API sucks we have to load it manually
 require_once $dir.'/lib/Facebook/facebook.php';
 
-$listener = array('WV16_FacebookConnect', 'clearCache');
-sly_Core::dispatcher()->register('ALL_GENERATED',     $listener);
-sly_Core::dispatcher()->register('SLY_CACHE_CLEARED', $listener);
+$listener   = array('WV16_FacebookConnect', 'clearCache');
+$dispatcher = sly_Core::dispatcher();
+
+$dispatcher->register('ALL_GENERATED',       $listener);
+$dispatcher->register('SLY_CACHE_CLEARED',   $listener);
+$dispatcher->register('SLY_FRONTEND_ROUTER', array('WV16_FacebookConnect', 'addRoute'));
