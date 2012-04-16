@@ -1,0 +1,19 @@
+{
+	"name": "webvariants/frontenduser-facebook",
+	"description": "Facebook Connect Plugin for Frontenduser",
+	"keywords": ["facebook", "frontenduser", "sallycms"],
+	"license": "MIT",
+	"version": "1.1",
+	"require": {
+		"php": ">=5.2.0",
+		"ext-curl": "*",
+		"ext-json": "*",
+		"facebook/php-sdk": "3.1.*"
+	},
+	"autoload": {
+		"psr-0": {"WV16_": "lib/"}
+	},
+	"config": {
+		"vendor-dir": "sally/vendor"
+	}
+}
