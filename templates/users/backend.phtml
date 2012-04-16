@@ -40,10 +40,10 @@ foreach ($types as $name => $type) {
 	$typesSelect[$name] = sly_translate($type->getTitle());
 }
 
+reset($types);
 $form->addElements(array($login, $password1, $password2, $activated, $confirmed));
 
 if (count($types) === 1) {
-	reset($types);
 	$form->addHiddenValue('type', key($types));
 }
 else {
@@ -54,7 +54,7 @@ else {
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
 
-$userType      = $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME;
+$userType      = $user ? $user->getTypeName() : key($types);
 $requiredInfos = WV16_Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
