@@ -6,14 +6,12 @@
 	"version": "1.1",
 	"require": {
 		"php": ">=5.2.0",
-		"ext-curl": "*",
-		"ext-json": "*",
-		"facebook/php-sdk": "3.1.*"
+		"facebook/php-sdk": "*"
 	},
 	"autoload": {
 		"psr-0": {"WV16_": "lib/"}
 	},
 	"config": {
-		"vendor-dir": "sally/vendor"
+		"vendor-dir": "lib"
 	}
 }
