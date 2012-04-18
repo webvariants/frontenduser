@@ -21,17 +21,16 @@ sly_Loader::addLoadPath(_WV16_PATH.'lib');
 // init events
 
 $dispatcher = sly_Core::dispatcher();
-$dispatcher->register('SLY_CACHE_CLEARED', array('WV16_Users', 'clearCache'));
+$dispatcher->register('SLY_CACHE_CLEARED', array('WV16_Users', 'onClearCache'));
+$dispatcher->register('SLY_SYSTEM_CACHES', array('WV16_Users', 'systemCacheList'));
 $dispatcher->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('WV16_Users', 'isProtectedListener'));
 
 if (sly_Core::isBackend()) {
 	$dispatcher->register('ADDONS_INCLUDED', array('WV16_Users', 'initMenu'));
 }
 
-// rebuild complete metadata table when importing a dump or clearing the cache
-
-$rebuildEvent = sly_Core::isDeveloperMode() ? 'SLY_CACHE_CLEARED' : 'SLY_DB_IMPORTER_AFTER';
-$dispatcher->register($rebuildEvent, array('WV16_Users', 'rebuildUserdata'));
+// rebuild complete metadata table when importing a dump
+$dispatcher->register('SLY_DB_IMPORTER_AFTER', array('WV16_Users', 'rebuildUserdata'));
 
 // Attribute & Typen synchronieren
 

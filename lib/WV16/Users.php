@@ -19,9 +19,25 @@ abstract class WV16_Users {
 	const ERR_PWD_TOO_SHORT   = 6;
 	const ERR_PWD_TOO_WEAK    = 7;
 
-	public static function clearCache($params = array()) {
+	public static function clearCache() {
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser', true);
+	}
+
+	public static function onClearCache(array $params = array()) {
+		$isSystem   = sly_Core::getCurrentControllerName() === 'system';
+		$controller = sly_Core::getCurrentController();
+		$selective  = $isSystem && method_exists($controller, 'isCacheSelected');
+		$clearData  = !$selective || $controller->isCacheSelected('fu-data');
+		$rebuild    = sly_Core::isDeveloperMode() || ($selective && $controller->isCacheSelected('fu-rebuild'));
+
+		if ($clearData) {
+			self::clearCache();
+		}
+
+		if ($rebuild) {
+			self::rebuildUserdata(array('subject' => true));
+		}
 
 		return isset($params['subject']) ? $params['subject'] : true;
 	}
@@ -202,5 +218,26 @@ abstract class WV16_Users {
 				}
 			}
 		}
+	}
+
+	/**
+	 * SLY_SYSTEM_CACHES
+	 *
+	 * @param array $params  event parameters
+	 */
+	public static function systemCacheList(array $params) {
+		$select     = $params['subject'];
+		$selected   = $select->getValue();
+		$selected[] = 'fu-data';
+
+		if (sly_Core::isDeveloperMode()) {
+			$selected[] = 'fu-rebuild';
+		}
+
+		$select->addValue('fu-data',    'Benutzerdaten-Cache leeren');
+		$select->addValue('fu-rebuild', 'Benutzerdaten validieren & neu aufbauen');
+		$select->setSelected($selected);
+
+		return $select;
 	}
 }
