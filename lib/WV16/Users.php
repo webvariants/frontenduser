@@ -29,7 +29,7 @@ abstract class WV16_Users {
 		$controller = sly_Core::getCurrentController();
 		$selective  = $isSystem && method_exists($controller, 'isCacheSelected');
 		$clearData  = !$selective || $controller->isCacheSelected('fu-data');
-		$rebuild    = sly_Core::isDeveloperMode() || ($selective && $controller->isCacheSelected('fu-rebuild'));
+		$rebuild    = !$selective || $controller->isCacheSelected('fu-rebuild');
 
 		if ($clearData) {
 			self::clearCache();
