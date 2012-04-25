@@ -117,6 +117,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 		$newParams     = $newVersion->getParams();
 		$actionsToTake = $oldVersion->datatypeCall('getIncompatibilityUpdateStatement', array($oldParams, $newParams));
 		$prefix        = WV_SQL::getPrefix();
+		$sql           = WV_SQL::getInstance();
 
 		foreach ($actionsToTake as $action) {
 			list ($type, $what, $where) = $action;
