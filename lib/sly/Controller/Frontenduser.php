@@ -92,7 +92,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
-				$errors[$idx] = $e['error'];
+				$errors[$idx] = sly_translate(WV16_Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
 			}
 
 			$errormsg = implode('<br />', $errors);
@@ -189,7 +189,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
-				$errors[$idx] = $e['error'];
+				$errors[$idx] = sly_translate(WV16_Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
 			}
 
 			print sly_Helper_Message::warn(implode('<br />', $errors));
