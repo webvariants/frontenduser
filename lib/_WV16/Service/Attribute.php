@@ -113,16 +113,25 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 
 		// Jetzt könnnen die bestehenden Daten aktualisiert werden.
 
-		$oldParams     = $oldVersion->getParams();
-		$newParams     = $newVersion->getParams();
-		$actionsToTake = $oldVersion->datatypeCall('getIncompatibilityUpdateStatement', array($oldParams, $newParams));
-		$prefix        = WV_SQL::getPrefix();
-		$sql           = WV_SQL::getInstance();
+		$oldParams = $oldVersion->getParams();
+		$newParams = $newVersion->getParams();
+
+		try {
+			$actionsToTake = $oldVersion->datatypeCall('getIncompatibilityUpdateStatement', array($oldParams, $newParams));
+		}
+		catch (Exception $e) {
+			return;
+		}
+
+		$prefix    = WV_SQL::getPrefix();
+		$sql       = WV_SQL::getInstance();
+		$attribute = $oldVersion->getName();
 
 		foreach ($actionsToTake as $action) {
 			list ($type, $what, $where) = $action;
 			$what  = str_replace('$$$value_column$$$', 'value', $what);
 			$where = str_replace('$$$value_column$$$', 'value', $where);
+			$where = 'attribute = '.$sql->quote($attribute).' AND ('.$where.')';
 
 			switch ($type) {
 				case 'DELETE':
@@ -134,7 +143,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 					break;
 
 				default:
-					trigger_error('Unbekannte Aktion im Update-Statement!', E_USER_WARNING);
+					trigger_error('Unbekannte Aktion "'.$type.'" beim Aktualisieren des Attributs '.$attribute.'!', E_USER_WARNING);
 			}
 		}
 
