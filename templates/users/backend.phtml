@@ -54,7 +54,13 @@ else {
 ////////////////////////////////////////////////////////////////////////////////
 // Attribute bearbeiten
 
-$userType      = $user ? $user->getTypeName() : key($types);
+if (isset($_POST['type'])) {
+	$userType = sly_post('type', 'string', key($types));
+}
+else {
+	$userType = $user ? $user->getTypeName() : key($types);
+}
+
 $requiredInfos = WV16_Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
