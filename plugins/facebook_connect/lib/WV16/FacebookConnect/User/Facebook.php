@@ -45,28 +45,47 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 		return WV16_FacebookConnect::isRegistered();
 	}
 
-	public function register($confirmed = true, $activated = true) {
+	public function register($confirmed = true, $activated = true, $userType = null, $login = null) {
 		if ($this->isRegistered()) {
 			throw new WV16_Exception('User is already registered.');
 		}
 
-		$id   = $this->getLogin();
-		$pass = sly_Util_String::getRandomString(30, 30);
-		$type = WV16_FacebookConnect::getUserType();
-		$user = WV16_Users::register($id, $pass, $type);
+		$id    = $login === null ? $this->getLogin() : $login;
+		$pass  = sly_Util_String::getRandomString(30, 30);
+		$types = WV16_FacebookConnect::getUserTypes();
+
+		if ($userType === null) {
+			if (count($types) === 1) {
+				$userType = reset($types);
+			}
+			else {
+				throw new WV16_Exception('You must give a specific usertype, as there is more than one type configured.');
+			}
+		}
+		elseif (!in_array($userType, $types)) {
+			throw new WV16_Exception('This method may only be used to register Facebook accounts; invalid usertype "'.$userType.'" given.');
+		}
+
+		$user = WV16_Users::register($id, $pass, $userType);
 
 		$user->setConfirmed($confirmed);
 		$user->setActivated($activated);
 
-		// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
+		// copy as many information as possible
+		// Pay attention to what fields are available, how they are mapped
+		// and whether the current type has them assigned or not.
+		$mapping    = sly_Core::config()->get('frontenduser_fbconnect/mapping', array());
+		$attributes = array_keys(WV16_Provider::getAttributes($userType));
 
 		foreach ($this->getFacebookDetails() as $name => $value) {
-			if ($name === 'facebook_email') {
-				$user->setValue('email', $value);
-			}
-			else {
-				$user->setValue($name, $value);
-			}
+			// if this field should not be mapped, continue
+			if (!isset($mapping[$name])) continue;
+
+			// if this mapped field is not assigned to the chosen type, skip it as well
+			$mapped = $mapping[$name];
+			if (!in_array($mapped, $attributes)) continue;
+
+			$user->setValue($mapped, $value);
 		}
 
 		$user->update();
@@ -81,7 +100,6 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 
 			foreach ($data as $key => $value) {
 				if ($key === 'updated_time') continue;
-				$key = 'facebook_'.$key;
 				$this->fbdata[$key] = $value;
 			}
 		}
@@ -89,17 +107,17 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 		return $this->fbdata;
 	}
 
-	public function getFacebookID() { return $this->getValue('facebook_id',         '');    }
-	public function getName()       { return $this->getValue('facebook_name',       '');    }
-	public function getFirstname()  { return $this->getValue('facebook_first_name', '');    }
-	public function getLastname()   { return $this->getValue('facebook_last_name',  '');    }
-	public function getLink()       { return $this->getValue('facebook_link',       '');    }
-	public function getUsername()   { return $this->getValue('facebook_username',   '');    }
-	public function getEMail()      { return $this->getValue('facebook_email',      '');    } // only with scope:email!
-	public function getGender()     { return $this->getValue('facebook_gender',     '');    }
-	public function getTimezone()   { return $this->getValue('facebook_timezone',   '');    }
-	public function getLocale()     { return $this->getValue('facebook_locale',     '');    }
-	public function isVerified()    { return $this->getValue('facebook_verified',   false); }
+	public function getFacebookID() { return $this->getValue('id',         '');    }
+	public function getName()       { return $this->getValue('name',       '');    }
+	public function getFirstname()  { return $this->getValue('first_name', '');    }
+	public function getLastname()   { return $this->getValue('last_name',  '');    }
+	public function getLink()       { return $this->getValue('link',       '');    }
+	public function getUsername()   { return $this->getValue('username',   '');    }
+	public function getEMail()      { return $this->getValue('email',      '');    } // only with scope:email!
+	public function getGender()     { return $this->getValue('gender',     '');    }
+	public function getTimezone()   { return $this->getValue('timezone',   '');    }
+	public function getLocale()     { return $this->getValue('locale',     '');    }
+	public function isVerified()    { return $this->getValue('verified',   false); }
 
 	public function getValue($attribute, $default = null) {
 		$data = $this->getFacebookDetails();

@@ -16,8 +16,14 @@ abstract class WV16_FacebookConnect {
 		return isset($params['subject']) ? $params['subject'] : true;
 	}
 
-	public static function getUserType() {
-		return 'fbconnect';
+	public static function getUserTypes() {
+		$types = sly_Core::config()->get('frontenduser_fbconnect/types', array());
+
+		if (empty($types)) {
+			throw new WV16_Exception('You must configure at least one usertype for Facebook users.');
+		}
+
+		return $types;
 	}
 
 	public static function getAppID() {

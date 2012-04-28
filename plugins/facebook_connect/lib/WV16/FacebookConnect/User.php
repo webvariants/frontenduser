@@ -27,8 +27,19 @@ abstract class WV16_FacebookConnect_User {
 	}
 
 	public static function getLocalID($facebookID) {
-		$users = WV16_Provider::getUsersWithAttribute('facebook_id', WV16_FacebookConnect::getUserType(), 1, $facebookID);
-		if (empty($users)) return null;
+		$types = WV16_FacebookConnect::getUserTypes();
+		$users = WV16_Provider::getUsersWithAttribute('facebook_id', $types, 1, $facebookID);
+
+		// this is ok
+		if (empty($users)) {
+			return null;
+		}
+
+		// this is not
+		if (count($users) > 1) {
+			trigger_error('Found more than one user for an unique Facebook ID. This is bad. Using the first.', E_USER_WARNING);
+		}
+
 		$user = reset($users);
 		return $user->getId();
 	}
