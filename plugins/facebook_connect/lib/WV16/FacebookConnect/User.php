@@ -28,7 +28,8 @@ abstract class WV16_FacebookConnect_User {
 
 	public static function getLocalID($facebookID) {
 		$types = WV16_FacebookConnect::getUserTypes();
-		$users = WV16_Provider::getUsersWithAttribute('facebook_id', $types, 1, $facebookID);
+		$attr  = sly_Core::config()->get('frontenduser_fbconnect/id_attribute');
+		$users = WV16_Provider::getUsersWithAttribute($attr, $types, 1, $facebookID);
 
 		// this is ok
 		if (empty($users)) {

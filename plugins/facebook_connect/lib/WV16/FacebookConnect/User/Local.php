@@ -41,15 +41,32 @@ class WV16_FacebookConnect_User_Local extends _WV16_User implements WV16_Faceboo
 		return null;
 	}
 
-	public function getFacebookID() { return $this->getValue('facebook_id',         ''); }
-	public function getName()       { return $this->getValue('facebook_name',       ''); }
-	public function getFirstname()  { return $this->getValue('facebook_first_name', ''); }
-	public function getLastname()   { return $this->getValue('facebook_last_name',  ''); }
-	public function getLink()       { return $this->getValue('facebook_link',       ''); }
-	public function getUsername()   { return $this->getValue('facebook_username',   ''); }
-	public function getEMail()      { return $this->getValue('email',               ''); }
-	public function getGender()     { return $this->getValue('facebook_gender',     ''); }
-	public function getTimezone()   { return $this->getValue('facebook_timezone',   ''); }
-	public function getLocale()     { return $this->getValue('facebook_locale',     ''); }
-	public function isVerified()    { return $this->getValue('facebook_verified',   ''); }
+	public function getFacebookID() { return $this->getFacebookValue('id');         }
+	public function getName()       { return $this->getFacebookValue('name');       }
+	public function getFirstname()  { return $this->getFacebookValue('first_name'); }
+	public function getLastname()   { return $this->getFacebookValue('last_name');  }
+	public function getLink()       { return $this->getFacebookValue('link');       }
+	public function getUsername()   { return $this->getFacebookValue('username');   }
+	public function getEMail()      { return $this->getFacebookValue('email');      }
+	public function getGender()     { return $this->getFacebookValue('gender');     }
+	public function getTimezone()   { return $this->getFacebookValue('timezone');   }
+	public function getLocale()     { return $this->getFacebookValue('locale');     }
+	public function isVerified()    { return $this->getFacebookValue('verified');   }
+
+	protected function getFacebookValue($key) {
+		static $mapping = null;
+
+		if ($key === 'id') {
+			$key = sly_Core::config()->get('frontenduser_fbconnect/id_attribute');
+		}
+		else {
+			if ($mapping === null) {
+				$mapping = sly_Core::config()->get('frontenduser_fbconnect/mapping', array());
+			}
+
+			$key = $mapping[$key];
+		}
+
+		return $this->getValue($key, '');
+	}
 }

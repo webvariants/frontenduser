@@ -8,6 +8,8 @@ frontenduser_fbconnect:
    # This attribute may *only* contain the ID, so this is most likely a
    # stringline or text datatype attribute.
    # You *must* have one attribute that contains the FB ID!
+   # This setting exists so the plugin can work without a mapping
+   # of 'id' to a frontenduser attribute.
    id_attribute: facebook_id
 
    mapping:
