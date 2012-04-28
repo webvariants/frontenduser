@@ -267,8 +267,19 @@ abstract class WV16_Provider {
 			$params = array($attribute, (int) $setID);
 
 			if ($userType !== null) {
-				$query   .= ' AND `type` = ?';
-				$params[] = $userType;
+				if (is_array($userType)) {
+					// "type IN ()" would be invalid SQL and yield no result anyway when used
+					// in a big conjunction like we do here, so skip the query completely
+					if (empty($userType)) return array();
+
+					$userType = array_values(array_filter(array_unique(array_values($userType))));
+					$query   .= ' AND `type` IN ('.WV_SQL::getMarkers($userType).')';
+					$params   = array_merge($params, $userType);
+				}
+				else {
+					$query   .= ' AND `type` = ?';
+					$params[] = $userType;
+				}
 			}
 
 			if ($sortTable) {
