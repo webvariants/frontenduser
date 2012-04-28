@@ -85,6 +85,9 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 			$mapped = $mapping[$name];
 			if (!in_array($mapped, $attributes)) continue;
 
+			// if the value is complex (i.e. an array like 'location'), store it JSON encoded
+			if (!is_scalar($value)) $value = json_encode($value);
+
 			$user->setValue($mapped, $value);
 		}
 
