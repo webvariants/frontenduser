@@ -1,3 +1,43 @@
+frontenduser_fbconnect:
+   # This list contains all user types the plugin will scan for FB users.
+   # Mostly here because you might have a lot of users of other, non-FB, types
+   # and do not want to scan them all.
+   types: [fbconnect]
+
+   # This is the frontenduser attribute that holds the Facebook ID.
+   # This attribute may *only* contain the ID, so this is most likely a
+   # stringline or text datatype attribute.
+   # You *must* have one attribute that contains the FB ID!
+   id_attribute: facebook_id
+
+   mapping:
+      # - fb-info => frontenduser-attribute
+      # - Not all fb infos must be available, missing infos are left blank.
+      #   So if you do not request permission to access the email, the
+      #   frontenduser attribute (if mapped) will be left blank.
+      # - The plugin is smart enough to detect which of these attributes are
+      #   actually mapped to a type, so list *all* infos you need here. An
+      #   user type could then just have some of them assigned.
+      # - You are free to have more frontenduser attributes and fill them
+      #   manually. This list is just a helper for registering new users.
+      # - This list is also the base for the getXX() methods on user objects.
+      #   If you do not define a mapping for 'gender', you may *not* call
+      #   $user->getGender() later on!
+      # - Data is copied 1:1, so choose datatypes that can handle them (i.e.
+      #   don't use a linklist attribute for the user's gender).
+      # - See http://developers.facebook.com/docs/reference/api/user/ for
+      #   details on what fields exist for users.
+      id: facebook_id
+      name: facebook_name
+      first_name: facebook_first_name
+      last_name: facebook_last_name
+      username: facebook_username
+      gender: facebook_gender
+      locale: facebook_locale
+      link: facebook_link
+      timezone: facebook_timezone
+      verified: facebook_verified
+
 frontenduser:
    types:
       fbconnect: Facebook Connect
@@ -31,7 +71,7 @@ frontenduser:
          datatype: select
          params:
            source: values
-           values: {male: männlich, female: weiblich}
+           values: {male: männlich, female: weiblich, na: nicht angegeben}
            min: 1
            max: 1
            size: 1
