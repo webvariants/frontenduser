@@ -27,6 +27,7 @@ class WV16_FacebookConnect_RealTime {
 
 	/**
 	 * @param  string $token  only overwrite this if you're handling the verification request yourself
+	 * @return void
 	 */
 	public function subscribe($object, $fields, $callbackURL = null, $token = null) {
 		if (!in_array($object, array('user', 'page', 'permissions'))) {
@@ -43,10 +44,6 @@ class WV16_FacebookConnect_RealTime {
 
 		if ($token === null) {
 			$token = sly_Core::config()->get('INSTNAME');
-		}
-
-		if ($facebookID == 0) {
-			return null;
 		}
 
 		$params = array('object' => $object, 'fields' => $fields, 'callback_url' => $callbackURL, 'verify_token' => $token);
@@ -66,7 +63,6 @@ class WV16_FacebookConnect_RealTime {
 	}
 
 	protected function request($method, array $params = array()) {
-		$params['access_token'] = $this->api->getApplicationAccessToken();
 		return $this->api->api($this->getUrl(), $method, $params);
 	}
 }
