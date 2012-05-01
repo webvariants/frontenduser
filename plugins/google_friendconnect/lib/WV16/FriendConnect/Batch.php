@@ -28,7 +28,7 @@ class WV16_FriendConnect_Batch {
 	 */
 	public function add(osapi_Request $request, $key) {
 		if (isset($this->requests[$key])) {
-			throw new osapi_Exception('Duplicate key in WV16_FacebookConnect_Batch');
+			throw new osapi_Exception('Duplicate key in WV16_FriendConnect_Batch');
 		}
 
 		$request->id = $key;
