@@ -9,13 +9,9 @@
  */
 
 abstract class WV16_Facebook {
-	public static function clearCache($params = array()) {
-		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.facebook', true);
-
-		return isset($params['subject']) ? $params['subject'] : true;
-	}
-
+	/**
+	 * @return array
+	 */
 	public static function getUserTypes() {
 		$types = sly_Core::config()->get('frontenduser_facebook/types', array());
 
@@ -26,19 +22,38 @@ abstract class WV16_Facebook {
 		return $types;
 	}
 
+	/**
+	 * @return string
+	 */
 	public static function getAppID() {
 		return WV8_Settings::getValue('frontenduser.facebook', 'appid');
 	}
 
+	/**
+	 * @return string
+	 */
 	public static function getAppSecret() {
 		return WV8_Settings::getValue('frontenduser.facebook', 'appsecret');
 	}
 
+	/**
+	 * @return Facebook
+	 */
 	public static function getFacebook() {
 		return new Facebook(array(
 			'appId'  => self::getAppID(),
 			'secret' => self::getAppSecret()
 		));
+	}
+
+	/**
+	 * @return WV16_Facebook_Cache
+	 */
+	public static function getFacebookCache($namespace, $lifetime) {
+		return new WV16_Facebook_Cache(array(
+			'appId'  => self::getAppID(),
+			'secret' => self::getAppSecret()
+		), $namespace, $lifetime);
 	}
 
 	public static function getCurrentUser() {
