@@ -11,10 +11,8 @@
 class sly_Controller_Frontend_FacebookRealtime extends sly_Controller_Frontend_Base implements sly_Controller_Interface {
 	public function indexAction() {
 		// collect some debugging data
-		$log = sly_Log::getInstance('fbrt_'.uniqid());
-		$log->dump('_SERVER', $_SERVER);
-		$log->dump('_GET', $_GET);
-		$log->dump('_POST', $_POST);
+		$log = sly_Log::getInstance('fbrt');
+		$log->dump('raw', file_get_contents('php://input'));
 
 		$response = sly_Core::getResponse();
 		$response->setContentType('text/plain');
