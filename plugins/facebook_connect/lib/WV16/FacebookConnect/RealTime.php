@@ -21,8 +21,8 @@ class WV16_FacebookConnect_RealTime {
 		return sprintf('/%d/subscriptions', $this->appID);
 	}
 
-	public function list() {
-		return $this->api->api($this->getUrl());
+	public function listSubscriptions() {
+		return $this->request('GET');
 	}
 
 	/**
@@ -49,10 +49,8 @@ class WV16_FacebookConnect_RealTime {
 			return null;
 		}
 
-		$url    = $this->getUrl();
 		$params = array('object' => $object, 'fields' => $fields, 'callback_url' => $callbackURL, 'verify_token' => $token);
-
-		$this->api->api($url, 'POST', $params);
+		$this->request('POST', $params);
 	}
 
 	/**
@@ -63,9 +61,12 @@ class WV16_FacebookConnect_RealTime {
 			throw new WV16_Exception('Invalid object type "'.$object.'" given.');
 		}
 
-		$url    = $this->getUrl();
 		$params = $object === null ? array() : array('object' => $object);
+		$this->request('DELETE', $params);
+	}
 
-		$this->api->api($url, 'DELETE', $params);
+	protected function request($method, array $params = array()) {
+		$params['access_token'] = $this->api->getApplicationAccessToken();
+		return $this->api->api($this->getUrl(), $method, $params);
 	}
 }
