@@ -35,16 +35,10 @@ abstract class WV16_FacebookConnect {
 	}
 
 	public static function getFacebook() {
-		static $fb = null;
-
-		if ($fb === null) {
-			$fb = new WV16_FacebookConnect_API(array(
-				'appId'  => self::getAppID(),
-				'secret' => self::getAppSecret()
-			));
-		}
-
-		return $fb;
+		return new Facebook(array(
+			'appId'  => self::getAppID(),
+			'secret' => self::getAppSecret()
+		));
 	}
 
 	public static function getCurrentUser() {
