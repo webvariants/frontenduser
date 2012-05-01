@@ -33,6 +33,15 @@ class WV16_Facebook_User_Facebook implements WV16_User, WV16_Facebook_User_Inter
 		$this->fbdata     = null;
 	}
 
+	/**
+	 * Sets the API connector
+	 *
+	 * Use this method to inject your own wrapper (i.e. for caching purposes).
+	 */
+	public function setFacebookAPI(BaseFacebook $api) {
+		$this->facebook = $api;
+	}
+
 	public function getLogin() {
 		return 'fb_'.$this->facebookID;
 	}
