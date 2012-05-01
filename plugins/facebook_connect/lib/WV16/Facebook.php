@@ -11,13 +11,13 @@
 abstract class WV16_Facebook {
 	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();
-		$cache->flush('frontenduser.fbconnect', true);
+		$cache->flush('frontenduser.facebook', true);
 
 		return isset($params['subject']) ? $params['subject'] : true;
 	}
 
 	public static function getUserTypes() {
-		$types = sly_Core::config()->get('frontenduser_fbconnect/types', array());
+		$types = sly_Core::config()->get('frontenduser_facebook/types', array());
 
 		if (empty($types)) {
 			throw new WV16_Exception('You must configure at least one usertype for Facebook users.');
@@ -27,11 +27,11 @@ abstract class WV16_Facebook {
 	}
 
 	public static function getAppID() {
-		return WV8_Settings::getValue('frontenduser.fbconnect', 'appid');
+		return WV8_Settings::getValue('frontenduser.facebook', 'appid');
 	}
 
 	public static function getAppSecret() {
-		return WV8_Settings::getValue('frontenduser.fbconnect', 'appsecret');
+		return WV8_Settings::getValue('frontenduser.facebook', 'appsecret');
 	}
 
 	public static function getFacebook() {

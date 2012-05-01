@@ -1,8 +1,8 @@
-frontenduser_fbconnect:
+frontenduser_facebook:
    # This list contains all user types the plugin will scan for FB users.
    # Mostly here because you might have a lot of users of other, non-FB, types
    # and do not want to scan them all.
-   types: [fbconnect]
+   types: [facebook]
 
    # This is the frontenduser attribute that holds the Facebook ID.
    # This attribute may *only* contain the ID, so this is most likely a
@@ -42,32 +42,32 @@ frontenduser_fbconnect:
 
 frontenduser:
    types:
-      fbconnect: Facebook Connect
+      facebook: Facebook Connect
    attributes:
       facebook_id:
          title: Facebook-ID
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_name:
          title: FB-Name
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_first_name:
          title: FB-Vorname
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_last_name:
          title: FB-Vorname
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_link:
          title: FB-Link
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_username:
          title: FB-Benutzername
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_gender:
          title: FB-Geschlecht
          datatype: select
@@ -77,15 +77,15 @@ frontenduser:
            min: 1
            max: 1
            size: 1
-         types: [fbconnect]
+         types: [facebook]
       facebook_timezone:
          title: FB-Zeitzone
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_locale:
          title: FB-Locale
          datatype: stringline
-         types: [fbconnect]
+         types: [facebook]
       facebook_verified:
          title: FB verfiziert
          datatype: select
@@ -95,9 +95,9 @@ frontenduser:
            min: 1
            max: 1
            size: 1
-         types: [fbconnect]
+         types: [facebook]
    exports:
-      fbconnect_users:
+      facebook_users:
          title: Facebook-Accounts
-         usertype: fbconnect
+         usertype: facebook
          attributes: [facebook_id]

@@ -57,11 +57,11 @@ class WV16_Facebook_User_Local extends _WV16_User implements WV16_Facebook_User_
 		static $mapping = null;
 
 		if ($key === 'id') {
-			$key = sly_Core::config()->get('frontenduser_fbconnect/id_attribute');
+			$key = sly_Core::config()->get('frontenduser_facebook/id_attribute');
 		}
 		else {
 			if ($mapping === null) {
-				$mapping = sly_Core::config()->get('frontenduser_fbconnect/mapping', array());
+				$mapping = sly_Core::config()->get('frontenduser_facebook/mapping', array());
 			}
 
 			$key = $mapping[$key];

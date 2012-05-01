@@ -74,7 +74,7 @@ class WV16_Facebook_User_Facebook implements WV16_User, WV16_Facebook_User_Inter
 		// copy as many information as possible
 		// Pay attention to what fields are available, how they are mapped
 		// and whether the current type has them assigned or not.
-		$mapping    = sly_Core::config()->get('frontenduser_fbconnect/mapping', array());
+		$mapping    = sly_Core::config()->get('frontenduser_facebook/mapping', array());
 		$attributes = array_keys(WV16_Provider::getAttributes($userType));
 
 		foreach ($this->getFacebookDetails() as $name => $value) {

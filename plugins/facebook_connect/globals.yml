@@ -1,13 +1,13 @@
 global_settings:
-   frontenduser.fbconnect.appid:
+   frontenduser.facebook.appid:
       title: App-ID
       datatype: stringline
-      pagename: Facebook Connect
+      pagename: Facebook
       group: App-Konfiguration
       local: true
-   frontenduser.fbconnect.appsecret:
+   frontenduser.facebook.appsecret:
       title: App-Secret
       datatype: stringline
-      pagename: Facebook Connect
+      pagename: Facebook
       group: App-Konfiguration
       local: true
