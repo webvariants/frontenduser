@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConnect_User_Interface {
+class WV16_Facebook_User_Facebook implements WV16_User, WV16_Facebook_User_Interface {
 	private $facebook;
 	private $facebookID;
 	private $fbdata;
@@ -16,10 +16,10 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 	private static $instance;
 
 	/**
-	 * @return WV16_FacebookConnect_User_Facebook  der entsprechende Benutzer
+	 * @return WV16_Facebook_User_Facebook  der entsprechende Benutzer
 	 */
 	public static function getInstance() {
-		if (!WV16_FacebookConnect::isLoggedIn()) {
+		if (!WV16_Facebook::isLoggedIn()) {
 			throw new WV16_Exception('Cannot get Facebook user when no one is logged in.');
 		}
 
@@ -28,8 +28,8 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 	}
 
 	protected function __construct() {
-		$this->facebook   = WV16_FacebookConnect::getFacebook();
-		$this->facebookID = WV16_FacebookConnect::getCurrentUserID();
+		$this->facebook   = WV16_Facebook::getFacebook();
+		$this->facebookID = WV16_Facebook::getCurrentUserID();
 		$this->fbdata     = null;
 	}
 
@@ -42,7 +42,7 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 	}
 
 	public function isRegistered() {
-		return WV16_FacebookConnect::isRegistered();
+		return WV16_Facebook::isRegistered();
 	}
 
 	public function register($confirmed = true, $activated = true, $userType = null, $login = null) {
@@ -52,7 +52,7 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 
 		$id    = $login === null ? $this->getLogin() : $login;
 		$pass  = sly_Util_String::getRandomString(30, 30);
-		$types = WV16_FacebookConnect::getUserTypes();
+		$types = WV16_Facebook::getUserTypes();
 
 		if ($userType === null) {
 			if (count($types) === 1) {
@@ -93,7 +93,7 @@ class WV16_FacebookConnect_User_Facebook implements WV16_User, WV16_FacebookConn
 
 		$user->update();
 
-		return WV16_FacebookConnect_User::getInstance($this->facebookID);
+		return WV16_Facebook_User::getInstance($this->facebookID);
 	}
 
 	public function getFacebookDetails() {

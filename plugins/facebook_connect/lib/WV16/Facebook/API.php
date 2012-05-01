@@ -8,7 +8,11 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_API extends Facebook {
+class WV16_Facebook_API extends Facebook {
+	public function __construct(array $config) {
+		parent::__construct($config);
+	}
+
 	/**
 	 * @param  string      $url     The URL to make the request to
 	 * @param  array       $params  The parameters to use for the POST body

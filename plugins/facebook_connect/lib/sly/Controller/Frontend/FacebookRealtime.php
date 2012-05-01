@@ -85,7 +85,7 @@ class sly_Controller_Frontend_FacebookRealtime extends sly_Controller_Frontend_B
 				// set the current language so globalsettings can retrieve the app secret later on
 				sly_Core::setCurrentClang(sly_Core::getDefaultClangId());
 
-				$secret = '5fba9c64b4b685f5fc7902fbdffeb8c6'; // WV16_FacebookConnect::getAppSecret();
+				$secret = '5fba9c64b4b685f5fc7902fbdffeb8c6'; // WV16_Facebook::getAppSecret();
 				$algo   = $parts[0];
 				$hash   = $parts[1];
 				$check  = hash_hmac($algo, $raw, $secret);

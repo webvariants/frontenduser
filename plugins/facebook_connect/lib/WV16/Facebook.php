@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-abstract class WV16_FacebookConnect {
+abstract class WV16_Facebook {
 	public static function clearCache($params = array()) {
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser.fbconnect', true);
@@ -43,7 +43,7 @@ abstract class WV16_FacebookConnect {
 
 	public static function getCurrentUser() {
 		$id = self::getCurrentUserID();
-		return $id ? WV16_FacebookConnect_User::getInstance($id) : null;
+		return $id ? WV16_Facebook_User::getInstance($id) : null;
 	}
 
 	public static function getCurrentUserID() {
@@ -75,7 +75,7 @@ abstract class WV16_FacebookConnect {
 
 	public static function isRegistered() {
 		$id = self::getCurrentUserID();
-		return $id && WV16_FacebookConnect_User::getLocalID($id) !== null;
+		return $id && WV16_Facebook_User::getLocalID($id) !== null;
 	}
 
 	public static function getAuthToken() {

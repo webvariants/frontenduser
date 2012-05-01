@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-interface WV16_FacebookConnect_User_Interface {
+interface WV16_Facebook_User_Interface {
 	public function getFacebookID();
 	public function getName();
 	public function getFirstname();

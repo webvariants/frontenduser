@@ -8,11 +8,11 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_User_Local extends _WV16_User implements WV16_FacebookConnect_User_Interface {
+class WV16_Facebook_User_Local extends _WV16_User implements WV16_Facebook_User_Interface {
 	private static $instances = array();
 
 	/**
-	 * @return WV16_FacebookConnect_User_Local  der entsprechende Benutzer
+	 * @return WV16_Facebook_User_Local  der entsprechende Benutzer
 	 */
 	public static function getInstance($localID) {
 		$localID = (int) $localID;

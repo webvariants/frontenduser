@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_FacebookConnect_RealTime {
+class WV16_Facebook_RealTime {
 	protected $api;
 	protected $appID;
 

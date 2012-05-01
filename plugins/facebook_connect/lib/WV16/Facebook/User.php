@@ -8,9 +8,9 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-abstract class WV16_FacebookConnect_User {
+abstract class WV16_Facebook_User {
 	/**
-	 * @return WV16_FacebookConnect_User  der entsprechende Benutzer
+	 * @return WV16_Facebook_User  der entsprechende Benutzer
 	 */
 	public static function getInstance($facebookID) {
 		if ($facebookID == 0) {
@@ -20,14 +20,14 @@ abstract class WV16_FacebookConnect_User {
 		$localUserID = self::getLocalID($facebookID);
 
 		if ($localUserID === null) {
-			return WV16_FacebookConnect_User_Facebook::getInstance();
+			return WV16_Facebook_User_Facebook::getInstance();
 		}
 
-		return WV16_FacebookConnect_User_Local::getInstance($localUserID);
+		return WV16_Facebook_User_Local::getInstance($localUserID);
 	}
 
 	public static function getLocalID($facebookID) {
-		$types = WV16_FacebookConnect::getUserTypes();
+		$types = WV16_Facebook::getUserTypes();
 		$attr  = sly_Core::config()->get('frontenduser_fbconnect/id_attribute');
 		$users = WV16_Provider::getUsersWithAttribute($attr, $types, 1, $facebookID);
 
