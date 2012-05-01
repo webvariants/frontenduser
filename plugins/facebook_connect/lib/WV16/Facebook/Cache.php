@@ -30,7 +30,7 @@ class WV16_Facebook_Cache extends Facebook {
 	 */
 	protected function makeRequest($url, $params, $ch = null) {
 		$cache     = sly_Core::cache();
-		$namespace = $this->getNamespace();
+		$namespace = $this->namespace;
 		$cacheKey  = substr(md5($url.json_encode($params)), 0, 12);
 		$cached    = $cache->get($namespace, $cacheKey);
 
