@@ -97,6 +97,9 @@ class sly_Controller_Frontend_FacebookRealtime extends sly_Controller_Frontend_B
 					$log->warning('Bad signature: got '.$hash.' but computed '.$check.'.');
 				}
 				else {
+					$data = json_decode($raw, true);
+					sly_Core::dispatcher()->notify('WV16_FACEBOOK_REALTIME_UPDATE', $data);
+
 					$log->info('Signature was valid.');
 				}
 			}
