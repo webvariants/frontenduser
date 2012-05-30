@@ -40,10 +40,16 @@ abstract class WV16_Facebook {
 	 * @return Facebook
 	 */
 	public static function getFacebook() {
-		return new Facebook(array(
-			'appId'  => self::getAppID(),
-			'secret' => self::getAppSecret()
-		));
+		static $instance;
+
+		if (!$instance) {
+			$instance = new Facebook(array(
+				'appId'  => self::getAppID(),
+				'secret' => self::getAppSecret()
+			));
+		}
+
+		return $instance;
 	}
 
 	/**
@@ -56,36 +62,18 @@ abstract class WV16_Facebook {
 		), $namespace, $lifetime);
 	}
 
+	public static function getCurrentUserID() {
+		$id = self::getFacebook()->getUser();
+		return $id ? $id : null;
+	}
+
 	public static function getCurrentUser() {
 		$id = self::getCurrentUserID();
 		return $id ? WV16_Facebook_User::getInstance($id) : null;
 	}
 
-	public static function getCurrentUserID() {
-		return self::isLoggedIn() ? self::getFacebook()->getUser() : null;
-	}
-
 	public static function isLoggedIn() {
-		static $ok = null;
-
-		if ($ok === null) {
-			$fb = self::getFacebook();
-
-			if ($fb->getSignedRequest() === null) {
-				$ok = false;
-			}
-			else {
-				try {
-					$fb->api('/me');
-					$ok = true;
-				}
-				catch (FacebookApiException $e) {
-					$ok = false;
-				}
-			}
-		}
-
-		return $ok;
+		return self::getCurrentUserID() !== null;
 	}
 
 	public static function isRegistered() {
