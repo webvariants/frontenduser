@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class WV16_Facebook_Cache extends Facebook {
+class WV16_Facebook_Cache extends WV16_Facebook_API {
 	protected $namespace;
 	protected $lifetime;
 

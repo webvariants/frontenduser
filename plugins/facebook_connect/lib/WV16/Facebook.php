@@ -43,7 +43,7 @@ abstract class WV16_Facebook {
 		static $instance;
 
 		if (!$instance) {
-			$instance = new Facebook(array(
+			$instance = new WV16_Facebook_API(array(
 				'appId'  => self::getAppID(),
 				'secret' => self::getAppSecret()
 			));
