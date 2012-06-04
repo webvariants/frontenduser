@@ -17,13 +17,17 @@ abstract class WV16_Facebook_User {
 			return null;
 		}
 
-		$localUserID = self::getLocalID($facebookID);
-
-		if ($localUserID === null) {
+		if ($facebookID === null) {
 			return WV16_Facebook_User_Facebook::getInstance();
 		}
 
-		return WV16_Facebook_User_Local::getInstance($localUserID);
+		$localUserID = self::getLocalID($facebookID);
+
+		if ($localUserID !== null) {
+			return WV16_Facebook_User_Local::getInstance($localUserID);
+		}
+
+		return null;
 	}
 
 	public static function getLocalID($facebookID) {
