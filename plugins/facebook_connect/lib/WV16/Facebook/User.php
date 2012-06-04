@@ -27,7 +27,12 @@ abstract class WV16_Facebook_User {
 			return WV16_Facebook_User_Local::getInstance($localUserID);
 		}
 
-		return null;
+		try {
+			return WV16_Facebook_User_Facebook::getInstance();
+		}
+		catch (Exception $e) {
+			return null;
+		}
 	}
 
 	public static function getLocalID($facebookID) {
