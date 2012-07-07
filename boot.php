@@ -8,7 +8,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-define('_WV16_PATH', SLY_ADDONFOLDER.'/frontenduser/');
+define('_WV16_PATH', rtrim(dirname(__FILE__), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
 
 // AddOn-Konfiguration
 
