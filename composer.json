@@ -1,23 +1,34 @@
 {
-	"name": "webvariants/frontenduser",
-	"description": "AddOn for SallyCMS, providing an extended user management.",
-	"authors": [{"name": "webvariants GbR"}],
-	"homepage": "http://www.sallycms.de/",
-	"version": "3.7-dev",
-	"license": "MIT",
-	"type": "sallycms-addon",
-	"require": {
-		"php": ">=5.2.0",
-		"sallycms/composer-installer": "*",
-		"sallycms/sallycms": ">=0.6,<0.8",
-		"webvariants/developer-utils": "5.*",
-		"webvariants/global-settings": "5.*"
-	},
-	"autoload": {
-		"psr-0": {
-			"WV16_": "lib/",
-			"sly_Controller_Frontenduser": "lib/",
-			"_WV16": "lib/"
-		}
-	}
+    "name": "webvariants/frontenduser",
+    "description": "AddOn for SallyCMS, providing an extended user management.",
+    "authors": [
+        {
+            "name": "webvariants GbR"
+        }
+    ],
+    "homepage": "http://www.sallycms.de/",
+    "license": "MIT",
+    "type": "sallycms-addon",
+    "require": {
+        "php": ">=5.2.0",
+        "sallycms/composer-installer": "*",
+        "sallycms/sallycms": ">=0.6,<0.8",
+        "webvariants/developer-utils": "5.*",
+        "webvariants/global-settings": "5.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "WV16_": "lib/",
+            "sly_Controller_Frontenduser": "lib/",
+            "_WV16": "lib/"
+        }
+    },
+    "extra": {
+        "sallycms": {
+            "version": "3.7-dev"
+        },
+        "branch-alias": {
+            "dev-default": "3.7.x-dev"
+        }
+    }
 }
