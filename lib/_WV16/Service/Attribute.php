@@ -15,7 +15,7 @@ class _WV16_Service_Attribute extends WV_Service_Property {
 		if ($properties === null || $forceRefresh) {
 			$config     = sly_Core::config();
 			$attributes = $config->get('frontenduser/attributes', array());
-			$cacheFile  = sly_Service_Factory::getAddOnService()->internalFolder('frontenduser').'/attributes.php';
+			$cacheFile  = sly_Service_Factory::getAddOnService()->internalDirectory('frontenduser').'/attributes.php';
 			$oldState   = null;
 
 			if (file_exists($cacheFile)) {
