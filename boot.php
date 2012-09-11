@@ -27,7 +27,6 @@ $dispatcher->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('WV16_U
 
 if (sly_Core::isBackend()) {
 	$dispatcher->register('SLY_ADDONS_LOADED', array('WV16_Users', 'initMenu'));
-	$dispatcher->register('SLY_ADDONS_LOADED', array('WV16_Users', 'initMenu'));
 }
 
 // rebuild complete metadata table when importing a dump
