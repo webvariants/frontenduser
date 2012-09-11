@@ -21,8 +21,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$this->init = true;
 
 		$layout = sly_Core::getLayout();
-		$layout->addCSSFile('../data/dyn/public/frontenduser/css/wv16.css');
-		$layout->addJavaScriptFile('../data/dyn/public/frontenduser/js/frontenduser.min.js');
+		$layout->addCSSFile('../data/dyn/public/webvariants/frontenduser/css/wv16.less');
+		$layout->addJavaScriptFile('../data/dyn/public/webvariants/frontenduser/js/frontenduser.min.js');
 		$layout->pageHeader(t('frontenduser_title'));
 	}
 

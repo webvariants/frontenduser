@@ -26,7 +26,7 @@ $dispatcher->register('SLY_SYSTEM_CACHES', array('WV16_Users', 'systemCacheList'
 $dispatcher->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('WV16_Users', 'isProtectedListener'));
 
 if (sly_Core::isBackend()) {
-	$dispatcher->register('ADDONS_INCLUDED', array('WV16_Users', 'initMenu'));
+	$dispatcher->register('SLY_ADDONS_LOADED', array('WV16_Users', 'initMenu'));
 }
 
 // rebuild complete metadata table when importing a dump
@@ -35,5 +35,5 @@ $dispatcher->register('SLY_DB_IMPORTER_AFTER', array('WV16_Users', 'rebuildUserd
 // Attribute & Typen synchronieren
 
 if (sly_Core::isDeveloperMode()) {
-	$dispatcher->register('ADDONS_INCLUDED', array('WV16_Users', 'syncYAML'));
+	$dispatcher->register('SLY_ADDONS_LOADED', array('WV16_Users', 'syncYAML'));
 }
