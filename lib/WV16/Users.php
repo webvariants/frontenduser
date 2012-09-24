@@ -157,7 +157,7 @@ abstract class WV16_Users {
 		$basename = basename($file);
 
 		// if the file is not stored in mediapool, it cannot be protected by FrontendUser
-		if (!sly_Util_String::startsWith($file, 'sally/data/mediapool')) return false;
+		if (!sly_Util_String::startsWith($file, 'data/mediapool')) return false;
 
 		// image_resize request?
 		if (sly_Service_Factory::getAddOnService()->isAvailable('image_resize')) {
