@@ -3,7 +3,6 @@
 	"description": "AddOn for SallyCMS, providing an extended user management.",
 	"authors": [{"name": "webvariants GbR"}],
 	"homepage": "http://www.sallycms.de/",
-	"version": "3.7-dev",
 	"license": "MIT",
 	"type": "sallycms-addon",
 	"require": {

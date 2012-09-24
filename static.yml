@@ -2,4 +2,4 @@ author: webvariants GbR
 supportpage: http://www.sallycms.de/
 requires: [developer_utils, global_settings, userworkflows]
 sally: ['0.6']
-version: '3.6'
+version: '3.6.1'
