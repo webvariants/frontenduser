@@ -262,9 +262,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return in_array($value, array_keys($v)) || in_array($value, array_values($v));
 	}
 
-
 	/* Gruppen-Management */
-
 
 	public function isInGroup($group) {
 		return array_search($group, $this->groups) !== false;
@@ -305,9 +303,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return $code;
 	}
 
-
 	/* Setter */
-
 
 	public function setConfirmed($isConfirmed = true, $confirmationCode = null) {
 		// Auf Wunsch kann auch diese Methode die Überprüfung auf den
@@ -372,9 +368,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		}
 	}
 
-
 	/* Set-Management */
-
 
 	public function setSetID($setID) {
 		$setID = (int) $setID;
@@ -420,9 +414,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return _WV16_Service_Set::isReadOnlySet($this->currentSetID);
 	}
 
-
 	/* Hilfsmethoden für den User-Service */
-
 
 	public function _setEverActivated() {
 		$this->wasActivated = true;
