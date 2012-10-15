@@ -127,7 +127,7 @@ abstract class WV16_Users {
 	}
 
 	public static function findByConfirmationCode($code) {
-		$where = 'confirmation_code = "'.preg_replace('#[^a-z0-9]#i', '', $code).'"';
+		$where = 'confirmation_code = "'.preg_replace('#[^a-z0-9]#i', '', $code).'" AND confirmation_code != ""';
 		$users = WV16_Provider::getUsers($where, 'id', 'asc', 0, 1);
 
 		return empty($users) ? null : reset($users);
