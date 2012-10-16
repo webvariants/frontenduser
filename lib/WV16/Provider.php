@@ -232,7 +232,7 @@ abstract class WV16_Provider {
 	 * @param  string $userType   der Name des Artikeltyps oder null, falls alle
 	 * @param  int    $setID      ID des ValueSets, in dem gesucht werden soll
 	 * @param  string $value      der gesuchte Attributwert oder null, falls egal
-	 * @param  int    $operator   Anweisungen an den Datentyp, wie die Suche nach dem Wert ($value) zu erfolgen hat
+	 * @param  int    $operator   Vergleichsoperator für SQL-Abfrage
 	 * @param  string $sort       eine optionale "ORDER BY"-Klausel (ohne "ORDER BY")
 	 * @return array              eine Liste von passenden Benutzern
 	 */
@@ -258,9 +258,13 @@ abstract class WV16_Provider {
 			}
 
 			$query =
-				'SELECT uv.user_id, uv.value FROM ~wv16_user_values uv '.
+				'SELECT uv.user_id FROM ~wv16_user_values uv '.
 				'LEFT JOIN ~wv16_users u ON u.id = uv.user_id '.
 				'WHERE uv.attribute = ? AND uv.set_id = ?';
+
+			if (!is_null($value) && !is_null($operator)) {
+				$query .= ' AND uv.value '.$operator.' '.$value;
+			}
 
 			$sql    = WV_SQL::getInstance();
 			$return = array();
@@ -286,34 +290,13 @@ abstract class WV16_Provider {
 				$query .= ' ORDER BY '.$sortTable.'.'.$sortColumn;
 			}
 
-			$values = $sql->getArray($query, $params, '~');
+			$users = $sql->getArray($query, $params, '~');
 
 			// Nichts gefunden? Und tschüss!
 
-			if (empty($values)) {
+			if (empty($users)) {
 				$cache->set($namespace, $cacheKey, array());
 				return array();
-			}
-
-			// Wenn kein spezieller Wert gesucht wird, haben wir bereits das
-			// finale Ergebnis gefunden.
-
-			if ($value === null) {
-				$users = array_map('intval', array_keys($values));
-			}
-			else {
-				// Datentyp ermitteln
-
-				$users     = array();
-				$attribute = WV16_Factory::getAttribute($attribute);
-				$params    = $attribute->getParams();
-
-				// Gefundene Daten durchgehen
-
-				foreach ($values as $userID => $userValue) {
-					$contained = $attribute->datatypeCall('isValueContained', array($value, $userValue, $params, $operator));
-					if ($contained) $users[] = (int) $userID;
-				}
 			}
 
 			// Daten cachen
