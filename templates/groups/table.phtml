@@ -33,9 +33,9 @@ foreach ($groups as $group) {
 
 	?>
 	<tr>
-		<td class="sly-icon"><a href="<?= $url ?>"><img src="../data/dyn/public/webvariants/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
-		<td><a href="<?= $url ?>"><?= sly_html($translated) ?></a></td>
-		<td><?= sly_html($group->getName()) ?></td>
+		<td class="sly-icon"><a href="<?php print $url ?>"><img src="../data/dyn/public/webvariants/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
+		<td><a href="<?php print $url ?>"><?php print sly_html($translated) ?></a></td>
+		<td><?php print sly_html($group->getName()) ?></td>
 	</tr>
 	<?
 }

@@ -14,6 +14,6 @@ $base = 'index.php?page=frontenduser_exports&amp;func=export&amp;export=';
 ?>
 <ul style="margin-left:25px">
 	<? foreach ($exports as $key => $info): ?>
-	<li><a href="<?= $base.$key ?>"><?= sly_translate($info['title'], true) ?></a></li>
+	<li><a href="<?php print $base.$key ?>"><?php print sly_translate($info['title'], true) ?></a></li>
 	<? endforeach ?>
 </ul>
