@@ -53,12 +53,12 @@ class _WV16_Service_Set extends WV_Object {
 		return $firstSetID;
 	}
 
-	public function createSetCopy(_WV16_User $user, $sourceSetID = null) {
+	public function createSetCopy(_WV16_User $user, $sourceSetID = null, $empty = false) {
 		$setID = $sourceSetID === null ? $this->getFirstSetID($user) : (int) $sourceSetID;
 		$id    = $user->getID();
 		$newID = WV_SQL::getInstance()->fetch('MAX(set_id)', 'wv16_user_values', 'user_id = ?', $id) + 1;
 
-		$this->copySet($user, $setID, $newID);
+		$this->copySet($user, $setID, $newID, $empty);
 		return $newID;
 	}
 
@@ -105,13 +105,15 @@ class _WV16_Service_Set extends WV_Object {
 		return $sql->affectedRows() > 0;
 	}
 
-	protected function copySet(_WV16_User $user, $sourceSet, $targetSet) {
+	protected function copySet(_WV16_User $user, $sourceSet, $targetSet, $empty = false) {
 		$userID = $user->getID();
+
+		$params = !$empty ? array($targetSet, $userID, $sourceSet) : array($targetSet, '', $userID, $sourceSet);
 
 		WV_SQL::getInstance()->query(
 			'INSERT INTO ~wv16_user_values '.
-			'SELECT user_id,attribute,?,value FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?',
-			array($targetSet, $userID, $sourceSet), '~'
+			'SELECT user_id,attribute,?,'.(!$empty?'value':'?').' FROM ~wv16_user_values WHERE user_id = ? AND set_id = ?',
+			$params, '~'
 		);
 
 		$cache = sly_Core::cache();

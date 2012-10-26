@@ -395,9 +395,9 @@ class _WV16_User extends WV_Object implements WV16_User {
 		return $service->getFirstSetID($this);
 	}
 
-	public function createSetCopy($sourceSetID = null) {
+	public function createSetCopy($sourceSetID = null, $empty = false) {
 		$service = new _WV16_Service_Set();
-		return $service->createSetCopy($this, $sourceSetID);
+		return $service->createSetCopy($this, $sourceSetID, $empty);
 	}
 
 	public function createReadOnlySet($sourceSetID = null) {
