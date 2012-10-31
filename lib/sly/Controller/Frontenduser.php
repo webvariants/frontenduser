@@ -197,6 +197,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		}
 
 		$wasActivated = $user->wasEverActivated();
+		$oldLogin     = $user->getLogin();
 
 		///////////////////////////////////////////////////////////////
 		// Attribute sind OK. Ab in die Datenbank damit.
@@ -240,6 +241,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		}
 
 		$params = !empty($password1) ? array('password' => $password1) : array();
+		$params['old_login'] = $oldLogin;
+
 		sly_Core::dispatcher()->notify('WV16_USER_UPDATED', $user, $params);
 		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich bearbeitet.');
 
