@@ -111,7 +111,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			// Attribute können erst gesetzt werden, nachdem der Benutzer angelegt wurde.
 
 			foreach ($valuesToStore as $name => $value) {
-				$user->setValue($name, $value);
+				$user->setSerializedValue($name, $value);
 			}
 
 			// Gruppen hinzufügen
@@ -216,7 +216,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$user->update();
 
 			foreach ($valuesToStore as $name => $value) {
-				$user->setValue($name, $value);
+				$user->setSerializedValue($name, $value);
 			}
 
 			// Zu prüfen, in welcher Gruppe wir schon sind und in welcher nicht wäre

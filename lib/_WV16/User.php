@@ -186,7 +186,15 @@ class _WV16_User extends WV_Object implements WV16_User {
 	/**
 	 * @return boolean  true im Erfolgsfall, sonst false
 	 */
-	public function setValue($attribute, $value) {
+	public function setSerializedValue($attribute, $value) {
+		if (!is_string($value) && !is_int($value) && $value !== null) {
+			throw new WV16_Exception('A serialized value must be either NULL or a string, got '.gettype($value).'.');
+		}
+
+		if (!$this->hasAttribute($attribute)) {
+			throw new WV16_Exception('User does not have a "'.$attribute.'" attribute.');
+		}
+
 		$service = new _WV16_Service_Value();
 		$written = $service->write($this, null, $attribute, $value);
 
@@ -201,6 +209,30 @@ class _WV16_User extends WV_Object implements WV16_User {
 		}
 
 		return $written;
+	}
+
+	/**
+	 * Set a user's attribute value
+	 *
+	 * This should be used to set the native value (like an array for the select
+	 * datatype or a boolean for the boolen datatype). The value will
+	 * automatically be serialized and then stored.
+	 *
+	 * @return boolean  true im Erfolgsfall, sonst false
+	 */
+	public function setRawValue($attribute, $value) {
+		$value = WV16_Factory::getAttribute($attr)->serialize($value);
+		return $this->setSerializedValue($attribute, $value);
+	}
+
+	/**
+	 * Set a user's attribute value
+	 *
+	 * @deprecated      use the more descriptive setSerializedValue() method instead
+	 * @return boolean  true im Erfolgsfall, sonst false
+	 */
+	public function setValue($attribute, $value) {
+		return $this->setSerializedValue($attribute, $value);
 	}
 
 	public function getValues($raw = false) {
