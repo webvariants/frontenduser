@@ -221,7 +221,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	 * @return boolean  true im Erfolgsfall, sonst false
 	 */
 	public function setRawValue($attribute, $value) {
-		$value = WV16_Factory::getAttribute($attr)->serialize($value);
+		$value = WV16_Factory::getAttribute($attribute)->serialize($value);
 		return $this->setSerializedValue($attribute, $value);
 	}
 
