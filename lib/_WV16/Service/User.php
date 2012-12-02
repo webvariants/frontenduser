@@ -74,6 +74,10 @@ class _WV16_Service_User extends WV_Object {
 	}
 
 	public function update(_WV16_User $user) {
+		if ($user->isDeleted()) {
+			throw new WV16_Exception('Gelöschte Benutzer können nicht aktualisiert werden.');
+		}
+
 		self::transactionGuard(array($this, '_update'), $user, 'WV16_Exception');
 	}
 
@@ -159,6 +163,10 @@ class _WV16_Service_User extends WV_Object {
 	}
 
 	public function delete(_WV16_User $user) {
+		if ($user->isDeleted()) {
+			throw new WV16_Exception('Dieser Nutzer wurde bereits gelöscht.');
+		}
+
 		return self::transactionGuard(array($this, '_delete'), $user, 'WV16_Exception');
 	}
 
@@ -166,9 +174,16 @@ class _WV16_Service_User extends WV_Object {
 		$sql = WV_SQL::getInstance();
 		$id  = $user->getID();
 
-		$sql->query('DELETE FROM ~wv16_users WHERE id = ?', $id, '~');
-		$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $id, '~');
-		$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ?', $id, '~');
+		// only mark users with read-only sets as deleted
+		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id < 0', $id) > 0) {
+			$user->_setDeleted();
+			$sql->query('UPDATE ~wv16_users SET deleted = ? WHERE id = ?', array(1, $id), '~');
+		}
+		else {
+			$sql->query('DELETE FROM ~wv16_users WHERE id = ?', $id, '~');
+			$sql->query('DELETE FROM ~wv16_user_groups WHERE user_id = ?', $id, '~');
+			$sql->query('DELETE FROM ~wv16_user_values WHERE user_id = ?', $id, '~');
+		}
 
 		$cache = sly_Core::cache();
 		$cache->flush('frontenduser.users', true);

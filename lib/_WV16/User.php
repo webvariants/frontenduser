@@ -301,6 +301,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	public function addGroup($group) {
+		if ($this->isReadOnly()) return false;
+
 		$service = new _WV16_Service_User();
 
 		if ($service->addToGroup($this, $group)) {
@@ -312,6 +314,8 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	public function removeGroup($group) {
+		if ($this->isReadOnly()) return false;
+
 		$service = new _WV16_Service_User();
 		$service->removeFromGroup($this, $group);
 
@@ -325,19 +329,25 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	public function removeAllGroups() {
+		if ($this->isReadOnly()) return false;
 		$service = new _WV16_Service_User();
 		return $service->removeFromAllGroups($this);
 	}
 
 	public function setConfirmationCode($code = null) {
+		if ($this->isReadOnly()) return false;
+
 		$code = $code === null ? WV16_Users::generateConfirmationCode($this->login) : substr($code, 0, 20);
 		$this->confirmationCode = $code;
+
 		return $code;
 	}
 
 	/* Setter */
 
 	public function setConfirmed($isConfirmed = true, $confirmationCode = null) {
+		if ($this->isReadOnly()) return false;
+
 		// Auf Wunsch kann auch diese Methode die Überprüfung auf den
 		// Bestätigungscode selbst durchführen.
 
@@ -350,6 +360,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	}
 
 	public function setActivated($isActivated = true) {
+		if ($this->isReadOnly()) return false;
 		$this->activated = (boolean) $isActivated;
 	}
 
@@ -450,5 +461,9 @@ class _WV16_User extends WV_Object implements WV16_User {
 
 	public function _setEverActivated() {
 		$this->wasActivated = true;
+	}
+
+	public function _setDeleted() {
+		$this->deleted = true;
 	}
 }
