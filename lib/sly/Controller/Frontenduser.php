@@ -137,10 +137,22 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$this->init();
 
 		$id   = sly_request('id', 'int');
+		$set  = sly_request('setid', 'int', null);
 		$user = _WV16_User::getInstance($id);
 		$func = 'edit';
 
-		print $this->render('users/backend.phtml', compact('user', 'func'));
+		if ($set !== null) {
+			$sets = $user->getSetIDs(false);
+
+			if (!in_array($set, $sets)) {
+				$set = $user->getSetID();
+			}
+		}
+		else {
+			$set = $user->getSetID();
+		}
+
+		print $this->render('users/backend.phtml', compact('user', 'func', 'set'));
 	}
 
 	public function do_editAction() {
@@ -159,6 +171,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$activated = sly_post('activated', 'boolean', false);
 		$confirmed = sly_post('confirmed', 'boolean', false);
 		$groups    = sly_postArray('groups', 'string');
+		$set       = sly_request('setid', 'int', null);
 
 		///////////////////////////////////////////////////////////////
 		// Passwort und Benutzertyp checken
@@ -182,6 +195,19 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 		///////////////////////////////////////////////////////////////
 		// Attribute auslesen und vom Datentyp jeweils verarbeiten lassen
+
+		$activeSet = $user->getSetID();
+
+		if ($set !== null) {
+			$sets = $user->getSetIDs(false);
+
+			if (!in_array($set, $sets)) {
+				$set = $user->getSetID();
+			}
+		}
+		else {
+			$set = $user->getSetID();
+		}
 
 		$valuesToStore = $this->serializeForm($userType);
 
@@ -214,6 +240,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 			// Attributmenge aktualisieren
 			$user->update();
+			$user->setSetID($set);
 
 			foreach ($valuesToStore as $name => $value) {
 				$user->setSerializedValue($name, $value);
@@ -239,6 +266,9 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			print sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
+
+		// reset the active set
+		$user->setSetID($activeSet);
 
 		$params = !empty($password1) ? array('password' => $password1) : array();
 		$params['old_login'] = $oldLogin;

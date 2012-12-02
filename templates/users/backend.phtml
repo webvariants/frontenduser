@@ -14,9 +14,10 @@ if (!empty($errormsg)) {
 
 $form = new sly_Form('index.php', 'POST', 'Benutzer '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
 
-$form->addHiddenValue('page', 'frontenduser');
-$form->addHiddenValue('func', 'do_'.$func);
-$form->addHiddenValue('id',   $user ? $user->getID() : '');
+$form->addHiddenValue('page',  'frontenduser');
+$form->addHiddenValue('func',  'do_'.$func);
+$form->addHiddenValue('id',    $user ? $user->getID() : '');
+$form->addHiddenValue('setid', $user ? $set : '');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normale Felder
@@ -61,13 +62,19 @@ else {
 	$userType = $user ? $user->getTypeName() : key($types);
 }
 
+// switch to the currently selected set
+if ($user) {
+	$activeSet = $user->getSetID();
+	$user->setSetID($set);
+}
+
 $requiredInfos = WV16_Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
 $attributes    = array_keys($user ? $user->getType()->getAttributes() : $requiredInfos);
 
 if (!empty($dataToDisplay)) {
-	$form->beginFieldset('Attribute für den aktuellen Benutzertyp', 'wv16attributes');
+	$form->beginFieldset('Benutzerdaten', 'wv16attributes');
 }
 
 foreach ($dataToDisplay as $attrName => $data) {
@@ -82,6 +89,11 @@ foreach ($dataToDisplay as $attrName => $data) {
 	$form->add($fragment);
 	$attribute->renderForm($form, array($value));
 	$form->add(new sly_Form_Fragment('</div>'));
+}
+
+// reset the setID
+if ($user) {
+	$user->setSetID($activeSet);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +134,12 @@ print $form->render();
 ?>
 
 <script type="text/javascript">
-var wv16 = {attributesPerType: []};
+var wv16 = {
+	attributesPerType: [],
+	activeSet:         <?php print $user ? $set : 'null'; ?>,
+	userID:            <?php print $user ? $user->getID() : 'null'; ?>,
+	userSets:          []
+};
 <?php
 
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
@@ -138,8 +155,13 @@ foreach (WV16_Provider::getUserTypes() as $type) {
 		$list[] = $attr->getID();
 	}
 
-	print implode(',', $list);
+	print implode(', ', $list);
 	print "];\n";
+}
+
+if ($user) {
+	$setIDs = $user->getSetIDs(false);
+	print 'wv16.userSets = ['.implode(', ', $setIDs)."];\n";
 }
 
 ?>

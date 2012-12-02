@@ -1,2 +1,2 @@
 @echo off
-call uglifyjs -nc -o assets/js/frontenduser.min.js assets/js/frontenduser.js
+call uglifyjs assets/js/frontenduser.js -nc -m -c -o assets/js/frontenduser.min.js
