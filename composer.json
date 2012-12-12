@@ -11,10 +11,10 @@
     "type": "sallycms-addon",
     "require": {
         "php": ">=5.2.0",
-        "sallycms/composer-installer": "*",
-        "sallycms/sallycms": ">=0.6,<0.8",
-        "webvariants/developer-utils": "5.*",
-        "webvariants/global-settings": "5.*"
+        "sallycms/composer-installer": "~1.1",
+        "sallycms/sallycms": ">=0.7,<0.8",
+        "webvariants/developer-utils": "~5.1",
+        "webvariants/global-settings": "~5.4"
     },
     "autoload": {
         "psr-0": {
@@ -25,10 +25,10 @@
     },
     "extra": {
         "sallycms": {
-            "version": "3.7-dev"
+            "version": "3.8.x-dev"
         },
         "branch-alias": {
-            "dev-default": "3.7.x-dev"
+            "dev-default": "3.x-dev"
         }
     }
 }
