@@ -43,7 +43,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$users = WV16_Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
 		$total = WV16_Provider::getTotalUsers($where);
 
-		print $this->render('users/table.phtml', compact('users', 'total'));
+		$this->render('users/table.phtml', compact('users', 'total'), false);
 	}
 
 	public function addAction() {
@@ -52,7 +52,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$user = null;
 		$func = 'add';
 
-		print $this->render('users/backend.phtml', compact('user', 'func'));
+		$this->render('users/backend.phtml', compact('user', 'func'), false);
 	}
 
 	public function do_addAction() {
@@ -152,7 +152,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$set = $user->getSetID();
 		}
 
-		print $this->render('users/backend.phtml', compact('user', 'func', 'set'));
+		$this->render('users/backend.phtml', compact('user', 'func', 'set'), false);
 	}
 
 	public function do_editAction() {

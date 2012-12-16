@@ -15,7 +15,7 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$this->init();
 
 		$groups = WV16_Provider::getGroups();
-		print $this->render('groups/table.phtml', compact('groups'));
+		$this->render('groups/table.phtml', compact('groups'), false);
 	}
 
 	public function addAction() {
@@ -24,7 +24,7 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$group = null;
 		$func  = 'add';
 
-		print $this->render('groups/backend.phtml', compact('group', 'func'));
+		$this->render('groups/backend.phtml', compact('group', 'func'), false);
 	}
 
 	public function do_addAction() {
@@ -55,7 +55,7 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$group = WV16_Factory::getGroup($name);
 		$func  = 'edit';
 
-		print $this->render('groups/backend.phtml', compact('group', 'func'));
+		$this->render('groups/backend.phtml', compact('group', 'func'), false);
 	}
 
 	public function do_editAction() {

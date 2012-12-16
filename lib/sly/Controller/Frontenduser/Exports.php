@@ -13,7 +13,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		$this->init();
 
 		$exports = $this->getExports();
-		print $this->render('exports.phtml', compact('exports'));
+		$this->render('exports.phtml', compact('exports'), false);
 	}
 
 	private function getExports() {
