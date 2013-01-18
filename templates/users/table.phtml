@@ -36,7 +36,7 @@ $table->openBuffer();
 foreach ($users as $user) {
 	?>
 	<tr>
-		<?
+		<?php
 		foreach ($columns as $name => $title) {
 			print $name === '___id___' ? '<td class="sly-icon">' : '<td>';
 
@@ -80,7 +80,7 @@ foreach ($users as $user) {
 		}
 		?>
 	</tr>
-	<?
+	<?php
 }
 
 $table->closeBuffer();
