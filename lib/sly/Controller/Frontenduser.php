@@ -193,6 +193,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			return $this->editAction();
 		}
 
+		sly_Core::dispatcher()->notify('WV16_USER_PRE_UPDATED', $user);
+
 		///////////////////////////////////////////////////////////////
 		// Attribute auslesen und vom Datentyp jeweils verarbeiten lassen
 
