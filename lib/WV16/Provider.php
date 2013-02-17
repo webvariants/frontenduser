@@ -262,11 +262,12 @@ abstract class WV16_Provider {
 				'LEFT JOIN ~wv16_users u ON u.id = uv.user_id '.
 				'WHERE uv.attribute = ? AND uv.set_id = ?';
 
+			$sql = WV_SQL::getInstance();
+
 			if (!is_null($value) && !is_null($operator)) {
-				$query .= ' AND uv.value '.$operator.' '.$value;
+				$query .= ' AND uv.value '.$operator.' '.$sql->quote($value);
 			}
 
-			$sql    = WV_SQL::getInstance();
 			$return = array();
 			$params = array($attribute, (int) $setID);
 
