@@ -28,6 +28,8 @@ frontenduser:
    types:
       default: Standardbenutzer
 
+#   rename_deleted_users: false # rename deleted users that are only marked as deleted
+
    attributes:
       firstname:
          title: Vorname

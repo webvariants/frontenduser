@@ -178,6 +178,11 @@ class _WV16_Service_User extends WV_Object {
 		if ($sql->count('wv16_user_values', 'user_id = ? AND set_id < 0', $id) > 0) {
 			$user->_setDeleted();
 			$sql->query('UPDATE ~wv16_users SET deleted = ? WHERE id = ?', array(1, $id), '~');
+			if (sly_Core::config()->get('frontenduser/rename_deleted_users', false)) {
+				$suffix = '_deleted_' . $id . '_' . time(); // id and time to be unique
+				$new_login = mb_strcut($user->getLogin(), 0, 100 - strlen($suffix), 'UTF-8') . $suffix; // 100 is fieldsize in db
+				$sql->query('UPDATE ~wv16_users SET login = ? WHERE id = ?', array($new_login, $id), '~');
+			}
 		}
 		else {
 			$sql->query('DELETE FROM ~wv16_users WHERE id = ?', $id, '~');
