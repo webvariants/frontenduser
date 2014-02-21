@@ -144,7 +144,7 @@ abstract class WV16_Provider {
 	public static function getAttributes($userType = null) {
 		$cache     = sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = sly_Cache::generateKey('attributes', $userType);
+		$cacheKey  = $userType !== null ? sly_Cache::generateKey('attributes', $userType) : 'attributes_NuLL';
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
