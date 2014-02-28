@@ -25,6 +25,7 @@ class _WV16_User extends WV_Object implements WV16_User {
 	protected $confirmationCode;
 
 	private static $instances = array();
+	private $setDataCache = array();
 
 	public function __sleep() {
 		return array('id', 'login', 'password', 'type', 'registered', 'rawValues',
@@ -414,6 +415,22 @@ class _WV16_User extends WV_Object implements WV16_User {
 	/* Set-Management */
 
 	public function setSetID($setID) {
+		$this->setDataCache[$this->currentSetID] = array(
+			'rawValues' => $this->rawValues,
+			'values' => $this->values
+		);
+
+		if (array_key_exists($setID, $this->setDataCache)) {
+			$this->rawValues = $this->setDataCache[$setID]['rawValues'];
+			$this->values = $this->setDataCache[$setID]['values'];
+			$this->currentSetID = $setID;
+			return false;
+		}
+
+		if ($this->currentSetID === $setID) {
+			return false;
+		}
+
 		$setID = (int) $setID;
 		$sql   = WV_SQL::getInstance();
 
