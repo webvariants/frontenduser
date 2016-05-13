@@ -8,7 +8,12 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
+namespace wv\FrontendUser\Controller;
+
+use wv\FrontendUser\Factory;
+use wv\FrontendUser\User;
+
+class ExportController extends BaseController {
 	public function indexAction() {
 		$this->init();
 
@@ -17,7 +22,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 	}
 
 	private function getExports() {
-		return sly_Core::config()->get('frontenduser/exports');
+		return \sly_Core::config()->get('frontenduser/exports');
 	}
 
 	public function exportAction() {
@@ -29,7 +34,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// check export
 
 		if (!isset($exports[$export])) {
-			print sly_Helper_Message::warn('Der angeforderte Export konnte nicht gefunden werden.');
+			print \sly_Helper_Message::warn('Der angeforderte Export konnte nicht gefunden werden.');
 			return $this->indexAction();
 		}
 
@@ -39,11 +44,11 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// find users
 
 		$type  = $export['usertype'];
-		$sql   = WV_SQL::getInstance();
+		$sql   = \WV_SQL::getInstance();
 		$users = $sql->getArray('SELECT id FROM ~wv16_users WHERE `type` = ?', $type, '~');
 
 		if (empty($users)) {
-			print sly_Helper_Message::warn('Es wurden keine passenden Benutzer gefunden.');
+			print \sly_Helper_Message::warn('Es wurden keine passenden Benutzer gefunden.');
 			return $this->indexAction();
 		}
 
@@ -58,7 +63,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// write header line
 
 		foreach ($export['attributes'] as $attrName) {
-			$attribute = WV16_Factory::getAttribute($attrName);
+			$attribute = Factory::getAttribute($attrName);
 			$headers[] = str_replace(array('"', "'", ';'), '', $attribute->getTitle());
 		}
 
@@ -68,7 +73,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 		// write user data
 
 		foreach ($users as $userID) {
-			$user = _WV16_User::getInstance($userID);
+			$user = User::getInstance($userID);
 			$line = array($userID, $user->getLogin());
 
 			foreach ($export['attributes'] as $attrName) {
@@ -97,7 +102,7 @@ class sly_Controller_Frontenduser_Exports extends sly_Controller_Frontenduser {
 	}
 
 	public function checkPermission($action) {
-		$user = sly_Util_User::getCurrentUser();
+		$user = \sly_Util_User::getCurrentUser();
 		return $user && ($user->isAdmin() || $user->hasRight('frontenduser', 'exports'));
 	}
 }

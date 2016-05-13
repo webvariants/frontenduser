@@ -8,13 +8,17 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
-	private $errors = array();
+namespace wv\FrontendUser\Controller;
 
+use wv\FrontendUser\Factory;
+use wv\FrontendUser\Group;
+use wv\FrontendUser\Provider;
+
+class GroupController extends BaseController {
 	public function indexAction() {
 		$this->init();
 
-		$groups = WV16_Provider::getGroups();
+		$groups = Provider::getGroups();
 		$this->render('groups/table.phtml', compact('groups'), false);
 	}
 
@@ -35,15 +39,15 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$title = sly_post('title', 'string');
 
 		try {
-			$group = _WV16_Group::create($name, $title);
+			$group = Group::create($name, $title);
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->addAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_GROUP_ADDED', $group);
-		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich angelegt.');
+		\sly_Core::dispatcher()->notify('WV16_GROUP_ADDED', $group);
+		print \sly_Helper_Message::info('Die Gruppe wurde erfolgreich angelegt.');
 
 		$this->indexAction();
 	}
@@ -52,7 +56,7 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 		$this->init();
 
 		$name  = sly_request('name', 'string');
-		$group = WV16_Factory::getGroup($name);
+		$group = Factory::getGroup($name);
 		$func  = 'edit';
 
 		$this->render('groups/backend.phtml', compact('group', 'func'), false);
@@ -67,19 +71,19 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 
 		$name  = sly_post('name', 'string');
 		$title = sly_post('title', 'string');
-		$group = WV16_Factory::getGroup($name);
+		$group = Factory::getGroup($name);
 
 		try {
 			$group->setTitle($title);
 			$group->update();
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_GROUP_UPDATED', $group);
-		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich bearbeitet.');
+		\sly_Core::dispatcher()->notify('WV16_GROUP_UPDATED', $group);
+		print \sly_Helper_Message::info('Die Gruppe wurde erfolgreich bearbeitet.');
 
 		$this->indexAction();
 	}
@@ -89,23 +93,23 @@ class sly_Controller_Frontenduser_Groups extends sly_Controller_Frontenduser {
 
 		try {
 			$name  = sly_post('name', 'string');
-			$group = WV16_Factory::getGroup($name);
+			$group = Factory::getGroup($name);
 
 			$group->delete();
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_GROUP_DELETED', $group);
-		print sly_Helper_Message::info('Die Gruppe wurde erfolgreich gelöscht.');
+		\sly_Core::dispatcher()->notify('WV16_GROUP_DELETED', $group);
+		print \sly_Helper_Message::info('Die Gruppe wurde erfolgreich gelöscht.');
 
 		$this->indexAction();
 	}
 
 	public function checkPermission($action) {
-		$user = sly_Util_User::getCurrentUser();
+		$user = \sly_Util_User::getCurrentUser();
 		return $user && ($user->isAdmin() || $user->hasRight('frontenduser', 'groups'));
 	}
 }

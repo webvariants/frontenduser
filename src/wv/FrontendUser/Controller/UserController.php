@@ -8,40 +8,29 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_Controller_Interface {
-	private $errors = array();
-	private $init   = false;
+namespace wv\FrontendUser\Controller;
 
-	protected function getViewFolder() {
-		return _WV16_PATH.'templates/';
-	}
+use wv\FrontendUser\Factory;
+use wv\FrontendUser\Provider;
+use wv\FrontendUser\User;
 
-	protected function init() {
-		if ($this->init) return;
-		$this->init = true;
-
-		$layout = sly_Core::getLayout();
-		$layout->addCSSFile('../data/dyn/public/webvariants/frontenduser/css/wv16.less');
-		$layout->addJavaScriptFile('../data/dyn/public/webvariants/frontenduser/js/frontenduser.min.js');
-		$layout->pageHeader(t('frontenduser_title'));
-	}
-
+class UserController extends BaseController {
 	public function indexAction() {
 		$this->init();
 
-		$search  = sly_Table::getSearchParameters('users');
-		$paging  = sly_Table::getPagingParameters('users', true, false);
-		$sorting = sly_Table::getSortingParameters('login', array('login', 'registered'));
+		$search  = \sly_Table::getSearchParameters('users');
+		$paging  = \sly_Table::getPagingParameters('users', true, false);
+		$sorting = \sly_Table::getSortingParameters('login', array('login', 'registered'));
 		$where   = 'deleted = 0';
-		$sql     = WV_SQL::getInstance();
+		$sql     = \WV_SQL::getInstance();
 
 		if (!empty($search)) {
 			$where .= ' AND (`login` LIKE ? OR `registered` LIKE ?)';
 			$where  = str_replace('?', $sql->quote('%'.$search.'%'), $where);
 		}
 
-		$users = WV16_Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
-		$total = WV16_Provider::getTotalUsers($where);
+		$users = Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
+		$total = Provider::getTotalUsers($where);
 
 		$this->render('users/table.phtml', compact('users', 'total'), false);
 	}
@@ -72,14 +61,14 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 		try {
 			if ($password1 != $password2) {
-				throw new Exception('Die beiden Passwörter sind nicht identisch.');
+				throw new \Exception('Die beiden Passwörter sind nicht identisch.');
 			}
 
 			// Holzhammer-Methode
-			WV16_Factory::getUserType($userType);
+			Factory::getUserType($userType);
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->addAction();
 		}
 
@@ -92,11 +81,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
-				$errors[$idx] = sly_translate(WV16_Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
+				$errors[$idx] = sly_translate(Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
 			}
 
 			$errormsg = implode('<br />', $errors);
-			print sly_Helper_Message::warn($errormsg);
+			print \sly_Helper_Message::warn($errormsg);
 			return $this->addAction();
 		}
 
@@ -104,7 +93,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		// Attribute sind OK. Ab in die Datenbank damit.
 
 		try {
-			$user = _WV16_User::register($login, $password1, $userType);
+			$user = User::register($login, $password1, $userType);
 			$user->setConfirmed($confirmed);
 			$user->setActivated($activated);
 
@@ -122,13 +111,13 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 			$user->update();
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->addAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_USER_ADDED', $user, array('password' => $password1));
-		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich angelegt.');
+		\sly_Core::dispatcher()->notify('WV16_USER_ADDED', $user, array('password' => $password1));
+		print \sly_Helper_Message::info('Der Benutzer wurde erfolgreich angelegt.');
 
 		$this->indexAction();
 	}
@@ -138,7 +127,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 		$id   = sly_request('id', 'int');
 		$set  = sly_request('setid', 'int', null);
-		$user = _WV16_User::getInstance($id);
+		$user = User::getInstance($id);
 		$func = 'edit';
 
 		if ($set !== null) {
@@ -180,20 +169,20 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			// Wir initialisieren das Objekt jetzt schon, damit wir im catch-Block
 			// direkt ein edit-Formular anbieten können.
 
-			$user = WV16_Factory::getUserByID($id);
+			$user = Factory::getUserByID($id);
 
 			if ($password1 && $password1 != $password2) {
-				throw new Exception('Die beiden Passwörter sind nicht identisch.');
+				throw new \Exception('Die beiden Passwörter sind nicht identisch.');
 			}
 
-			WV16_Factory::getUserType($userType);
+			Factory::getUserType($userType);
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_USER_PRE_UPDATED', $user);
+		\sly_Core::dispatcher()->notify('WV16_USER_PRE_UPDATED', $user);
 
 		///////////////////////////////////////////////////////////////
 		// Attribute auslesen und vom Datentyp jeweils verarbeiten lassen
@@ -217,10 +206,10 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$errors = $this->errors;
 
 			foreach ($errors as $idx => $e) {
-				$errors[$idx] = sly_translate(WV16_Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
+				$errors[$idx] = sly_translate(Factory::getAttribute($e['attribute'])->getTitle()).': '.$e['error'];
 			}
 
-			print sly_Helper_Message::warn(implode('<br />', $errors));
+			print \sly_Helper_Message::warn(implode('<br />', $errors));
 			return $this->editAction();
 		}
 
@@ -231,7 +220,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		// Attribute sind OK. Ab in die Datenbank damit.
 
 		try {
-			WV_SQL::getInstance()->beginTransaction();
+			\WV_SQL::getInstance()->beginTransaction();
 
 			$user->setUserType($userType);
 			$user->setLogin($login);
@@ -261,11 +250,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			$user->setActivated($activated);
 			$user->update();
 
-			WV_SQL::getInstance()->commit();
+			\WV_SQL::getInstance()->commit();
 		}
-		catch (Exception $e) {
-			WV_SQL::getInstance()->rollBack();
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			\WV_SQL::getInstance()->rollBack();
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
 
@@ -275,8 +264,8 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 		$params = !empty($password1) ? array('password' => $password1) : array();
 		$params['old_login'] = $oldLogin;
 
-		sly_Core::dispatcher()->notify('WV16_USER_UPDATED', $user, $params);
-		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich bearbeitet.');
+		\sly_Core::dispatcher()->notify('WV16_USER_UPDATED', $user, $params);
+		print \sly_Helper_Message::info('Der Benutzer wurde erfolgreich bearbeitet.');
 
 		// Bei der ersten Aktivierung benachrichtigen wir den Benutzer.
 
@@ -284,11 +273,11 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 		if ($firstTimeActivation) {
 			try {
-				WV_UserWorkflows::notifyUserOnActivation($user);
-				print sly_Helper_Message::info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
+				\WV_UserWorkflows::notifyUserOnActivation($user);
+				print \sly_Helper_Message::info('Der Nutzer wurde per Mail über seine Aktivierung benachrichtigt.');
 			}
-			catch (Exception $e) {
-				print sly_Helper_Message::warn('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.sly_html($e->getMessage()).'.');
+			catch (\Exception $e) {
+				print \sly_Helper_Message::warn('Das Senden der Aktivierungsbenachrichtigung schlug fehl: '.sly_html($e->getMessage()).'.');
 			}
 		}
 
@@ -300,30 +289,30 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 
 		try {
 			$id     = sly_request('id', 'int');
-			$user   = _WV16_User::getInstance($id);
+			$user   = User::getInstance($id);
 			$values = $user->getValues(); // für den EP vor der Vernichtung retten
 
 			$user->delete();
 		}
-		catch (Exception $e) {
-			print sly_Helper_Message::warn($e->getMessage());
+		catch (\Exception $e) {
+			print \sly_Helper_Message::warn($e->getMessage());
 			return $this->editAction();
 		}
 
-		sly_Core::dispatcher()->notify('WV16_USER_DELETED', $user, array('values' => $values));
-		print sly_Helper_Message::info('Der Benutzer wurde erfolgreich gelöscht.');
+		\sly_Core::dispatcher()->notify('WV16_USER_DELETED', $user, array('values' => $values));
+		print \sly_Helper_Message::info('Der Benutzer wurde erfolgreich gelöscht.');
 
 		$this->indexAction();
 	}
 
 	public function checkPermission($action) {
-		$user = sly_Util_User::getCurrentUser();
+		$user = \sly_Util_User::getCurrentUser();
 		return $user && ($user->isAdmin() || $user->hasRight('frontenduser', 'users'));
 	}
 
 	private function serializeForm($userType) {
-		$requiredAttrs  = WV16_Provider::getAttributes($userType);
-		$availableAttrs = WV16_Provider::getAttributes();
+		$requiredAttrs  = Provider::getAttributes($userType);
+		$availableAttrs = Provider::getAttributes();
 		$values         = array();
 
 		foreach ($availableAttrs as $name => $attr) {
@@ -333,7 +322,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 			try {
 				$values[$name] = $attr->serializeForm();
 			}
-			catch (Exception $e) {
+			catch (\Exception $e) {
 				$this->errors[] = array(
 					'attribute' => $name,
 					'error'     => $e->getMessage()
@@ -345,7 +334,7 @@ class sly_Controller_Frontenduser extends sly_Controller_Backend implements sly_
 	}
 
 	protected function getAttributesToDisplay($assigned, $required) {
-		$available = WV16_Provider::getAttributes();
+		$available = Provider::getAttributes();
 		$required  = array_keys($required);
 		$return    = array();
 
