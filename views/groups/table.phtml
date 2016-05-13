@@ -1,0 +1,44 @@
+<?php
+/*
+ * Copyright (c) 2016, webvariants GmbH & Co. KG, http://www.webvariants.de
+ *
+ * This file is released under the terms of the MIT license. You can find the
+ * complete text in the attached LICENSE file or online at:
+ *
+ * http://www.opensource.org/licenses/mit-license.php
+ */
+
+$id    = '<a href="index.php?page=frontenduser_groups&amp;func=add"><img src="../data/dyn/public/webvariants/frontenduser/images/group_add.png" alt="" title="Hinzufügen" /></a>';
+$table = new sly_Table('groups');
+
+$table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
+$table->addColumn(new sly_Table_Column('Bezeichnung', '', 'title'));
+$table->addColumn(new sly_Table_Column('Interner Name', '', 'name'));
+
+$table->setIsEmpty(empty($groups));
+$table->setEmptyNotice('Es wurden noch keine Gruppen angelegt.');
+$table->enableSearching(false);
+$table->enableSorting(false);
+
+$table->openBuffer();
+
+foreach ($groups as $group) {
+	$url = 'index.php?page=frontenduser_groups&amp;func=edit&amp;name='.urlencode($group->getName());
+	$title = $group->getTitle();
+	$translated = sly_translate($title);
+
+	if ($translated !== $title) {
+		$translated = "$translated ($title)";
+	}
+
+	?>
+	<tr>
+		<td class="sly-icon"><a href="<?php print $url ?>"><img src="../data/dyn/public/webvariants/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
+		<td><a href="<?php print $url ?>"><?php print sly_html($translated) ?></a></td>
+		<td><?php print sly_html($group->getName()) ?></td>
+	</tr>
+	<?php
+}
+
+$table->closeBuffer();
+print $table->render();

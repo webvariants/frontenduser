@@ -1,0 +1,49 @@
+<?php
+/*
+ * Copyright (c) 2016, webvariants GmbH & Co. KG, http://www.webvariants.de
+ *
+ * This file is released under the terms of the MIT license. You can find the
+ * complete text in the attached LICENSE file or online at:
+ *
+ * http://www.opensource.org/licenses/mit-license.php
+ */
+
+if (!empty($errormsg)) {
+	print sly_Helper_Message::warn($errormsg);
+}
+
+$form = new sly_Form('index.php', 'POST', 'Gruppe '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
+
+$form->addHiddenValue('page', 'frontenduser_groups');
+$form->addHiddenValue('func', 'do_'.$func);
+
+////////////////////////////////////////////////////////////////////////////////
+// Normale Felder
+
+$title = new sly_Form_Input_Text('title', 'Bezeichnung', $group ? $group->getTitle() : '');
+
+if ($group) {
+	$name = new sly_Form_Text('Interner Name', $group->getName());
+	$form->addHiddenValue('name', $group->getName());
+}
+else {
+	$name = new sly_Form_Input_Text('name', 'Interner Name', '');
+	$name->setHelptext('Der Name kann später nicht mehr geändert werden.');
+}
+
+$form->addElements(array($name, $title));
+
+////////////////////////////////////////////////////////////////////////////////
+// Buttons festlegen
+
+if ($group) {
+	$delete = new sly_Form_Input_Button('submit', 'delete', 'Löschen');
+	$delete->setAttribute('onclick', 'return confirm("Sicher, dass diese Gruppe gelöscht werden soll?")');
+	$form->setDeleteButton($delete);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Fertig!
+
+$form->setFocus($group ? 'title' : 'name');
+print $form->render();
