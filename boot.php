@@ -20,21 +20,18 @@ if ($backend) {
 
 // init events
 $dispatcher = $container['sly-dispatcher'];
-$dispatcher->register('SLY_CACHE_CLEARED', array('wv\FrontendUser\Users', 'onClearCache'));
-$dispatcher->register('SLY_SYSTEM_CACHES', array('wv\FrontendUser\Users', 'systemCacheList'));
+$dispatcher->addListener('SLY_CACHE_CLEARED',           array('wv\FrontendUser\EventHandler', 'onCacheCleared'));
+$dispatcher->addListener('SLY_SYSTEM_CACHES',           array('wv\FrontendUser\EventHandler', 'onSystemCaches'));
+$dispatcher->addListener('SLY_BACKEND_NAVIGATION_INIT', array('wv\FrontendUser\EventHandler', 'onBackendNavInit'));
 
-$dispatcher->register(sly\Assets\Service::EVENT_IS_PROTECTED_ASSET, array('wv\FrontendUser\Users', 'isProtectedListener'));
-
-if ($backend) {
-	$dispatcher->register('SLY_ADDONS_LOADED', array('wv\FrontendUser\Users', 'initMenu'));
-}
+$dispatcher->addListener(sly\Assets\Service::EVENT_IS_PROTECTED_ASSET, array('wv\FrontendUser\EventHandler', 'onIsProtectedAsset'));
 
 // rebuild complete metadata table when importing a dump
-$dispatcher->register('SLY_DB_IMPORTER_AFTER', array('wv\FrontendUser\Users', 'rebuildUserdata'));
+$dispatcher->addListener('SLY_DB_IMPORTER_AFTER', array('wv\FrontendUser\EventHandler', 'onDatabaseImportAfter'));
 
 // sync attributes and types
 if (sly_Core::isDeveloperMode()) {
-	$dispatcher->register('SLY_ADDONS_LOADED', array('wv\FrontendUser\Users', 'syncYAML'));
+	$dispatcher->addListener('SLY_ADDONS_LOADED', array('wv\FrontendUser\EventHandler', 'onAddonsLoaded'));
 }
 
 // define controllers

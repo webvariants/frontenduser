@@ -19,7 +19,7 @@ jQuery(function($) {
 			legend  = $('#wv16attributes legend'),
 			links   = [],
 			setID   = 0,
-			baseURL = 'index.php?page=frontenduser&func=edit&id='+wv16.userID+'&setid=';
+			baseURL = './frontenduser/edit?id='+wv16.userID+'&setid=';
 
 		legend.append('<span style="float:right;margin-right:10px">Sets:</span>');
 		legend = legend.find('span');
