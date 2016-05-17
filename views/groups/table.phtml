@@ -8,7 +8,10 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
-$id    = '<a href="index.php?page=frontenduser_groups&amp;func=add"><img src="../data/dyn/public/webvariants/frontenduser/images/group_add.png" alt="" title="Hinzufügen" /></a>';
+
+use sly\Assets\Util;
+
+$id    = '<a href="./frontenduser_groups/add"><img src="'.Util::addOnUri('webvariants/frontenduser', 'images/group_add.png').'" alt="" title="Hinzufügen" /></a>';
 $table = new sly_Table('groups');
 
 $table->addColumn(new sly_Table_Column($id, '', 'id', array('class' => 'sly-icon')));
@@ -22,8 +25,10 @@ $table->enableSorting(false);
 
 $table->openBuffer();
 
+$icon = Util::addOnUri('webvariants/frontenduser', 'images/group.png');
+
 foreach ($groups as $group) {
-	$url = 'index.php?page=frontenduser_groups&amp;func=edit&amp;name='.urlencode($group->getName());
+	$url = './frontenduser_groups/edit?name='.urlencode($group->getName());
 	$title = $group->getTitle();
 	$translated = sly_translate($title);
 
@@ -33,7 +38,7 @@ foreach ($groups as $group) {
 
 	?>
 	<tr>
-		<td class="sly-icon"><a href="<?php print $url ?>"><img src="../data/dyn/public/webvariants/frontenduser/images/group.png" alt="" title="Gruppe bearbeiten" /></a></td>
+		<td class="sly-icon"><a href="<?php print $url ?>"><img src="<?php print $icon ?>" alt="" title="Gruppe bearbeiten" /></a></td>
 		<td><a href="<?php print $url ?>"><?php print sly_html($translated) ?></a></td>
 		<td><?php print sly_html($group->getName()) ?></td>
 	</tr>

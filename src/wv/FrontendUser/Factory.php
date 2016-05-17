@@ -16,7 +16,7 @@ abstract class Factory {
 		$login     = strtolower(trim($login));
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.users.mappings';
-		$cacheKey  = \sly_Cache::generateKey('id_for', $login);
+		$cacheKey  = sha1(json_encode(array('id_for', $login)));
 
 		$userID = $cache->get($namespace, $cacheKey, -1);
 

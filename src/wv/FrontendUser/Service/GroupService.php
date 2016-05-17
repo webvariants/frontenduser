@@ -74,7 +74,7 @@ class GroupService extends \WV_Object {
 	public function exists($name) {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.groups';
-		$cacheKey  = \sly_Cache::generateKey('mapping', $name);
+		$cacheKey  = sha1(json_encode(array('mapping', $name)));
 
 		if ($cache->exists($namespace, $cacheKey)) {
 			return true;

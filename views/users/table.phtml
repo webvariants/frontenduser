@@ -8,9 +8,11 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
+use sly\Assets\Util;
+
 print '<p>Die folgenden Benutzer sind auf Ihrer Website registriert.</p>';
 
-$id        = '<a href="index.php?page=frontenduser&amp;func=add"><img src="../data/dyn/public/webvariants/frontenduser/images/user_add.png" alt="" title="Hinzufügen" /></a>';
+$id        = '<a href="./frontenduser/add"><img src="'.Util::addOnUri('webvariants/frontenduser', 'images/user_add.png').'" alt="" title="Hinzufügen" /></a>';
 $table     = new sly_Table('users');
 $columns   = array_merge(array('___id___' => ''), sly_Core::config()->get('frontenduser/be_columns', array()));
 $callbacks = sly_Core::config()->get('frontenduser/be_column_callbacks', array());
@@ -33,6 +35,8 @@ $table->enableSorting(true);
 
 $table->openBuffer();
 
+$icon = Util::addOnUri('webvariants/frontenduser', 'images/user.png');
+
 foreach ($users as $user) {
 	?>
 	<tr>
@@ -42,11 +46,11 @@ foreach ($users as $user) {
 
 			switch ($name) {
 				case '___id___':
-					$value = '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'"><img src="../data/dyn/public/webvariants/frontenduser/images/user.png" alt="" title="Benutzer bearbeiten" /></a>';
+					$value = '<a href="./frontenduser/edit?id='.$user->getID().'"><img src="'.$icon.'" alt="" title="Benutzer bearbeiten" /></a>';
 					break;
 
 				case '___login___':
-					$value  = '<a href="index.php?page=frontenduser&amp;func=edit&amp;id='.$user->getID().'">';
+					$value  = '<a href="./frontenduser/edit?id='.$user->getID().'">';
 					$value .= sly_html($user->getLogin());
 					$value .= '</a>';
 					break;

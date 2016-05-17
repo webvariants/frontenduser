@@ -215,7 +215,7 @@ class UserService extends \WV_Object {
 	public function exists($login) {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.users';
-		$cacheKey  = \sly_Cache::generateKey('mapping', $login);
+		$cacheKey  = sha1(json_encode(array('mapping', $login)));
 
 		if ($cache->exists($namespace, $cacheKey)) {
 			return true;

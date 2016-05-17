@@ -44,7 +44,7 @@ class Group extends \WV_Object {
 	}
 
 	/**
-	 * @return _WV16_Group  der neu erzeugte Benutzer
+	 * @return Group
 	 */
 	public static function create($name, $title) {
 		$service = new Service\GroupService();

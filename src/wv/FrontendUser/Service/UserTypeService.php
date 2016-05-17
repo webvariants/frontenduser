@@ -22,7 +22,7 @@ class UserTypeService {
 		if ($types === null || $forceRefresh) {
 			$config    = \sly_Core::config();
 			$curState  = $config->get('frontenduser/types', array());
-			$cacheFile = \sly_Util_AddOn::internalDirectory('webvariants/frontenduser').'/types.php';
+			$cacheFile = \sly_Util_AddOn::tempDirectory('webvariants/frontenduser').'/types.php';
 			$oldState  = null;
 
 			if (file_exists($cacheFile)) {

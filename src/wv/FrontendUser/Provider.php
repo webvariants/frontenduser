@@ -14,7 +14,7 @@ abstract class Provider {
 	public static function getTotalUsers($where = '1') {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('total_users', $where);
+		$cacheKey  = sha1(json_encode(array('total_users', $where)));
 		$total     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($total < 0) {
@@ -33,7 +33,7 @@ abstract class Provider {
 		$offset    = abs((int) $offset);
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('users_by', $where, $orderBy, $direction, $offset, $max);
+		$cacheKey  = sha1(json_encode(array('users_by', $where, $orderBy, $direction, $offset, $max)));
 
 		$users = $cache->get($namespace, $cacheKey, -1);
 
@@ -61,7 +61,7 @@ abstract class Provider {
 		$offset    = abs((int) $offset);
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('users_by', $group, $orderBy, $direction, $offset, $max);
+		$cacheKey  = sha1(json_encode(array('users_by', $where, $orderBy, $direction, $offset, $max)));
 
 		$users = $cache->get($namespace, $cacheKey, -1);
 
@@ -94,7 +94,7 @@ abstract class Provider {
 		$offset    = abs((int) $offset);
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('groups_by', $orderBy, $direction, $offset, $max);
+		$cacheKey  = sha1(json_encode(array('groups_by', $orderBy, $direction, $offset, $max)));
 
 		$groups = $cache->get($namespace, $cacheKey, -1);
 
@@ -146,7 +146,7 @@ abstract class Provider {
 	public static function getAttributes($userType = null) {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = $userType !== null ? \sly_Cache::generateKey('attributes', $userType) : 'attributes_NuLL';
+		$cacheKey  = $userType !== null ? sha1(json_encode(array('attributes', $userType))) : 'attributes_NuLL';
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {
@@ -175,7 +175,7 @@ abstract class Provider {
 	public static function getUserCountByType($userType) {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.counts';
-		$cacheKey  = \sly_Cache::generateKey('users_by_type', $userType);
+		$cacheKey  = sha1(json_encode(array('users_by_type', $userType)));
 		$count     = $cache->get($namespace, $cacheKey, -1);
 
 		if ($count < 0) {
@@ -200,7 +200,7 @@ abstract class Provider {
 	public static function getUsersByType($userType, $sortby = 'login', $direction = 'ASC', $limitClause = '') {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('users_by_type', $userType, $sortby, $direction, $limitClause);
+		$cacheKey  = sha1(json_encode(array('users_by_type', $userType, $sortby, $direction, $limitClause)));
 		$users     = $cache->get($namespace, $cacheKey, false);
 		$return    = array();
 
@@ -241,7 +241,7 @@ abstract class Provider {
 	public static function getUsersWithAttribute($attribute, $userType = null, $setID = 1, $value = null, $operator = null, $sort = null) {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('users_by_attribute', $attribute, $userType, $value, $operator, $sort);
+		$cacheKey  = sha1(json_encode(array('users_by_attribute', $attribute, $userType, $value, $operator, $sort)));
 		$users     = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($users)) {
@@ -391,7 +391,7 @@ abstract class Provider {
 
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
-		$cacheKey  = \sly_Cache::generateKey('userdata', $attribute, $userType, (int) $setID);
+		$cacheKey  = sha1(json_encode(array('userdata', $attribute, $userType, (int) $setID)));
 		$data      = $cache->get($namespace, $cacheKey, false);
 
 		if (!is_array($data)) {

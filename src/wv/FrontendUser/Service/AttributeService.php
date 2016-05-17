@@ -20,7 +20,7 @@ class AttributeService extends \WV_Service_Property {
 		if ($properties === null || $forceRefresh) {
 			$config     = \sly_Core::config();
 			$attributes = $config->get('frontenduser/attributes', array());
-			$cacheFile  = \sly_Util_AddOn::internalDirectory('webvariants/frontenduser').'/attributes.php';
+			$cacheFile  = \sly_Util_AddOn::tempDirectory('webvariants/frontenduser').'/attributes.php';
 			$oldState   = null;
 
 			if (file_exists($cacheFile)) {

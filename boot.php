@@ -10,18 +10,22 @@
 
 define('_WV_FRONTENDUSER_PATH', rtrim(dirname(__FILE__), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR);
 
+$container = sly_Core::getContainer();
+$backend   = sly_Core::isBackend();
+
 // load language file
-if (sly_Core::isBackend()) {
-	sly_Core::getI18N()->appendFile(_WV_FRONTENDUSER_PATH.'lang');
+if ($backend) {
+	$container['sly-i18n']->appendFile(_WV_FRONTENDUSER_PATH.'lang');
 }
 
 // init events
-$dispatcher = sly_Core::dispatcher();
+$dispatcher = $container['sly-dispatcher'];
 $dispatcher->register('SLY_CACHE_CLEARED', array('wv\FrontendUser\Users', 'onClearCache'));
 $dispatcher->register('SLY_SYSTEM_CACHES', array('wv\FrontendUser\Users', 'systemCacheList'));
-$dispatcher->register(sly_Service_Asset::EVENT_IS_PROTECTED_ASSET, array('wv\FrontendUser\Users', 'isProtectedListener'));
 
-if (sly_Core::isBackend()) {
+$dispatcher->register(sly\Assets\Service::EVENT_IS_PROTECTED_ASSET, array('wv\FrontendUser\Users', 'isProtectedListener'));
+
+if ($backend) {
 	$dispatcher->register('SLY_ADDONS_LOADED', array('wv\FrontendUser\Users', 'initMenu'));
 }
 
@@ -32,3 +36,16 @@ $dispatcher->register('SLY_DB_IMPORTER_AFTER', array('wv\FrontendUser\Users', 'r
 if (sly_Core::isDeveloperMode()) {
 	$dispatcher->register('SLY_ADDONS_LOADED', array('wv\FrontendUser\Users', 'syncYAML'));
 }
+
+// define controllers
+$container['sly-backend-controller-frontenduser'] = function() {
+	return new wv\FrontendUser\Controller\UserController();
+};
+
+$container['sly-backend-controller-frontenduser_groups'] = function() {
+	return new wv\FrontendUser\Controller\GroupController();
+};
+
+$container['sly-backend-controller-frontenduser_exports'] = function() {
+	return new wv\FrontendUser\Controller\ExportController();
+};

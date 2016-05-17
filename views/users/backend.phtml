@@ -8,14 +8,15 @@
  * http://www.opensource.org/licenses/mit-license.php
  */
 
+use wv\FrontendUser\Provider;
+use wv\FrontendUser\UserType;
+
 if (!empty($errormsg)) {
 	print sly_Helper_Message::warn($errormsg);
 }
 
-$form = new sly_Form('index.php', 'POST', 'Benutzer '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
+$form = new sly_Form($_router->getPlainUrl('frontenduser', 'do_'.$func), 'POST', 'Benutzer '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
 
-$form->addHiddenValue('page',  'frontenduser');
-$form->addHiddenValue('func',  'do_'.$func);
 $form->addHiddenValue('id',    $user ? $user->getID() : '');
 $form->addHiddenValue('setid', $user ? $set : '');
 
@@ -34,7 +35,7 @@ $confirmed->setHelpText('Bestätigung bedeutet, dass der Benutzer sein Konto sel
 $activated->setChecked(!$user || $user->isActivated());
 $activated->setHelpText('Nur hier freigeschaltete Benutzer können sich einloggen.');
 
-$types       = WV16_Provider::getUserTypes();
+$types       = Provider::getUserTypes();
 $typesSelect = array();
 
 foreach ($types as $name => $type) {
@@ -48,7 +49,7 @@ if (count($types) === 1) {
 	$form->addHiddenValue('type', key($types));
 }
 else {
-	$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : _WV16_UserType::DEFAULT_NAME, $typesSelect);
+	$type = new sly_Form_Select_DropDown('type', 'Benutzertyp', $user ? $user->getTypeName() : UserType::DEFAULT_NAME, $typesSelect);
 	$form->add($type);
 }
 
@@ -68,7 +69,7 @@ if ($user) {
 	$user->setSetID($set);
 }
 
-$requiredInfos = WV16_Provider::getAttributes($userType);
+$requiredInfos = Provider::getAttributes($userType);
 $assignedData  = $user ? $user->getValues(true) : array();
 $dataToDisplay = $this->getAttributesToDisplay($assignedData, $requiredInfos);
 $attributes    = array_keys($user ? $user->getType()->getAttributes() : $requiredInfos);
@@ -102,7 +103,7 @@ if ($user) {
 $assignedGroups = $user ? $user->getGroupNames() : array();
 $groups         = array();
 
-foreach (WV16_Provider::getGroups() as $name => $group) {
+foreach (Provider::getGroups() as $name => $group) {
 	$groups[$name] = sly_translate($group->getTitle());
 }
 
@@ -145,7 +146,7 @@ var wv16 = {
 // Arrays generieren, die die Informationen beinhalten, welche Metainfos in welchem Typ
 // vorhanden sind.
 
-foreach (WV16_Provider::getUserTypes() as $type) {
+foreach (Provider::getUserTypes() as $type) {
 	print 'wv16.attributesPerType[\''.$type->getName().'\'] = [';
 
 	$list = array();

@@ -16,7 +16,7 @@ frontenduser:
    # Benutzer, den Standardwert für diese Spalte (String) und den Namen (Key)
    # der Spalte (String).
    #
-   #    myCallback(_WV16_User $user, $default, $column) { return ''; }
+   #    myCallback(User $user, $default, $column) { return ''; }
    #
    # Die zurückgegebenen Werte müssen bereits HTML-kodiert sein (= eigenes HTML
    # ist möglich).

@@ -12,10 +12,7 @@ if (!empty($errormsg)) {
 	print sly_Helper_Message::warn($errormsg);
 }
 
-$form = new sly_Form('index.php', 'POST', 'Gruppe '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
-
-$form->addHiddenValue('page', 'frontenduser_groups');
-$form->addHiddenValue('func', 'do_'.$func);
+$form = new sly_Form($_router->getPlainUrl('frontenduser_groups', 'do_'.$func), 'POST', 'Gruppe '.($func == 'add' ? 'erstellen' : 'bearbeiten'), '', 'wv16_user');
 
 ////////////////////////////////////////////////////////////////////////////////
 // Normale Felder

@@ -18,7 +18,7 @@ class SetService extends \WV_Object {
 		$cache     = \sly_Core::cache();
 		$namespace = 'frontenduser.lists';
 		$id        = $user->getID();
-		$cacheKey  = \sly_Cache::generateKey('set_ids', $id, $includeReadOnly);
+		$cacheKey  = sha1(json_encode(array('set_ids', $id, $includeReadOnly)));
 		$ids       = $cache->get($namespace, $cacheKey, null);
 
 		if (is_array($ids)) {
