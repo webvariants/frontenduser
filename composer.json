@@ -22,9 +22,6 @@
         }
     },
     "extra": {
-        "sallycms": {
-            "version": "4.0.x-dev"
-        },
         "branch-alias": {
             "dev-default": "4.x-dev"
         }
