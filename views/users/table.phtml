@@ -30,7 +30,7 @@ foreach ($columns as $name => $title) {
 
 $table->setIsEmpty(empty($users));
 $table->setEmptyNotice('Es haben sich noch keine Benutzer angemeldet.');
-$table->enableSearching(true);
+$table->enableSearching(true, array('page' => 'frontenduser'));
 $table->enableSorting(true);
 
 $table->openBuffer();
