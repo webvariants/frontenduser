@@ -9,11 +9,10 @@
  */
 
 print '<p>Die folgenden CSV-Exporte stehen zur Verfügung:</p>';
-$base = './frontenduser_exports/export?export=';
 
 ?>
 <ul style="margin-left:25px">
 	<?php foreach ($exports as $key => $info): ?>
-	<li><a href="<?php print $base.$key ?>"><?php print sly_translate($info['title'], true) ?></a></li>
+	<li><a href="<?php print $_router->getUrl('frontenduser_exports', 'export', array('export' => $key)) ?>"><?php print sly_translate($info['title'], true) ?></a></li>
 	<?php endforeach ?>
 </ul>
