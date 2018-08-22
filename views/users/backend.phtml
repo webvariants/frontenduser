@@ -167,3 +167,6 @@ if ($user) {
 
 ?>
 </script>
+
+<?php
+\sly_Core::dispatcher()->notify('WV_FE_USER_CONTROLLER_EDIT_VIEW_END', $user);

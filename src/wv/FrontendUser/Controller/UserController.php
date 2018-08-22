@@ -26,8 +26,11 @@ class UserController extends BaseController {
 
 		if (!empty($search)) {
 			$where .= ' AND (`login` LIKE ? OR `registered` LIKE ?)';
+			$where_before_replace = $where;
 			$where  = str_replace('?', $sql->quote('%'.$search.'%'), $where);
 		}
+
+		$where = \sly_Core::dispatcher()->filter('WV_FE_USER_CONTROLLER_WHERE', $where, array('search' => $search, 'where_before_replace' => $where_before_replace, 'sql' => $sql));
 
 		$users = Provider::getUsers($where, $sorting['sortby'], $sorting['direction'], $paging['start'], $paging['elements']);
 		$total = Provider::getTotalUsers($where);
