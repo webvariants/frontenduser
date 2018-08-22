@@ -24,6 +24,7 @@ class UserController extends BaseController {
 		$where   = 'deleted = 0';
 		$sql     = \WV_SQL::getInstance();
 
+		$where_before_replace = $where;
 		if (!empty($search)) {
 			$where .= ' AND (`login` LIKE ? OR `registered` LIKE ?)';
 			$where_before_replace = $where;
